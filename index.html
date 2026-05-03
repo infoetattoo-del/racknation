@@ -1,0 +1,1111 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RACK NATION</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Share+Tech+Mono&display=swap');
+
+  :root {
+    --bg: #0a0a0a;
+    --panel: #111111;
+    --border: #222222;
+    --accent: #e8ff00;
+    --accent2: #ff3c00;
+    --text: #cccccc;
+    --muted: #555555;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Share Tech Mono', monospace;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    user-select: none;
+  }
+
+  /* HEADER */
+  #header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 20px;
+    border-bottom: 1px solid var(--border);
+    background: var(--panel);
+    flex-shrink: 0;
+    z-index: 10;
+  }
+
+  #logo {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 28px;
+    letter-spacing: 4px;
+    color: var(--accent);
+  }
+
+  #logo span { color: var(--accent2); }
+
+  #city-selector {
+    display: flex;
+    gap: 6px;
+    align-items: center;
+  }
+
+  #city-selector label { font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: 2px; }
+
+  #city-select {
+    background: var(--bg);
+    color: var(--text);
+    border: 1px solid var(--border);
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 12px;
+    padding: 4px 8px;
+    cursor: pointer;
+    outline: none;
+  }
+
+  #city-select:focus { border-color: var(--accent); }
+
+  #header-right {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    font-size: 11px;
+    color: var(--muted);
+  }
+
+  .hstat { display: flex; flex-direction: column; align-items: center; gap: 1px; }
+  .hstat-val { color: var(--accent); font-size: 14px; }
+
+  /* MAIN LAYOUT */
+  #main {
+    display: flex;
+    flex: 1;
+    overflow: hidden;
+  }
+
+  /* LEFT PANEL - TOOLS */
+  #left-panel {
+    width: 64px;
+    background: var(--panel);
+    border-right: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 12px 0;
+    gap: 4px;
+    flex-shrink: 0;
+  }
+
+  .tool-section-label {
+    font-size: 8px;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin: 8px 0 4px;
+    width: 100%;
+    text-align: center;
+  }
+
+  .tool-btn {
+    width: 44px;
+    height: 44px;
+    border: 1px solid var(--border);
+    background: transparent;
+    color: var(--text);
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 2px;
+    font-size: 9px;
+    font-family: 'Share Tech Mono', monospace;
+    transition: all 0.1s;
+    position: relative;
+  }
+
+  .tool-btn:hover { border-color: var(--accent); color: var(--accent); }
+  .tool-btn.active { border-color: var(--accent); background: rgba(232,255,0,0.08); color: var(--accent); }
+
+  .tool-icon { font-size: 18px; line-height: 1; }
+
+  .divider { width: 32px; height: 1px; background: var(--border); margin: 4px 0; }
+
+  /* CANVAS AREA */
+  #canvas-area {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background: #070707;
+    position: relative;
+    overflow: hidden;
+  }
+
+  #scene {
+    position: relative;
+    width: 100%;
+    height: 100%;
+  }
+
+  /* TRAIN SVG */
+  #train-container {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    width: 880px;
+    height: 340px;
+  }
+
+  #train-bg {
+    width: 100%;
+    height: 100%;
+  }
+
+  #graffiti-canvas {
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%;
+    height: 100%;
+    cursor: crosshair;
+  }
+
+  /* Ground / depot ambiance */
+  #ground {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 80px;
+    background: linear-gradient(to top, #0d0d0d, transparent);
+  }
+
+  #rails {
+    position: absolute;
+    bottom: 38px;
+    left: 0;
+    right: 0;
+    height: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .rail { width: 100%; height: 3px; background: #1a1a1a; }
+
+  /* Depot background elements */
+  #depot-bg {
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    pointer-events: none;
+  }
+
+  /* RIGHT PANEL */
+  #right-panel {
+    width: 180px;
+    background: var(--panel);
+    border-left: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    padding: 12px;
+    gap: 12px;
+    flex-shrink: 0;
+    overflow-y: auto;
+  }
+
+  .panel-title {
+    font-size: 9px;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    margin-bottom: 6px;
+  }
+
+  /* COLOR PALETTE */
+  #color-grid {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 4px;
+  }
+
+  .color-swatch {
+    width: 100%;
+    aspect-ratio: 1;
+    border: 1.5px solid transparent;
+    cursor: pointer;
+    transition: transform 0.1s;
+  }
+
+  .color-swatch:hover { transform: scale(1.15); border-color: #fff3; }
+  .color-swatch.selected { border-color: #fff; transform: scale(1.15); }
+
+  /* CUSTOM COLOR */
+  #custom-color-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-top: 4px;
+  }
+
+  #custom-color {
+    width: 32px;
+    height: 32px;
+    border: 1px solid var(--border);
+    background: none;
+    cursor: pointer;
+    padding: 0;
+  }
+
+  #custom-label { font-size: 10px; color: var(--muted); }
+
+  /* SLIDERS */
+  .slider-row {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .slider-label {
+    display: flex;
+    justify-content: space-between;
+    font-size: 10px;
+    color: var(--muted);
+  }
+
+  .slider-val { color: var(--accent); }
+
+  input[type=range] {
+    width: 100%;
+    height: 3px;
+    appearance: none;
+    background: var(--border);
+    outline: none;
+    cursor: pointer;
+  }
+
+  input[type=range]::-webkit-slider-thumb {
+    appearance: none;
+    width: 12px;
+    height: 12px;
+    background: var(--accent);
+    border-radius: 0;
+    cursor: pointer;
+  }
+
+  /* CAP SELECTOR */
+  #cap-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 4px;
+  }
+
+  .cap-btn {
+    padding: 5px 4px;
+    border: 1px solid var(--border);
+    background: transparent;
+    color: var(--muted);
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 9px;
+    cursor: pointer;
+    text-align: center;
+    transition: all 0.1s;
+    line-height: 1.3;
+  }
+
+  .cap-btn:hover { border-color: var(--accent); color: var(--accent); }
+  .cap-btn.active { border-color: var(--accent); background: rgba(232,255,0,0.08); color: var(--accent); }
+
+  /* ACTIONS */
+  .action-btn {
+    width: 100%;
+    padding: 7px;
+    border: 1px solid var(--border);
+    background: transparent;
+    color: var(--text);
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 10px;
+    cursor: pointer;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    transition: all 0.1s;
+    text-align: center;
+  }
+
+  .action-btn:hover { border-color: var(--accent); color: var(--accent); }
+  .action-btn.danger:hover { border-color: var(--accent2); color: var(--accent2); }
+  .action-btn.primary { border-color: var(--accent); color: var(--bg); background: var(--accent); font-weight: bold; }
+  .action-btn.primary:hover { background: #fff; }
+
+  /* STATUS BAR */
+  #status-bar {
+    background: var(--panel);
+    border-top: 1px solid var(--border);
+    padding: 5px 16px;
+    display: flex;
+    gap: 24px;
+    align-items: center;
+    font-size: 10px;
+    color: var(--muted);
+    flex-shrink: 0;
+  }
+
+  #status-bar span { color: var(--text); }
+  #coords { color: var(--muted); }
+
+  /* SPRAY PREVIEW */
+  #spray-preview {
+    width: 44px;
+    height: 44px;
+    border: 1px solid var(--border);
+    background: #1a1a1a;
+    position: relative;
+    overflow: hidden;
+    flex-shrink: 0;
+  }
+
+  #spray-dot {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    border-radius: 50%;
+    pointer-events: none;
+  }
+
+  /* CITY OVERLAY */
+  #city-label {
+    position: absolute;
+    top: 12px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 13px;
+    letter-spacing: 4px;
+    color: #ffffff18;
+    pointer-events: none;
+    white-space: nowrap;
+  }
+
+  /* NOTIFICATION */
+  #notif {
+    position: absolute;
+    bottom: 90px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--accent);
+    color: var(--bg);
+    font-family: 'Bebas Neue', monospace;
+    font-size: 14px;
+    letter-spacing: 3px;
+    padding: 6px 18px;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s;
+    white-space: nowrap;
+  }
+
+  /* DRIP CANVAS */
+  #drip-canvas {
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+  }
+
+  /* Scrollbar */
+  #right-panel::-webkit-scrollbar { width: 3px; }
+  #right-panel::-webkit-scrollbar-track { background: transparent; }
+  #right-panel::-webkit-scrollbar-thumb { background: var(--border); }
+</style>
+</head>
+<body>
+
+<div id="header">
+  <div id="logo">RACK <span>NATION</span></div>
+  <div id="city-selector">
+    <label>Location</label>
+    <select id="city-select">
+      <option value="Paris Metro Line 13">Paris — Ligne 13</option>
+      <option value="New York City Subway">New York — Subway</option>
+      <option value="Berlin S-Bahn Yard">Berlin — S-Bahn</option>
+      <option value="Barcelona Metro L5">Barcelona — L5</option>
+      <option value="Tokyo Yamanote Line">Tokyo — Yamanote</option>
+      <option value="London Underground">London — Underground</option>
+      <option value="São Paulo CPTM">São Paulo — CPTM</option>
+      <option value="Stockholm T-Bana">Stockholm — T-Bana</option>
+    </select>
+  </div>
+  <div id="header-right">
+    <div class="hstat"><span class="hstat-val" id="stroke-count">0</span><span>strokes</span></div>
+    <div class="hstat"><span class="hstat-val" id="coverage">0%</span><span>coverage</span></div>
+    <div class="hstat"><span class="hstat-val" id="can-level">100%</span><span>can</span></div>
+  </div>
+</div>
+
+<div id="main">
+
+  <!-- LEFT TOOLS -->
+  <div id="left-panel">
+    <div class="tool-section-label">Tool</div>
+    <button class="tool-btn active" id="tool-spray" onclick="setTool('spray')" title="Spray Can">
+      <span class="tool-icon">🎨</span>
+      <span>SPRAY</span>
+    </button>
+    <button class="tool-btn" id="tool-marker" onclick="setTool('marker')" title="Marker">
+      <span class="tool-icon">✏️</span>
+      <span>MARK</span>
+    </button>
+    <button class="tool-btn" id="tool-roller" onclick="setTool('roller')" title="Paint Roller">
+      <span class="tool-icon">🖌</span>
+      <span>ROLL</span>
+    </button>
+    <div class="divider"></div>
+    <div class="tool-section-label">Cap</div>
+    <button class="tool-btn active" id="cap-fat" onclick="setCap('fat')" title="Fat Cap">
+      <span class="tool-icon" style="font-size:22px">●</span>
+      <span>FAT</span>
+    </button>
+    <button class="tool-btn" id="cap-skinny" onclick="setCap('skinny')" title="Skinny Cap">
+      <span class="tool-icon" style="font-size:12px">●</span>
+      <span>SKNY</span>
+    </button>
+    <button class="tool-btn" id="cap-ny" onclick="setCap('ny')" title="NY Fat">
+      <span class="tool-icon" style="font-size:18px">◉</span>
+      <span>NY</span>
+    </button>
+    <button class="tool-btn" id="cap-filler" onclick="setCap('filler')" title="Filler Cap">
+      <span class="tool-icon" style="font-size:20px">⬛</span>
+      <span>FILL</span>
+    </button>
+  </div>
+
+  <!-- CANVAS -->
+  <div id="canvas-area">
+    <div id="scene">
+
+      <div id="depot-bg">
+        <svg width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
+          <!-- depot ceiling structures -->
+          <line x1="0" y1="40" x2="100%" y2="40" stroke="#111" stroke-width="1"/>
+          <line x1="15%" y1="0" x2="15%" y2="40" stroke="#111" stroke-width="8"/>
+          <line x1="35%" y1="0" x2="35%" y2="40" stroke="#111" stroke-width="8"/>
+          <line x1="55%" y1="0" x2="55%" y2="40" stroke="#111" stroke-width="8"/>
+          <line x1="75%" y1="0" x2="75%" y2="40" stroke="#111" stroke-width="8"/>
+          <!-- Overhead lights -->
+          <rect x="14%" y="0" width="2%" height="6" fill="#1a1a1a"/>
+          <rect x="34%" y="0" width="2%" height="6" fill="#1a1a1a"/>
+          <rect x="54%" y="0" width="2%" height="6" fill="#1a1a1a"/>
+          <rect x="74%" y="0" width="2%" height="6" fill="#1a1a1a"/>
+        </svg>
+      </div>
+
+      <div id="city-label">PARIS — LIGNE 13</div>
+
+      <!-- TRAIN -->
+      <div id="train-container">
+        <svg id="train-bg" viewBox="0 0 880 340" xmlns="http://www.w3.org/2000/svg">
+          <!-- Train body -->
+          <rect x="20" y="40" width="840" height="230" rx="12" fill="#1c1c1c" stroke="#2a2a2a" stroke-width="2"/>
+          <!-- Top stripe -->
+          <rect x="20" y="40" width="840" height="28" rx="12" fill="#181818"/>
+          <rect x="20" y="56" width="840" height="12" fill="#181818"/>
+          <!-- Window row -->
+          <rect x="60" y="90" width="120" height="80" rx="6" fill="#0d0d0d" stroke="#222" stroke-width="1.5"/>
+          <rect x="210" y="90" width="120" height="80" rx="6" fill="#0d0d0d" stroke="#222" stroke-width="1.5"/>
+          <rect x="360" y="90" width="160" height="80" rx="6" fill="#0d0d0d" stroke="#222" stroke-width="1.5"/>
+          <rect x="550" y="90" width="120" height="80" rx="6" fill="#0d0d0d" stroke="#222" stroke-width="1.5"/>
+          <rect x="700" y="90" width="120" height="80" rx="6" fill="#0d0d0d" stroke="#222" stroke-width="1.5"/>
+          <!-- Door lines -->
+          <line x1="185" y1="56" x2="185" y2="270" stroke="#222" stroke-width="2"/>
+          <line x1="340" y1="56" x2="340" y2="270" stroke="#222" stroke-width="2"/>
+          <line x1="530" y1="56" x2="530" y2="270" stroke="#222" stroke-width="2"/>
+          <line x1="690" y1="56" x2="690" y2="270" stroke="#222" stroke-width="2"/>
+          <!-- Door handles -->
+          <rect x="180" y="155" width="10" height="20" rx="2" fill="#2a2a2a"/>
+          <rect x="335" y="155" width="10" height="20" rx="2" fill="#2a2a2a"/>
+          <rect x="525" y="155" width="10" height="20" rx="2" fill="#2a2a2a"/>
+          <rect x="685" y="155" width="10" height="20" rx="2" fill="#2a2a2a"/>
+          <!-- Bottom skirt -->
+          <rect x="20" y="258" width="840" height="30" rx="0" fill="#161616" stroke="#222" stroke-width="1"/>
+          <!-- Wheels -->
+          <ellipse cx="120" cy="305" rx="28" ry="28" fill="#141414" stroke="#222" stroke-width="2"/>
+          <ellipse cx="120" cy="305" rx="14" ry="14" fill="#1a1a1a"/>
+          <ellipse cx="300" cy="305" rx="28" ry="28" fill="#141414" stroke="#222" stroke-width="2"/>
+          <ellipse cx="300" cy="305" rx="14" ry="14" fill="#1a1a1a"/>
+          <ellipse cx="580" cy="305" rx="28" ry="28" fill="#141414" stroke="#222" stroke-width="2"/>
+          <ellipse cx="580" cy="305" rx="14" ry="14" fill="#1a1a1a"/>
+          <ellipse cx="760" cy="305" rx="28" ry="28" fill="#141414" stroke="#222" stroke-width="2"/>
+          <ellipse cx="760" cy="305" rx="14" ry="14" fill="#1a1a1a"/>
+          <!-- Number plate -->
+          <rect x="38" y="220" width="60" height="28" rx="2" fill="#111" stroke="#222" stroke-width="1"/>
+          <!-- Front light -->
+          <ellipse cx="35" cy="180" rx="10" ry="10" fill="#111" stroke="#333" stroke-width="1"/>
+        </svg>
+
+        <canvas id="graffiti-canvas"></canvas>
+      </div>
+
+      <!-- Ground -->
+      <div id="ground"></div>
+      <div id="rails">
+        <div class="rail"></div>
+        <div class="rail"></div>
+      </div>
+
+      <div id="notif">SAVED TO GALLERY</div>
+    </div>
+  </div>
+
+  <!-- RIGHT PANEL -->
+  <div id="right-panel">
+
+    <!-- SPRAY PREVIEW -->
+    <div>
+      <div class="panel-title">Preview</div>
+      <div style="display:flex; gap:8px; align-items:center;">
+        <div id="spray-preview">
+          <div id="spray-dot"></div>
+        </div>
+        <div style="flex:1;">
+          <div style="font-size:9px; color:var(--muted);">Current color</div>
+          <div id="current-color-swatch" style="width:100%; height:22px; margin-top:4px; border:1px solid var(--border);"></div>
+          <div id="current-hex" style="font-size:9px; color:var(--muted); margin-top:2px;">#FF3C00</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- COLORS -->
+    <div>
+      <div class="panel-title">Colors</div>
+      <div id="color-grid"></div>
+      <div id="custom-color-row">
+        <input type="color" id="custom-color" value="#ff3c00">
+        <span id="custom-label">Custom</span>
+      </div>
+    </div>
+
+    <!-- PRESSURE -->
+    <div>
+      <div class="panel-title">Pressure</div>
+      <div class="slider-row">
+        <div class="slider-label"><span>Pressure</span><span class="slider-val" id="pressure-val">70%</span></div>
+        <input type="range" id="pressure" min="10" max="100" value="70" step="1">
+      </div>
+      <div class="slider-row" style="margin-top:8px;">
+        <div class="slider-label"><span>Opacity</span><span class="slider-val" id="opacity-val">80%</span></div>
+        <input type="range" id="opacity-sl" min="10" max="100" value="80" step="1">
+      </div>
+      <div class="slider-row" style="margin-top:8px;">
+        <div class="slider-label"><span>Drip rate</span><span class="slider-val" id="drip-val">30%</span></div>
+        <input type="range" id="drip-rate" min="0" max="100" value="30" step="1">
+      </div>
+    </div>
+
+    <!-- CAPS -->
+    <div>
+      <div class="panel-title">Cap type</div>
+      <div id="cap-grid">
+        <button class="cap-btn active" onclick="selectCapRight('fat')">FAT<br>NYC</button>
+        <button class="cap-btn" onclick="selectCapRight('skinny')">SKINNY<br>OUTLINE</button>
+        <button class="cap-btn" onclick="selectCapRight('ny')">NY FAT<br>WIDE</button>
+        <button class="cap-btn" onclick="selectCapRight('filler')">FILLER<br>FILL</button>
+      </div>
+    </div>
+
+    <!-- ACTIONS -->
+    <div style="display:flex; flex-direction:column; gap:6px;">
+      <div class="panel-title">Actions</div>
+      <button class="action-btn primary" onclick="saveFlick()">FLICK IT ↗</button>
+      <button class="action-btn" onclick="clearCanvas()">CLEAR</button>
+      <button class="action-btn danger" onclick="buffCanvas()">BUFF ✕</button>
+    </div>
+
+  </div>
+</div>
+
+<!-- STATUS BAR -->
+<div id="status-bar">
+  <span id="tool-status">TOOL: SPRAY / FAT CAP</span>
+  <span id="coords">X:0 Y:0</span>
+  <span id="action-status">READY TO BOMB</span>
+</div>
+
+<script>
+const canvas = document.getElementById('graffiti-canvas');
+const ctx = canvas.getContext('2d');
+const trainContainer = document.getElementById('train-container');
+
+let painting = false;
+let currentColor = '#FF3C00';
+let currentTool = 'spray';
+let currentCap = 'fat';
+let pressure = 0.7;
+let opacityLevel = 0.8;
+let dripRate = 0.3;
+let strokeCount = 0;
+let canLevel = 100;
+let lastX = 0, lastY = 0;
+let drips = [];
+let totalPixels = 0;
+let paintedPixels = new Set();
+let animFrame;
+
+// Resize canvas to match train container
+function resizeCanvas() {
+  const rect = trainContainer.getBoundingClientRect();
+  if (rect.width === 0 || rect.height === 0) return;
+  let imgData = null;
+  if (canvas.width > 0 && canvas.height > 0) {
+    try { imgData = ctx.getImageData(0, 0, canvas.width, canvas.height); } catch(e) {}
+  }
+  canvas.width = rect.width;
+  canvas.height = rect.height;
+  if (imgData) ctx.putImageData(imgData, 0, 0);
+}
+resizeCanvas();
+window.addEventListener('resize', () => { resizeCanvas(); });
+
+// CAP PROFILES
+const capProfiles = {
+  fat:    { minR: 12, maxR: 28, scatter: 0.65, solid: false, squash: 1 },
+  skinny: { minR: 2,  maxR: 6,  scatter: 0.2,  solid: true,  squash: 1 },
+  ny:     { minR: 8,  maxR: 22, scatter: 0.5,  solid: false, squash: 0.6 },
+  filler: { minR: 20, maxR: 40, scatter: 0.8,  solid: false, squash: 0.4 },
+};
+
+// COLORS
+const palette = [
+  '#FF3C00','#FF7700','#FFD600','#C8FF00','#00FF7F',
+  '#00FFFF','#0088FF','#6600FF','#FF00CC','#FF0055',
+  '#FFFFFF','#CCCCCC','#888888','#333333','#000000',
+  '#8B4513','#FF69B4','#7FFF00','#00CED1','#FF1493',
+];
+
+const grid = document.getElementById('color-grid');
+palette.forEach(c => {
+  const sw = document.createElement('div');
+  sw.className = 'color-swatch';
+  sw.style.background = c;
+  sw.onclick = () => selectColor(c, sw);
+  if (c === currentColor) sw.classList.add('selected');
+  grid.appendChild(sw);
+});
+
+function selectColor(c, el) {
+  currentColor = c;
+  document.querySelectorAll('.color-swatch').forEach(s => s.classList.remove('selected'));
+  if (el) el.classList.add('selected');
+  document.getElementById('custom-color').value = c;
+  updatePreview();
+  updateColorDisplay();
+}
+
+document.getElementById('custom-color').addEventListener('input', function() {
+  selectColor(this.value, null);
+});
+
+function updateColorDisplay() {
+  document.getElementById('current-color-swatch').style.background = currentColor;
+  document.getElementById('current-hex').textContent = currentColor.toUpperCase();
+}
+updateColorDisplay();
+
+// SLIDERS
+document.getElementById('pressure').addEventListener('input', function() {
+  pressure = this.value / 100;
+  document.getElementById('pressure-val').textContent = this.value + '%';
+  updatePreview();
+});
+document.getElementById('opacity-sl').addEventListener('input', function() {
+  opacityLevel = this.value / 100;
+  document.getElementById('opacity-val').textContent = this.value + '%';
+  updatePreview();
+});
+document.getElementById('drip-rate').addEventListener('input', function() {
+  dripRate = this.value / 100;
+  document.getElementById('drip-val').textContent = this.value + '%';
+});
+
+// PREVIEW — canvas réel qui simule le moteur
+const previewEl = document.getElementById('spray-preview');
+const pvCanvas = document.createElement('canvas');
+pvCanvas.width = 44; pvCanvas.height = 44;
+pvCanvas.style.cssText = 'position:absolute;top:0;left:0;width:100%;height:100%;';
+previewEl.appendChild(pvCanvas);
+const pvCtx = pvCanvas.getContext('2d');
+
+const pvOff = document.createElement('canvas');
+const pvOctx = pvOff.getContext('2d');
+
+function updatePreview() {
+  pvCtx.clearRect(0, 0, 44, 44);
+  pvCtx.fillStyle = '#1a1a1a';
+  pvCtx.fillRect(0, 0, 44, 44);
+
+  const cap = capProfiles[currentCap];
+  const r = (cap.minR + (cap.maxR - cap.minR) * pressure) * 0.55;
+  const scatter = r * cap.scatter;
+  const margin = r * 2.5;
+  const ow = Math.max(4, Math.ceil(margin * 2));
+  pvOff.width = ow; pvOff.height = ow;
+  pvOctx.clearRect(0, 0, ow, ow);
+
+  const ox = ow / 2, oy = ow / 2;
+  const count = Math.floor(pressure * 28) + 5;
+
+  for (let i = 0; i < count; i++) {
+    const angle = Math.random() * Math.PI * 2;
+    const dist = Math.pow(Math.random(), 0.5) * scatter;
+    const px = ox + Math.cos(angle) * dist;
+    const py = oy + Math.sin(angle) * dist * cap.squash;
+    const pSize = cap.solid
+      ? r * 0.2 + Math.random() * r * 0.15
+      : r * 0.08 + Math.random() * r * 0.25;
+    const edgeFade = 1 - (dist / (scatter + 1));
+    pvOctx.globalAlpha = edgeFade * (0.4 + Math.random() * 0.6) * 0.8;
+    pvOctx.fillStyle = currentColor;
+    if (!cap.solid) {
+      pvOctx.beginPath();
+      pvOctx.arc(px, py, pSize, 0, Math.PI * 2);
+      pvOctx.fill();
+    } else {
+      pvOctx.fillRect(px - pSize/2, py - pSize/2, pSize, pSize);
+    }
+  }
+  pvOctx.globalAlpha = 0.3;
+  pvOctx.fillStyle = currentColor;
+  pvOctx.beginPath();
+  pvOctx.arc(ox, oy, r * 0.28, 0, Math.PI * 2);
+  pvOctx.fill();
+
+  const blurPx = cap.solid ? 0.4 : (0.8 + r * 0.1);
+  pvCtx.save();
+  pvCtx.globalAlpha = opacityLevel;
+  pvCtx.filter = `blur(${blurPx.toFixed(1)}px)`;
+  pvCtx.drawImage(pvOff, 22 - ox, 22 - oy);
+  pvCtx.filter = 'none';
+  pvCtx.restore();
+}
+updatePreview();
+
+// TOOL SELECTION
+function setTool(t) {
+  currentTool = t;
+  document.querySelectorAll('[id^=tool-]').forEach(b => b.classList.remove('active'));
+  document.getElementById('tool-' + t).classList.add('active');
+  updateStatus();
+}
+
+function setCap(c) {
+  currentCap = c;
+  document.querySelectorAll('[id^=cap-]').forEach(b => b.classList.remove('active'));
+  document.getElementById('cap-' + c).classList.add('active');
+  selectCapRight(c);
+  updatePreview();
+  updateStatus();
+}
+
+function selectCapRight(c) {
+  currentCap = c;
+  document.querySelectorAll('#cap-grid .cap-btn').forEach(b => b.classList.remove('active'));
+  event && event.target && event.target.classList.add('active');
+  document.querySelectorAll('[id^=cap-]').forEach(b => b.classList.remove('active'));
+  const el = document.getElementById('cap-' + c);
+  if (el) el.classList.add('active');
+  updatePreview();
+  updateStatus();
+}
+
+function updateStatus() {
+  document.getElementById('tool-status').textContent = `TOOL: ${currentTool.toUpperCase()} / ${currentCap.toUpperCase()} CAP`;
+}
+
+// SPRAY ENGINE
+function getCanvasPos(e) {
+  const rect = canvas.getBoundingClientRect();
+  const scaleX = canvas.width / rect.width;
+  const scaleY = canvas.height / rect.height;
+  const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+  const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+  return {
+    x: (clientX - rect.left) * scaleX,
+    y: (clientY - rect.top) * scaleY
+  };
+}
+
+// Offscreen canvas for blur compositing
+const offscreen = document.createElement('canvas');
+const octx = offscreen.getContext('2d');
+
+function syncOffscreen() {
+  if (canvas.width > 0 && canvas.height > 0) {
+    offscreen.width = canvas.width;
+    offscreen.height = canvas.height;
+  }
+}
+syncOffscreen();
+
+function sprayPaint(x, y, isMove) {
+  const cap = capProfiles[currentCap];
+  const r = (cap.minR + (cap.maxR - cap.minR) * pressure) * (currentTool === 'roller' ? 2 : 1);
+
+  if (currentTool === 'marker') {
+    if (isMove) {
+      ctx.save();
+      ctx.beginPath();
+      ctx.moveTo(lastX, lastY);
+      ctx.lineTo(x, y);
+      ctx.strokeStyle = currentColor + Math.floor(opacityLevel * 255).toString(16).padStart(2,'0');
+      ctx.lineWidth = r * 0.6;
+      ctx.lineCap = 'round';
+      ctx.lineJoin = 'round';
+      ctx.stroke();
+      ctx.restore();
+    }
+  } else if (currentTool === 'roller') {
+    ctx.save();
+    ctx.globalAlpha = Math.min(opacityLevel * 0.9, 0.95);
+    ctx.fillStyle = currentColor;
+    ctx.fillRect(x - r, y - r * cap.squash, r * 2, r * cap.squash * 2);
+    ctx.restore();
+  } else {
+    // ── SPRAY: draw particles on offscreen, blur, composite onto main ──
+    const margin = r * 2.5;
+    const ow = Math.ceil(margin * 2);
+    const oh = Math.ceil(margin * 2);
+    offscreen.width = ow;
+    offscreen.height = oh;
+    octx.clearRect(0, 0, ow, oh);
+
+    const ox = margin; // local center
+    const oy = margin;
+
+    const particleCount = Math.floor(pressure * 45) + 8;
+    const scatter = r * cap.scatter;
+
+    for (let i = 0; i < particleCount; i++) {
+      const angle = Math.random() * Math.PI * 2;
+      const dist = Math.pow(Math.random(), 0.5) * scatter;
+      const px = ox + Math.cos(angle) * dist;
+      const py = oy + Math.sin(angle) * dist * cap.squash;
+
+      const pSize = cap.solid
+        ? r * 0.2 + Math.random() * r * 0.15
+        : r * 0.08 + Math.random() * r * 0.25;
+
+      const edgeFade = 1 - (dist / (scatter + 1));
+      octx.globalAlpha = edgeFade * (0.3 + Math.random() * 0.7) * 0.75;
+      octx.fillStyle = currentColor;
+
+      if (!cap.solid) {
+        octx.beginPath();
+        octx.arc(px, py, pSize, 0, Math.PI * 2);
+        octx.fill();
+      } else {
+        octx.fillRect(px - pSize/2, py - pSize/2, pSize, pSize);
+      }
+    }
+
+    // Center density bloom
+    octx.globalAlpha = 0.3;
+    octx.beginPath();
+    octx.arc(ox, oy, r * 0.28, 0, Math.PI * 2);
+    octx.fill();
+
+    // ── Blur amount: soft caps get more blur, hard caps less ──
+    const blurPx = cap.solid ? 0.6 : (1.2 + r * 0.12 * (1 - cap.scatter * 0.5));
+
+    ctx.save();
+    ctx.globalAlpha = opacityLevel;
+    ctx.filter = `blur(${blurPx.toFixed(1)}px)`;
+    ctx.drawImage(offscreen, x - ox, y - oy);
+    ctx.filter = 'none';
+    ctx.restore();
+  }
+
+  // DRIPS
+  if (currentTool === 'spray' && Math.random() < dripRate * pressure * 0.08) {
+    drips.push({
+      x: x + (Math.random() - 0.5) * r,
+      y: y,
+      speed: 0.4 + Math.random() * 1.2,
+      size: 1.5 + Math.random() * 3,
+      color: currentColor,
+      opacity: opacityLevel * (0.4 + Math.random() * 0.5),
+      length: 0,
+      maxLength: 20 + Math.random() * 80,
+    });
+  }
+
+  lastX = x;
+  lastY = y;
+}
+
+// DRIP ANIMATION
+function animateDrips() {
+  drips = drips.filter(d => d.length < d.maxLength && d.y < canvas.height);
+  drips.forEach(d => {
+    ctx.save();
+    ctx.globalAlpha = d.opacity * (1 - d.length / d.maxLength);
+    ctx.fillStyle = d.color;
+    ctx.beginPath();
+    ctx.ellipse(d.x, d.y + d.length, d.size * 0.6, d.size, 0, 0, Math.PI * 2);
+    ctx.fill();
+    // drip tail
+    if (d.length > 5) {
+      ctx.beginPath();
+      ctx.moveTo(d.x - d.size * 0.4, d.y);
+      ctx.lineTo(d.x - d.size * 0.4, d.y + d.length - d.size);
+      ctx.lineTo(d.x + d.size * 0.4, d.y + d.length - d.size);
+      ctx.lineTo(d.x + d.size * 0.4, d.y);
+      ctx.fill();
+    }
+    ctx.restore();
+    d.length += d.speed;
+  });
+  requestAnimationFrame(animateDrips);
+}
+animateDrips();
+
+// COVERAGE TRACKING
+function updateCoverage() {
+  try {
+    if (canvas.width === 0 || canvas.height === 0) return;
+    const data = ctx.getImageData(0, 0, canvas.width, canvas.height).data;
+    let painted = 0;
+    const step = 8;
+    const total = (canvas.width / step) * (canvas.height / step);
+    for (let i = 0; i < data.length; i += 4 * step) {
+      if (data[i + 3] > 20) painted++;
+    }
+    const pct = Math.min(Math.round((painted / total) * 100), 100);
+    document.getElementById('coverage').textContent = pct + '%';
+  } catch(e) {}
+}
+
+// EVENTS
+canvas.addEventListener('mousedown', (e) => {
+  painting = true;
+  const pos = getCanvasPos(e);
+  lastX = pos.x;
+  lastY = pos.y;
+  sprayPaint(pos.x, pos.y, false);
+  strokeCount++;
+  document.getElementById('stroke-count').textContent = strokeCount;
+  canLevel = Math.max(0, canLevel - 0.5);
+  document.getElementById('can-level').textContent = Math.round(canLevel) + '%';
+  document.getElementById('action-status').textContent = 'BOMBING...';
+});
+
+canvas.addEventListener('mousemove', (e) => {
+  const pos = getCanvasPos(e);
+  document.getElementById('coords').textContent = `X:${Math.round(pos.x)} Y:${Math.round(pos.y)}`;
+  if (!painting) return;
+  sprayPaint(pos.x, pos.y, true);
+  canLevel = Math.max(0, canLevel - 0.1);
+  document.getElementById('can-level').textContent = Math.round(canLevel) + '%';
+  if (strokeCount % 10 === 0) updateCoverage();
+});
+
+canvas.addEventListener('mouseup', () => {
+  painting = false;
+  document.getElementById('action-status').textContent = 'READY TO BOMB';
+});
+
+canvas.addEventListener('mouseleave', () => { painting = false; });
+
+// Touch
+canvas.addEventListener('touchstart', (e) => {
+  e.preventDefault();
+  painting = true;
+  const pos = getCanvasPos(e);
+  lastX = pos.x; lastY = pos.y;
+  sprayPaint(pos.x, pos.y, false);
+}, { passive: false });
+
+canvas.addEventListener('touchmove', (e) => {
+  e.preventDefault();
+  if (!painting) return;
+  const pos = getCanvasPos(e);
+  sprayPaint(pos.x, pos.y, true);
+}, { passive: false });
+
+canvas.addEventListener('touchend', () => { painting = false; });
+
+// CITY CHANGE
+document.getElementById('city-select').addEventListener('change', function() {
+  document.getElementById('city-label').textContent = this.value.toUpperCase();
+});
+
+// ACTIONS
+function clearCanvas() {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  strokeCount = 0;
+  canLevel = 100;
+  document.getElementById('stroke-count').textContent = '0';
+  document.getElementById('coverage').textContent = '0%';
+  document.getElementById('can-level').textContent = '100%';
+  document.getElementById('action-status').textContent = 'BUFFED — START FRESH';
+  drips = [];
+}
+
+function buffCanvas() {
+  let alpha = 1;
+  const buffInterval = setInterval(() => {
+    ctx.save();
+    ctx.globalAlpha = 0.15;
+    ctx.fillStyle = '#1c1c1c';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.restore();
+    alpha -= 0.05;
+    if (alpha <= 0) {
+      clearInterval(buffInterval);
+      clearCanvas();
+    }
+  }, 30);
+}
+
+function saveFlick() {
+  const link = document.createElement('a');
+  const merged = document.createElement('canvas');
+  merged.width = canvas.width;
+  merged.height = canvas.height;
+  const mctx = merged.getContext('2d');
+  mctx.drawImage(canvas, 0, 0);
+  link.download = 'racknation-flick.png';
+  link.href = merged.toDataURL('image/png');
+  link.click();
+  showNotif('FLICK SAVED');
+}
+
+function showNotif(msg) {
+  const n = document.getElementById('notif');
+  n.textContent = msg;
+  n.style.opacity = '1';
+  setTimeout(() => { n.style.opacity = '0'; }, 2000);
+}
+
+// Key shortcuts
+document.addEventListener('keydown', (e) => {
+  if (e.key === 's') setTool('spray');
+  if (e.key === 'm') setTool('marker');
+  if (e.key === 'r') setTool('roller');
+  if (e.key === '1') setCap('fat');
+  if (e.key === '2') setCap('skinny');
+  if (e.key === '3') setCap('ny');
+  if (e.key === '4') setCap('filler');
+  if (e.key === 'Delete' || e.key === 'Backspace') clearCanvas();
+});
+</script>
+</body>
+</html>
