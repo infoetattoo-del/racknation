@@ -459,20 +459,10 @@
   #lo-body { flex: 1; display: flex; overflow: hidden; }
   #lo-colors { width: 300px; border-right: 1px solid #1a1a1a; display: flex; flex-direction: column; flex-shrink: 0; }
   #lo-colors-title { font-size: 9px; color: #555; text-transform: uppercase; letter-spacing: 2px; padding: 10px 14px 6px; flex-shrink: 0; }
-  #lo-grid { flex: 1; overflow-y: auto; padding: 8px 12px; display: grid; grid-template-columns: repeat(7, 1fr); gap: 5px; }
+  #lo-grid { flex: 1; overflow-y: auto; padding: 8px 10px; display: grid; grid-template-columns: repeat(6, 1fr); gap: 4px; }
   #lo-grid::-webkit-scrollbar { width: 3px; }
   #lo-grid::-webkit-scrollbar-thumb { background: #222; }
-  .lo-ring-wrap { display: flex; flex-direction: column; align-items: center; gap: 2px; }
-  .lo-ring {
-    width: 30px; height: 30px; border-radius: 50%;
-    cursor: pointer; border: 2.5px solid transparent;
-    transition: transform .1s;
-    display: flex; align-items: center; justify-content: center;
-  }
-  .lo-ring::after { content: ''; width: 9px; height: 9px; border-radius: 50%; background: rgba(0,0,0,0.38); }
-  .lo-ring:hover { transform: scale(1.2); }
-  .lo-ring.lo-sel { border-color: #fff; transform: scale(1.15); }
-  .lo-rname { font-size: 7px; color: #333; text-align: center; max-width: 30px; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+  #lo-slots { display: flex; gap: 5px; flex-wrap: wrap; align-items: flex-end; min-height: 80px; }
   #lo-right { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
   #lo-slots-section { padding: 12px 16px; border-bottom: 1px solid #1a1a1a; flex-shrink: 0; }
   #lo-slots-title { font-size: 9px; color: #555; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 8px; }
@@ -816,36 +806,68 @@ const loCapNames = {fat:'Fat NYC',skinny:'Skinny',ny:'NY Fat',filler:'Filler',ou
 const loCapWidths = {fat:26,skinny:3,ny:20,filler:38,outline:1.5};
 const loCapBlur = {fat:2.5,skinny:0.4,ny:2,filler:4,outline:0.2};
 
+// SVG bombe aérosol dynamique — corps colorisé, bouchon translucide
+function sprayCanSVG(hex, size=52) {
+  const dark = darken(hex, 0.35);
+  const light = lighten(hex, 0.25);
+  const cap_w = Math.round(size * 0.38);
+  const body_w = Math.round(size * 0.52);
+  const h = Math.round(size * 1.85);
+  return `<svg width="${size}" height="${h}" viewBox="0 0 ${size} ${h}" xmlns="http://www.w3.org/2000/svg">
+    <!-- bouchon translucide -->
+    <rect x="${(size-cap_w)/2}" y="2" width="${cap_w}" height="${Math.round(h*0.12)}" rx="3" fill="rgba(255,255,255,0.18)" stroke="rgba(255,255,255,0.3)" stroke-width="0.8"/>
+    <!-- valve -->
+    <rect x="${(size-6)/2}" y="${Math.round(h*0.12)}" width="6" height="${Math.round(h*0.06)}" rx="2" fill="${dark}"/>
+    <!-- col de la bombe -->
+    <rect x="${(size-Math.round(size*0.32))/2}" y="${Math.round(h*0.17)}" width="${Math.round(size*0.32)}" height="${Math.round(h*0.08)}" rx="2" fill="${hex}"/>
+    <!-- épaule -->
+    <path d="M${(size-Math.round(size*0.32))/2} ${Math.round(h*0.24)} Q${size*0.08} ${Math.round(h*0.27)} ${(size-body_w)/2} ${Math.round(h*0.30)}" fill="none" stroke="${dark}" stroke-width="0.5"/>
+    <!-- corps principal -->
+    <rect x="${(size-body_w)/2}" y="${Math.round(h*0.28)}" width="${body_w}" height="${Math.round(h*0.54)}" rx="4" fill="${hex}"/>
+    <!-- reflet gauche -->
+    <rect x="${(size-body_w)/2 + 3}" y="${Math.round(h*0.30)}" width="${Math.round(body_w*0.18)}" height="${Math.round(h*0.48)}" rx="2" fill="${light}" opacity="0.4"/>
+    <!-- ombre droite -->
+    <rect x="${(size-body_w)/2 + body_w - Math.round(body_w*0.2)}" y="${Math.round(h*0.30)}" width="${Math.round(body_w*0.18)}" height="${Math.round(h*0.48)}" rx="2" fill="${dark}" opacity="0.35"/>
+    <!-- étiquette noire -->
+    <rect x="${(size-body_w)/2 + 2}" y="${Math.round(h*0.42)}" width="${body_w-4}" height="${Math.round(h*0.24)}" rx="2" fill="rgba(0,0,0,0.55)"/>
+    <!-- base -->
+    <rect x="${(size-body_w)/2}" y="${Math.round(h*0.82)}" width="${body_w}" height="${Math.round(h*0.08)}" rx="3" fill="${dark}"/>
+    <!-- fond de base -->
+    <ellipse cx="${size/2}" cy="${Math.round(h*0.90)}" rx="${body_w/2}" ry="${Math.round(h*0.035)}" fill="${dark}"/>
+  </svg>`;
+}
+
+function darken(hex, amt) {
+  let r=parseInt(hex.slice(1,3),16), g=parseInt(hex.slice(3,5),16), b=parseInt(hex.slice(5,7),16);
+  r=Math.max(0,Math.round(r*(1-amt))); g=Math.max(0,Math.round(g*(1-amt))); b=Math.max(0,Math.round(b*(1-amt)));
+  return '#'+[r,g,b].map(v=>v.toString(16).padStart(2,'0')).join('');
+}
+function lighten(hex, amt) {
+  let r=parseInt(hex.slice(1,3),16), g=parseInt(hex.slice(3,5),16), b=parseInt(hex.slice(5,7),16);
+  r=Math.min(255,Math.round(r+(255-r)*amt)); g=Math.min(255,Math.round(g+(255-g)*amt)); b=Math.min(255,Math.round(b+(255-b)*amt));
+  return '#'+[r,g,b].map(v=>v.toString(16).padStart(2,'0')).join('');
+}
+
 function loBuildGrid() {
   const g = document.getElementById('lo-grid');
   MTN_COLORS.forEach(c => {
     const wrap = document.createElement('div');
     wrap.className = 'lo-ring-wrap';
-    const ring = document.createElement('div');
-    ring.className = 'lo-ring';
-    ring.style.background = c.h;
-    ring.title = c.n;
-    ring.dataset.hex = c.h;
-    ring.dataset.name = c.n;
-    ring.onclick = () => loToggle(c.h, c.n, ring);
-    const nm = document.createElement('div');
-    nm.className = 'lo-rname';
-    nm.textContent = c.n.split(' ').pop();
-    wrap.appendChild(ring); wrap.appendChild(nm);
+    wrap.style.cssText = 'display:flex;flex-direction:column;align-items:center;gap:2px;cursor:pointer;padding:3px;border:1px solid transparent;border-radius:4px;transition:border-color .1s;';
+    wrap.title = c.n;
+    wrap.dataset.hex = c.h;
+    wrap.innerHTML = sprayCanSVG(c.h, 28) + `<div style="font-size:7px;color:#444;text-align:center;max-width:32px;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;">${c.n.split(' ').pop()}</div>`;
+    wrap.onclick = () => loAddColor(c.h, c.n);
+    wrap.onmouseenter = () => wrap.style.borderColor = '#444';
+    wrap.onmouseleave = () => wrap.style.borderColor = 'transparent';
     g.appendChild(wrap);
   });
 }
 
-function loToggle(hex, name, el) {
-  const idx = loSelected.findIndex(s => s.hex === hex);
-  if (idx >= 0) {
-    loSelected.splice(idx, 1);
-    el.classList.remove('lo-sel');
-  } else {
-    if (loSelected.length >= LO_MAX) return;
-    loSelected.push({hex, name});
-    el.classList.add('lo-sel');
-  }
+// Permet plusieurs fois la même couleur
+function loAddColor(hex, name) {
+  if (loSelected.length >= LO_MAX) return;
+  loSelected.push({hex, name});
   loRenderSlots();
   loUpdateCount();
 }
@@ -856,35 +878,29 @@ function loRenderSlots() {
   for (let i = 0; i < LO_MAX; i++) {
     const wrap = document.createElement('div');
     wrap.className = 'lo-can-wrap';
+    wrap.style.cssText = 'display:flex;flex-direction:column;align-items:center;gap:2px;';
     if (loSelected[i]) {
-      const capTop = document.createElement('div');
-      capTop.className = 'lo-can-cap-top';
-      capTop.style.background = loSelected[i].hex;
-      const body = document.createElement('div');
-      body.className = 'lo-can-body';
-      body.style.background = loSelected[i].hex;
-      body.title = loSelected[i].name + ' — clic pour retirer';
-      body.onclick = (() => {
-        const h = loSelected[i].hex;
-        return () => {
-          const r = document.querySelector(`.lo-ring[data-hex="${h}"]`);
-          if (r) r.classList.remove('lo-sel');
-          loSelected = loSelected.filter(s => s.hex !== h);
-          loRenderSlots(); loUpdateCount();
-        };
-      })();
+      wrap.innerHTML = sprayCanSVG(loSelected[i].hex, 34);
+      wrap.title = loSelected[i].name + ' — clic pour retirer';
+      wrap.style.cursor = 'pointer';
+      const idx = i;
+      wrap.onclick = () => {
+        loSelected.splice(idx, 1);
+        loRenderSlots(); loUpdateCount();
+      };
       const num = document.createElement('div');
-      num.className = 'lo-can-num';
+      num.style.cssText = 'font-size:7px;color:#444;';
       num.textContent = i + 1;
-      wrap.appendChild(capTop); wrap.appendChild(body); wrap.appendChild(num);
+      wrap.appendChild(num);
     } else {
       const empty = document.createElement('div');
-      empty.className = 'lo-can-empty';
+      empty.style.cssText = 'width:20px;height:52px;border:1px dashed #1e1e1e;border-radius:3px;display:flex;align-items:center;justify-content:center;font-size:11px;color:#1e1e1e;';
       empty.textContent = '+';
       const num = document.createElement('div');
-      num.className = 'lo-can-num';
+      num.style.cssText = 'font-size:7px;color:#2a2a2a;';
       num.textContent = i + 1;
-      wrap.appendChild(empty); wrap.appendChild(num);
+      wrap.appendChild(empty);
+      wrap.appendChild(num);
     }
     s.appendChild(wrap);
   }
