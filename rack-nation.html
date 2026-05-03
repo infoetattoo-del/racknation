@@ -165,11 +165,9 @@
   /* TRAIN SVG */
   #train-container {
     position: absolute;
-    left: 50%;
-    top: 50%;
-    transform: translate(-50%, -50%);
-    width: 880px;
-    height: 340px;
+    top: 0; left: 0; right: 0; bottom: 0;
+    width: 100%;
+    height: 100%;
     background: transparent;
   }
 
@@ -503,7 +501,7 @@
 
   <div id="lo-body">
     <div id="lo-colors">
-      <div id="lo-colors-title">Choisis tes cans · max 12</div>
+      <div id="lo-colors-title">Choose your cans · max 12</div>
       <div id="lo-grid"></div>
     </div>
     <div id="lo-right">
@@ -604,7 +602,7 @@
         <svg id="train-bg" viewBox="0 0 880 340" xmlns="http://www.w3.org/2000/svg" style="display:none;"></svg>
         <img id="train-img" src="" alt="train"
           style="position:absolute;top:0;left:0;width:100%;height:100%;
-                 object-fit:contain;z-index:1;
+                 object-fit:cover;object-position:center;z-index:1;
                  pointer-events:none;display:none;">
         <canvas id="graffiti-canvas"></canvas>
       </div>
@@ -893,6 +891,7 @@ function loUpdateCount(){
 
 function launchGame(){
   window._loadoutColors=loSelected.map(s=>s.hex);
+  window._loadoutSelected=loSelected;
   window._loadoutCap=loActiveCap;
   window._loadoutCity=document.getElementById('lo-city-sel').value;
   document.getElementById('loadout').classList.add('hidden');
@@ -938,7 +937,24 @@ function resizeCanvas() {
   if (imgData) ctx.putImageData(imgData, 0, 0);
 }
 resizeCanvas();
-window.addEventListener('resize', () => { resizeCanvas(); });
+window.addEventListener('resize', () => { resizeCanvas(); applyTrainClip(); });
+
+// Masque de peinture — zone train uniquement
+function applyTrainClip() {
+  // Le train occupe approximativement y:45 à y:285 sur le SVG 880x340
+  // On scale ces coordonnées aux dimensions du canvas
+  if (!canvas.width || !canvas.height) return;
+  const scaleX = canvas.width / 880;
+  const scaleY = canvas.height / 340;
+  trainClipRegion = {
+    x: Math.round(20 * scaleX),
+    y: Math.round(45 * scaleY),
+    w: Math.round(840 * scaleX),
+    h: Math.round(240 * scaleY),
+  };
+}
+let trainClipRegion = null;
+setTimeout(applyTrainClip, 200);
 
 // CAP PROFILES
 const capProfiles = {
@@ -1267,8 +1283,7 @@ canvas.addEventListener('mousedown', (e) => {
   sprayPaint(pos.x, pos.y, false);
   strokeCount++;
   document.getElementById('stroke-count').textContent = strokeCount;
-  canLevel = Math.max(0, canLevel - 0.5);
-  document.getElementById('can-level').textContent = Math.round(canLevel) + '%';
+  drainActiveCan(CAN_DRAIN_PER_STROKE);
   document.getElementById('action-status').textContent = 'BOMBING...';
 });
 
@@ -1277,8 +1292,7 @@ canvas.addEventListener('mousemove', (e) => {
   document.getElementById('coords').textContent = `X:${Math.round(pos.x)} Y:${Math.round(pos.y)}`;
   if (!painting) return;
   sprayPaint(pos.x, pos.y, true);
-  canLevel = Math.max(0, canLevel - 0.1);
-  document.getElementById('can-level').textContent = Math.round(canLevel) + '%';
+  drainActiveCan(CAN_DRAIN_PER_STROKE * 0.2);
   if (strokeCount % 10 === 0) updateCoverage();
 });
 
@@ -1707,26 +1721,29 @@ function loadCity(cityKey) {
 }
 
 // Init depuis le loadout
+// ─── SYSTÈME DE CANS ─────────────────────────────────────────────────────
+const CAN_MAX_LEVEL = 100; // Niveau max par can
+const CAN_DRAIN_PER_STROKE = 0.6; // Perte par coup de spray
+let gameCans = []; // [{hex, level, name}]
+let activeCanIdx = 0;
+
 function initGameFromLoadout() {
   const colors = window._loadoutColors || ['#FF3C00'];
-  const cap = window._loadoutCap || 'fat';
-  const city = window._loadoutCity || 'Paris — Ligne 13';
+  const names  = window._loadoutNames  || colors.map(()=>'—');
+  const cap    = window._loadoutCap    || 'fat';
+  const city   = window._loadoutCity   || 'Paris — Ligne 13';
 
-  // Appliquer la première couleur
-  selectColor(colors[0], null);
-  currentColor = colors[0];
+  // Initialiser les cans avec niveau plein
+  gameCans = colors.map((hex, i) => ({
+    hex,
+    name: (window._loadoutSelected && window._loadoutSelected[i]) ? window._loadoutSelected[i].name : '—',
+    level: CAN_MAX_LEVEL
+  }));
+  activeCanIdx = 0;
+  currentColor = gameCans[0].hex;
 
-  // Mettre à jour la palette avec les couleurs choisies
-  const grid = document.getElementById('color-grid');
-  grid.innerHTML = '';
-  colors.forEach(c => {
-    const sw = document.createElement('div');
-    sw.className = 'color-swatch';
-    sw.style.background = c;
-    sw.onclick = () => selectColor(c, sw);
-    if (c === currentColor) sw.classList.add('selected');
-    grid.appendChild(sw);
-  });
+  // Construire la palette in-game comme une rangée de cans
+  buildGameCanPanel();
 
   // Appliquer le cap
   setCap(cap);
@@ -1737,6 +1754,80 @@ function initGameFromLoadout() {
 
   // Resize canvas
   setTimeout(() => { resizeCanvas(); updatePreview(); }, 100);
+}
+
+function buildGameCanPanel() {
+  const grid = document.getElementById('color-grid');
+  grid.innerHTML = '';
+  grid.style.cssText = 'display:flex;flex-wrap:wrap;gap:4px;';
+
+  gameCans.forEach((can, i) => {
+    const wrap = document.createElement('div');
+    wrap.style.cssText = 'display:flex;flex-direction:column;align-items:center;gap:2px;cursor:pointer;';
+
+    // Barre de niveau
+    const barWrap = document.createElement('div');
+    barWrap.style.cssText = 'width:18px;height:40px;background:#1a1a1a;border:1px solid #222;border-radius:2px;overflow:hidden;position:relative;';
+    const bar = document.createElement('div');
+    bar.id = 'can-bar-' + i;
+    bar.style.cssText = `position:absolute;bottom:0;left:0;right:0;height:${can.level}%;background:${can.hex};transition:height .15s;`;
+    if (can.level < 20) bar.style.background = '#ff3c00';
+    barWrap.appendChild(bar);
+
+    // Cercle couleur
+    const dot = document.createElement('div');
+    dot.id = 'can-dot-' + i;
+    dot.style.cssText = `width:18px;height:18px;border-radius:50%;background:${can.hex};border:2px solid ${i===activeCanIdx?'#fff':'transparent'};transition:border-color .1s;`;
+
+    wrap.appendChild(barWrap);
+    wrap.appendChild(dot);
+    wrap.title = can.name + ' — ' + Math.round(can.level) + '%';
+    wrap.onclick = () => {
+      if (can.level <= 0) { showNotif('EMPTY CAN!'); return; }
+      activeCanIdx = i;
+      currentColor = gameCans[i].hex;
+      updateColorDisplay();
+      updatePreview();
+      // Highlight
+      document.querySelectorAll('[id^=can-dot-]').forEach((d,j) => {
+        d.style.borderColor = j === i ? '#fff' : 'transparent';
+      });
+      document.getElementById('custom-color').value = currentColor;
+      updateStatus();
+    };
+    grid.appendChild(wrap);
+  });
+}
+
+function drainActiveCan(amount) {
+  if (!gameCans.length) return;
+  const can = gameCans[activeCanIdx];
+  if (can.level <= 0) {
+    // Can vide — passer automatiquement au suivant
+    const next = gameCans.findIndex((c,i) => i > activeCanIdx && c.level > 0);
+    if (next >= 0) {
+      activeCanIdx = next;
+      currentColor = gameCans[next].hex;
+      updateColorDisplay();
+      updatePreview();
+      showNotif('CAN EMPTY → NEXT');
+    } else {
+      showNotif('ALL CANS EMPTY!');
+    }
+    return;
+  }
+  can.level = Math.max(0, can.level - amount);
+  // Update UI
+  const bar = document.getElementById('can-bar-' + activeCanIdx);
+  if (bar) {
+    bar.style.height = can.level + '%';
+    bar.style.background = can.level < 20 ? '#ff3c00' : can.hex;
+  }
+  const dot = document.getElementById('can-dot-' + activeCanIdx);
+  if (dot) dot.title = can.name + ' — ' + Math.round(can.level) + '%';
+  // Header stat
+  const pct = Math.round(can.level);
+  document.getElementById('can-level').textContent = pct + '%';
 }
 
 // La ville est chargée via initGameFromLoadout() au lancement
@@ -1833,12 +1924,20 @@ function animateAmbiance() {
 }
 animateAmbiance();
 
-// ─── AMBIANCE SONORE (Web Audio API) ─────────────────────────────────────────
-let audioCtx = null;
+// ─── AMBIANCE SONORE — MP3 ───────────────────────────────────────────────────
+let bgAudio = null;
 let soundOn = false;
-let soundNodes = [];
 
 function buildSound() {
+  if (!bgAudio) {
+    bgAudio = new Audio('Rack_nation.mp3');
+    bgAudio.loop = true;
+    bgAudio.volume = 0.55;
+  }
+  bgAudio.play().catch(() => {});
+}
+
+function _oldBuildSound_disabled() {
   audioCtx = new (window.AudioContext || window.webkitAudioContext)();
   const master = audioCtx.createGain();
   master.gain.value = 0.38;
@@ -1938,9 +2037,7 @@ function toggleSound() {
     btn.style.borderColor = 'var(--accent)';
   } else {
     soundOn = false;
-    soundNodes.forEach(n => { try { n.disconnect(); } catch(e) {} });
-    soundNodes = [];
-    if (audioCtx) { audioCtx.close(); audioCtx = null; }
+    if (bgAudio) { bgAudio.pause(); bgAudio.currentTime = 0; }
     btn.textContent = '♪ OFF';
     btn.style.color = 'var(--muted)';
     btn.style.borderColor = 'var(--border)';
