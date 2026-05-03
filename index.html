@@ -441,14 +441,14 @@
   <div id="city-selector">
     <label>Location</label>
     <select id="city-select">
-      <option value="Paris Metro Line 13">Paris — Ligne 13</option>
-      <option value="New York City Subway">New York — Subway</option>
-      <option value="Berlin S-Bahn Yard">Berlin — S-Bahn</option>
-      <option value="Barcelona Metro L5">Barcelona — L5</option>
-      <option value="Tokyo Yamanote Line">Tokyo — Yamanote</option>
-      <option value="London Underground">London — Underground</option>
-      <option value="São Paulo CPTM">São Paulo — CPTM</option>
-      <option value="Stockholm T-Bana">Stockholm — T-Bana</option>
+      <option value="Paris — Ligne 13">Paris — Ligne 13</option>
+      <option value="New York — Subway">New York — Subway</option>
+      <option value="Berlin — S-Bahn">Berlin — S-Bahn</option>
+      <option value="Barcelona — L5">Barcelona — L5</option>
+      <option value="Tokyo — Yamanote">Tokyo — Yamanote</option>
+      <option value="London — Underground">London — Underground</option>
+      <option value="São Paulo — CPTM">São Paulo — CPTM</option>
+      <option value="Stockholm — T-Bana">Stockholm — T-Bana</option>
     </select>
   </div>
   <div id="header-right">
@@ -519,45 +519,7 @@
 
       <!-- TRAIN -->
       <div id="train-container">
-        <svg id="train-bg" viewBox="0 0 880 340" xmlns="http://www.w3.org/2000/svg">
-          <!-- Train body -->
-          <rect x="20" y="40" width="840" height="230" rx="12" fill="#1c1c1c" stroke="#2a2a2a" stroke-width="2"/>
-          <!-- Top stripe -->
-          <rect x="20" y="40" width="840" height="28" rx="12" fill="#181818"/>
-          <rect x="20" y="56" width="840" height="12" fill="#181818"/>
-          <!-- Window row -->
-          <rect x="60" y="90" width="120" height="80" rx="6" fill="#0d0d0d" stroke="#222" stroke-width="1.5"/>
-          <rect x="210" y="90" width="120" height="80" rx="6" fill="#0d0d0d" stroke="#222" stroke-width="1.5"/>
-          <rect x="360" y="90" width="160" height="80" rx="6" fill="#0d0d0d" stroke="#222" stroke-width="1.5"/>
-          <rect x="550" y="90" width="120" height="80" rx="6" fill="#0d0d0d" stroke="#222" stroke-width="1.5"/>
-          <rect x="700" y="90" width="120" height="80" rx="6" fill="#0d0d0d" stroke="#222" stroke-width="1.5"/>
-          <!-- Door lines -->
-          <line x1="185" y1="56" x2="185" y2="270" stroke="#222" stroke-width="2"/>
-          <line x1="340" y1="56" x2="340" y2="270" stroke="#222" stroke-width="2"/>
-          <line x1="530" y1="56" x2="530" y2="270" stroke="#222" stroke-width="2"/>
-          <line x1="690" y1="56" x2="690" y2="270" stroke="#222" stroke-width="2"/>
-          <!-- Door handles -->
-          <rect x="180" y="155" width="10" height="20" rx="2" fill="#2a2a2a"/>
-          <rect x="335" y="155" width="10" height="20" rx="2" fill="#2a2a2a"/>
-          <rect x="525" y="155" width="10" height="20" rx="2" fill="#2a2a2a"/>
-          <rect x="685" y="155" width="10" height="20" rx="2" fill="#2a2a2a"/>
-          <!-- Bottom skirt -->
-          <rect x="20" y="258" width="840" height="30" rx="0" fill="#161616" stroke="#222" stroke-width="1"/>
-          <!-- Wheels -->
-          <ellipse cx="120" cy="305" rx="28" ry="28" fill="#141414" stroke="#222" stroke-width="2"/>
-          <ellipse cx="120" cy="305" rx="14" ry="14" fill="#1a1a1a"/>
-          <ellipse cx="300" cy="305" rx="28" ry="28" fill="#141414" stroke="#222" stroke-width="2"/>
-          <ellipse cx="300" cy="305" rx="14" ry="14" fill="#1a1a1a"/>
-          <ellipse cx="580" cy="305" rx="28" ry="28" fill="#141414" stroke="#222" stroke-width="2"/>
-          <ellipse cx="580" cy="305" rx="14" ry="14" fill="#1a1a1a"/>
-          <ellipse cx="760" cy="305" rx="28" ry="28" fill="#141414" stroke="#222" stroke-width="2"/>
-          <ellipse cx="760" cy="305" rx="14" ry="14" fill="#1a1a1a"/>
-          <!-- Number plate -->
-          <rect x="38" y="220" width="60" height="28" rx="2" fill="#111" stroke="#222" stroke-width="1"/>
-          <!-- Front light -->
-          <ellipse cx="35" cy="180" rx="10" ry="10" fill="#111" stroke="#333" stroke-width="1"/>
-        </svg>
-
+        <svg id="train-bg" viewBox="0 0 880 340" xmlns="http://www.w3.org/2000/svg"></svg>
         <canvas id="graffiti-canvas"></canvas>
       </div>
 
@@ -1048,9 +1010,448 @@ canvas.addEventListener('touchmove', (e) => {
 
 canvas.addEventListener('touchend', () => { painting = false; });
 
-// CITY CHANGE
+// ─── TRAIN SVG PAR VILLE ────────────────────────────────────────────────────
+const TRAINS = {
+  'Paris — Ligne 13': {
+    label: 'PARIS — LIGNE 13',
+    bg: '#0a0f1a',
+    depot: '#0d1520',
+    render: () => `
+      <!-- MF77 Paris Ligne 13 — bleu nuit avec bande blanche -->
+      <rect x="20" y="50" width="840" height="220" rx="10" fill="#1a2744" stroke="#243560" stroke-width="1.5"/>
+      <!-- Bande blanche centrale caractéristique -->
+      <rect x="20" y="118" width="840" height="36" fill="#e8e8e8"/>
+      <!-- Bande bleue foncée haut -->
+      <rect x="20" y="50" width="840" height="68" rx="10" fill="#0f1d3d"/>
+      <rect x="20" y="98" width="840" height="20" fill="#0f1d3d"/>
+      <!-- Bande bleue foncée bas -->
+      <rect x="20" y="154" width="840" height="116" fill="#162040"/>
+      <!-- Numéro de ligne -->
+      <circle cx="60" cy="84" r="20" fill="#3d6bce" stroke="#5580d8" stroke-width="1"/>
+      <text x="60" y="90" text-anchor="middle" font-family="Arial Black,sans-serif" font-size="18" font-weight="900" fill="white">13</text>
+      <!-- Fenêtres rangée haute -->
+      <rect x="100" y="58" width="100" height="54" rx="5" fill="#07111f" stroke="#1a2d50" stroke-width="1"/>
+      <rect x="220" y="58" width="100" height="54" rx="5" fill="#07111f" stroke="#1a2d50" stroke-width="1"/>
+      <rect x="370" y="58" width="140" height="54" rx="5" fill="#07111f" stroke="#1a2d50" stroke-width="1"/>
+      <rect x="560" y="58" width="100" height="54" rx="5" fill="#07111f" stroke="#1a2d50" stroke-width="1"/>
+      <rect x="680" y="58" width="100" height="54" rx="5" fill="#07111f" stroke="#1a2d50" stroke-width="1"/>
+      <!-- Reflets fenêtres -->
+      <rect x="102" y="60" width="28" height="6" rx="2" fill="#ffffff08"/>
+      <rect x="222" y="60" width="28" height="6" rx="2" fill="#ffffff08"/>
+      <rect x="372" y="60" width="35" height="6" rx="2" fill="#ffffff08"/>
+      <rect x="562" y="60" width="28" height="6" rx="2" fill="#ffffff08"/>
+      <rect x="682" y="60" width="28" height="6" rx="2" fill="#ffffff08"/>
+      <!-- Fenêtres rangée basse -->
+      <rect x="100" y="165" width="100" height="60" rx="5" fill="#07111f" stroke="#1a2d50" stroke-width="1"/>
+      <rect x="220" y="165" width="100" height="60" rx="5" fill="#07111f" stroke="#1a2d50" stroke-width="1"/>
+      <rect x="370" y="165" width="140" height="60" rx="5" fill="#07111f" stroke="#1a2d50" stroke-width="1"/>
+      <rect x="560" y="165" width="100" height="60" rx="5" fill="#07111f" stroke="#1a2d50" stroke-width="1"/>
+      <rect x="680" y="165" width="100" height="60" rx="5" fill="#07111f" stroke="#1a2d50" stroke-width="1"/>
+      <!-- Portes -->
+      <line x1="210" y1="50" x2="210" y2="270" stroke="#0d1a33" stroke-width="2"/>
+      <line x1="360" y1="50" x2="360" y2="270" stroke="#0d1a33" stroke-width="2"/>
+      <line x1="540" y1="50" x2="540" y2="270" stroke="#0d1a33" stroke-width="2"/>
+      <line x1="670" y1="50" x2="670" y2="270" stroke="#0d1a33" stroke-width="2"/>
+      <!-- Poignées portes -->
+      <rect x="205" y="158" width="8" height="16" rx="2" fill="#2a3d66"/>
+      <rect x="355" y="158" width="8" height="16" rx="2" fill="#2a3d66"/>
+      <rect x="535" y="158" width="8" height="16" rx="2" fill="#2a3d66"/>
+      <rect x="665" y="158" width="8" height="16" rx="2" fill="#2a3d66"/>
+      <!-- Châssis bas -->
+      <rect x="20" y="262" width="840" height="22" fill="#0c1428" stroke="#1a2744" stroke-width="1"/>
+      <!-- Bogies / roues -->
+      ${wheels('#0c1428','#1a2744')}
+      <!-- Phare avant -->
+      <ellipse cx="34" cy="175" rx="9" ry="9" fill="#1a2744" stroke="#2d4070" stroke-width="1"/>
+      <ellipse cx="34" cy="175" rx="5" ry="5" fill="#0f1d3d"/>
+      <!-- Numéro de rame -->
+      <rect x="36" y="228" width="55" height="22" rx="2" fill="#0c1428" stroke="#1a2744" stroke-width="1"/>
+      <text x="63" y="242" text-anchor="middle" font-family="monospace" font-size="9" fill="#2a3d66">MF-013</text>
+    `
+  },
+
+  'New York — Subway': {
+    label: 'NEW YORK — SUBWAY',
+    bg: '#0d0d0d',
+    depot: '#111',
+    render: () => `
+      <!-- R160 NYC Subway — gris acier stainless steel iconic -->
+      <rect x="20" y="45" width="840" height="230" rx="6" fill="#c8c8c4" stroke="#aaaaaa" stroke-width="1.5"/>
+      <!-- Bandes de couleur caractéristiques -->
+      <rect x="20" y="45" width="840" height="18" rx="6" fill="#1a1a1a"/>
+      <rect x="20" y="45" width="840" height="8" fill="#e63329"/>
+      <!-- Acier brossé texture -->
+      <rect x="20" y="53" width="840" height="222" fill="#bebebe" opacity="0.3"/>
+      <!-- Bande rouge A/C/E en bas des fenêtres -->
+      <rect x="20" y="155" width="840" height="8" fill="#e63329"/>
+      <!-- Fenêtres — grandes, rectangulaires, caractéristiques NYC -->
+      <rect x="55" y="80" width="130" height="70" rx="3" fill="#0d1520" stroke="#888" stroke-width="1"/>
+      <rect x="205" y="80" width="130" height="70" rx="3" fill="#0d1520" stroke="#888" stroke-width="1"/>
+      <rect x="360" y="80" width="160" height="70" rx="3" fill="#0d1520" stroke="#888" stroke-width="1"/>
+      <rect x="545" y="80" width="130" height="70" rx="3" fill="#0d1520" stroke="#888" stroke-width="1"/>
+      <rect x="695" y="80" width="130" height="70" rx="3" fill="#0d1520" stroke="#888" stroke-width="1"/>
+      <!-- Reflets acier sur les flancs -->
+      <rect x="20" y="165" width="840" height="3" fill="#ffffff30"/>
+      <rect x="20" y="220" width="840" height="2" fill="#ffffff20"/>
+      <!-- Portes coulissantes doubles -->
+      <line x1="195" y1="53" x2="195" y2="270" stroke="#999" stroke-width="1.5"/>
+      <line x1="345" y1="53" x2="345" y2="270" stroke="#999" stroke-width="1.5"/>
+      <line x1="530" y1="53" x2="530" y2="270" stroke="#999" stroke-width="1.5"/>
+      <line x1="685" y1="53" x2="685" y2="270" stroke="#999" stroke-width="1.5"/>
+      <!-- Rubber bumpers sur les portes -->
+      <rect x="192" y="155" width="6" height="30" rx="1" fill="#333"/>
+      <rect x="342" y="155" width="6" height="30" rx="1" fill="#333"/>
+      <rect x="527" y="155" width="6" height="30" rx="1" fill="#333"/>
+      <rect x="682" y="155" width="6" height="30" rx="1" fill="#333"/>
+      <!-- Châssis noir -->
+      <rect x="20" y="262" width="840" height="22" fill="#1a1a1a" stroke="#333" stroke-width="1"/>
+      <!-- Panneau de destination -->
+      <rect x="60" y="48" width="110" height="18" rx="2" fill="#111"/>
+      <text x="115" y="60" text-anchor="middle" font-family="Arial,sans-serif" font-size="9" fill="#ffcc00">A TRAIN — FAR ROCKAWAY</text>
+      ${wheels('#1a1a1a','#333')}
+      <!-- Phare -->
+      <rect x="24" y="160" width="14" height="10" rx="2" fill="#ffeeaa" opacity="0.7"/>
+    `
+  },
+
+  'Berlin — S-Bahn': {
+    label: 'BERLIN — S-BAHN',
+    bg: '#0a0a08',
+    depot: '#0f0f0d',
+    render: () => `
+      <!-- BR 481 Berlin S-Bahn — rouge bordeaux et beige iconique -->
+      <rect x="20" y="48" width="840" height="228" rx="8" fill="#c0392b" stroke="#a93226" stroke-width="1.5"/>
+      <!-- Bande beige/crème caractéristique S-Bahn Berlin -->
+      <rect x="20" y="130" width="840" height="70" fill="#e8dfc8"/>
+      <!-- Bande rouge bas -->
+      <rect x="20" y="200" width="840" height="76" fill="#c0392b"/>
+      <!-- Logo S-Bahn cercle vert -->
+      <circle cx="55" cy="90" r="22" fill="#44a247" stroke="#2d7a30" stroke-width="1.5"/>
+      <text x="55" y="97" text-anchor="middle" font-family="Arial Black,sans-serif" font-size="20" font-weight="900" fill="white">S</text>
+      <!-- Fenêtres hautes dans le rouge -->
+      <rect x="100" y="58" width="105" height="66" rx="5" fill="#1a0808" stroke="#8b1a1a" stroke-width="1"/>
+      <rect x="225" y="58" width="105" height="66" rx="5" fill="#1a0808" stroke="#8b1a1a" stroke-width="1"/>
+      <rect x="375" y="58" width="140" height="66" rx="5" fill="#1a0808" stroke="#8b1a1a" stroke-width="1"/>
+      <rect x="560" y="58" width="105" height="66" rx="5" fill="#1a0808" stroke="#8b1a1a" stroke-width="1"/>
+      <rect x="685" y="58" width="105" height="66" rx="5" fill="#1a0808" stroke="#8b1a1a" stroke-width="1"/>
+      <!-- Reflets fenêtres -->
+      <rect x="102" y="60" width="25" height="5" rx="1" fill="#ffffff0a"/>
+      <rect x="227" y="60" width="25" height="5" rx="1" fill="#ffffff0a"/>
+      <rect x="377" y="60" width="32" height="5" rx="1" fill="#ffffff0a"/>
+      <rect x="562" y="60" width="25" height="5" rx="1" fill="#ffffff0a"/>
+      <rect x="687" y="60" width="25" height="5" rx="1" fill="#ffffff0a"/>
+      <!-- Fenêtres basses dans la bande beige -->
+      <rect x="100" y="138" width="105" height="52" rx="4" fill="#1a0808" stroke="#8b1a1a" stroke-width="1"/>
+      <rect x="225" y="138" width="105" height="52" rx="4" fill="#1a0808" stroke="#8b1a1a" stroke-width="1"/>
+      <rect x="375" y="138" width="140" height="52" rx="4" fill="#1a0808" stroke="#8b1a1a" stroke-width="1"/>
+      <rect x="560" y="138" width="105" height="52" rx="4" fill="#1a0808" stroke="#8b1a1a" stroke-width="1"/>
+      <rect x="685" y="138" width="105" height="52" rx="4" fill="#1a0808" stroke="#8b1a1a" stroke-width="1"/>
+      <!-- Portes -->
+      <line x1="215" y1="48" x2="215" y2="270" stroke="#a93226" stroke-width="2"/>
+      <line x1="365" y1="48" x2="365" y2="270" stroke="#a93226" stroke-width="2"/>
+      <line x1="550" y1="48" x2="550" y2="270" stroke="#a93226" stroke-width="2"/>
+      <line x1="675" y1="48" x2="675" y2="270" stroke="#a93226" stroke-width="2"/>
+      <!-- Châssis -->
+      <rect x="20" y="262" width="840" height="22" fill="#1a0808" stroke="#a93226" stroke-width="1"/>
+      ${wheels('#1a0808','#a93226')}
+      <rect x="36" y="226" width="55" height="20" rx="2" fill="#1a0808" stroke="#8b1a1a" stroke-width="1"/>
+      <text x="63" y="239" text-anchor="middle" font-family="monospace" font-size="9" fill="#8b1a1a">BR481-013</text>
+    `
+  },
+
+  'Barcelona — L5': {
+    label: 'BARCELONA — L5',
+    bg: '#08080d',
+    depot: '#0c0c12',
+    render: () => `
+      <!-- CAF Barcelona Línea 5 — bleu électrique -->
+      <rect x="20" y="48" width="840" height="228" rx="10" fill="#1b3a8c" stroke="#2548aa" stroke-width="1.5"/>
+      <!-- Toit légèrement plus foncé -->
+      <rect x="20" y="48" width="840" height="30" rx="10" fill="#142d70"/>
+      <rect x="20" y="62" width="840" height="16" fill="#142d70"/>
+      <!-- Bande blanche distinctive -->
+      <rect x="20" y="145" width="840" height="20" fill="#f0f0f0"/>
+      <!-- Sous la bande — bleu plus foncé -->
+      <rect x="20" y="165" width="840" height="105" fill="#142d70"/>
+      <!-- Logo TMB -->
+      <rect x="38" y="58" width="50" height="24" rx="3" fill="#e31e24"/>
+      <text x="63" y="74" text-anchor="middle" font-family="Arial Black,sans-serif" font-size="11" font-weight="900" fill="white">L5</text>
+      <!-- Fenêtres panoramiques larges -->
+      <rect x="90" y="68" width="110" height="72" rx="6" fill="#060c1f" stroke="#1e3580" stroke-width="1"/>
+      <rect x="220" y="68" width="110" height="72" rx="6" fill="#060c1f" stroke="#1e3580" stroke-width="1"/>
+      <rect x="368" y="68" width="145" height="72" rx="6" fill="#060c1f" stroke="#1e3580" stroke-width="1"/>
+      <rect x="558" y="68" width="110" height="72" rx="6" fill="#060c1f" stroke="#1e3580" stroke-width="1"/>
+      <rect x="688" y="68" width="110" height="72" rx="6" fill="#060c1f" stroke="#1e3580" stroke-width="1"/>
+      <!-- Reflets -->
+      <rect x="92" y="70" width="30" height="7" rx="2" fill="#ffffff0c"/>
+      <rect x="222" y="70" width="30" height="7" rx="2" fill="#ffffff0c"/>
+      <rect x="370" y="70" width="38" height="7" rx="2" fill="#ffffff0c"/>
+      <rect x="560" y="70" width="30" height="7" rx="2" fill="#ffffff0c"/>
+      <rect x="690" y="70" width="30" height="7" rx="2" fill="#ffffff0c"/>
+      <!-- Fenêtres basses -->
+      <rect x="90" y="172" width="110" height="56" rx="5" fill="#060c1f" stroke="#1e3580" stroke-width="1"/>
+      <rect x="220" y="172" width="110" height="56" rx="5" fill="#060c1f" stroke="#1e3580" stroke-width="1"/>
+      <rect x="368" y="172" width="145" height="56" rx="5" fill="#060c1f" stroke="#1e3580" stroke-width="1"/>
+      <rect x="558" y="172" width="110" height="56" rx="5" fill="#060c1f" stroke="#1e3580" stroke-width="1"/>
+      <rect x="688" y="172" width="110" height="56" rx="5" fill="#060c1f" stroke="#1e3580" stroke-width="1"/>
+      <!-- Portes -->
+      <line x1="210" y1="48" x2="210" y2="270" stroke="#1a3070" stroke-width="2"/>
+      <line x1="358" y1="48" x2="358" y2="270" stroke="#1a3070" stroke-width="2"/>
+      <line x1="548" y1="48" x2="548" y2="270" stroke="#1a3070" stroke-width="2"/>
+      <line x1="678" y1="48" x2="678" y2="270" stroke="#1a3070" stroke-width="2"/>
+      <rect x="205" y="162" width="8" height="18" rx="2" fill="#0d2060"/>
+      <rect x="353" y="162" width="8" height="18" rx="2" fill="#0d2060"/>
+      <rect x="543" y="162" width="8" height="18" rx="2" fill="#0d2060"/>
+      <rect x="673" y="162" width="8" height="18" rx="2" fill="#0d2060"/>
+      <!-- Châssis -->
+      <rect x="20" y="262" width="840" height="22" fill="#0d1a44" stroke="#1b3a8c" stroke-width="1"/>
+      ${wheels('#0d1a44','#1b3a8c')}
+      <rect x="36" y="226" width="55" height="20" rx="2" fill="#0d1a44" stroke="#1b3a8c"/>
+      <text x="63" y="239" text-anchor="middle" font-family="monospace" font-size="9" fill="#2548aa">BCN-L5-22</text>
+    `
+  },
+
+  'Tokyo — Yamanote': {
+    label: 'TOKYO — YAMANOTE',
+    bg: '#080c08',
+    depot: '#0a0f0a',
+    render: () => `
+      <!-- E235 JR Yamanote — vert chartreuse iconique -->
+      <rect x="20" y="48" width="840" height="228" rx="8" fill="#9acd32" stroke="#7ab020" stroke-width="1.5"/>
+      <!-- Bande verte foncée haut -->
+      <rect x="20" y="48" width="840" height="22" rx="8" fill="#6aaa00"/>
+      <rect x="20" y="58" width="840" height="12" fill="#6aaa00"/>
+      <!-- Zone fenêtres — gris clair -->
+      <rect x="20" y="100" width="840" height="120" fill="#d8d8d8"/>
+      <!-- Bande verte bas -->
+      <rect x="20" y="220" width="840" height="56" fill="#7ab020"/>
+      <!-- Filet vert sur la bande grise -->
+      <rect x="20" y="100" width="840" height="6" fill="#9acd32"/>
+      <rect x="20" y="214" width="840" height="6" fill="#9acd32"/>
+      <!-- Logo JR -->
+      <circle cx="56" cy="72" r="18" fill="#1a5c1a" stroke="#2d7a2d" stroke-width="1"/>
+      <text x="56" y="79" text-anchor="middle" font-family="Arial Black,sans-serif" font-size="14" font-weight="900" fill="white">JR</text>
+      <!-- Fenêtres — format japonais, allongées horizontalement -->
+      <rect x="90" y="108" width="108" height="60" rx="4" fill="#0c1a0c" stroke="#5a8c1a" stroke-width="1"/>
+      <rect x="218" y="108" width="108" height="60" rx="4" fill="#0c1a0c" stroke="#5a8c1a" stroke-width="1"/>
+      <rect x="368" y="108" width="148" height="60" rx="4" fill="#0c1a0c" stroke="#5a8c1a" stroke-width="1"/>
+      <rect x="558" y="108" width="108" height="60" rx="4" fill="#0c1a0c" stroke="#5a8c1a" stroke-width="1"/>
+      <rect x="686" y="108" width="108" height="60" rx="4" fill="#0c1a0c" stroke="#5a8c1a" stroke-width="1"/>
+      <!-- Reflets caractéristiques trains japonais -->
+      <rect x="92" y="110" width="32" height="8" rx="2" fill="#ffffff12"/>
+      <rect x="220" y="110" width="32" height="8" rx="2" fill="#ffffff12"/>
+      <rect x="370" y="110" width="40" height="8" rx="2" fill="#ffffff12"/>
+      <rect x="560" y="110" width="32" height="8" rx="2" fill="#ffffff12"/>
+      <rect x="688" y="110" width="32" height="8" rx="2" fill="#ffffff12"/>
+      <!-- Portes coulissantes — très caractéristiques -->
+      <line x1="208" y1="70" x2="208" y2="270" stroke="#6aaa00" stroke-width="2"/>
+      <line x1="358" y1="70" x2="358" y2="270" stroke="#6aaa00" stroke-width="2"/>
+      <line x1="548" y1="70" x2="548" y2="270" stroke="#6aaa00" stroke-width="2"/>
+      <line x1="676" y1="70" x2="676" y2="270" stroke="#6aaa00" stroke-width="2"/>
+      <!-- Bouton d'ouverture des portes (spécifique Japon) -->
+      <circle cx="212" cy="175" r="6" fill="#e8e020" stroke="#c8c010" stroke-width="1"/>
+      <circle cx="362" cy="175" r="6" fill="#e8e020" stroke="#c8c010" stroke-width="1"/>
+      <circle cx="552" cy="175" r="6" fill="#e8e020" stroke="#c8c010" stroke-width="1"/>
+      <circle cx="680" cy="175" r="6" fill="#e8e020" stroke="#c8c010" stroke-width="1"/>
+      <!-- Châssis -->
+      <rect x="20" y="262" width="840" height="22" fill="#3d5c00" stroke="#6aaa00" stroke-width="1"/>
+      ${wheels('#3d5c00','#6aaa00')}
+      <rect x="36" y="230" width="60" height="20" rx="2" fill="#3d5c00" stroke="#6aaa00"/>
+      <text x="66" y="243" text-anchor="middle" font-family="monospace" font-size="9" fill="#9acd32">E235-013</text>
+    `
+  },
+
+  'London — Underground': {
+    label: 'LONDON — UNDERGROUND',
+    bg: '#080808',
+    depot: '#0d0d0d',
+    render: () => `
+      <!-- S Stock London Underground — gris métallique -->
+      <rect x="20" y="48" width="840" height="228" rx="12" fill="#4a4a4a" stroke="#5a5a5a" stroke-width="1.5"/>
+      <!-- Nez arrondi caractéristique -->
+      <rect x="20" y="48" width="840" height="20" rx="12" fill="#3a3a3a"/>
+      <rect x="20" y="56" width="840" height="12" fill="#3a3a3a"/>
+      <!-- Bande rouge London Underground -->
+      <rect x="20" y="130" width="840" height="12" fill="#dc241f"/>
+      <!-- Zone inférieure plus foncée -->
+      <rect x="20" y="210" width="840" height="66" fill="#2a2a2a"/>
+      <!-- Roundel London Underground -->
+      <circle cx="58" cy="82" r="20" fill="#dc241f"/>
+      <rect x="38" y="78" width="40" height="8" fill="#003688"/>
+      <text x="58" y="70" text-anchor="middle" font-family="Johnston,Arial,sans-serif" font-size="8" fill="white">LU</text>
+      <!-- Grandes fenêtres panoramiques -->
+      <rect x="85" y="62" width="112" height="62" rx="5" fill="#0d0d0d" stroke="#3a3a3a" stroke-width="1"/>
+      <rect x="215" y="62" width="112" height="62" rx="5" fill="#0d0d0d" stroke="#3a3a3a" stroke-width="1"/>
+      <rect x="368" y="62" width="148" height="62" rx="5" fill="#0d0d0d" stroke="#3a3a3a" stroke-width="1"/>
+      <rect x="558" y="62" width="112" height="62" rx="5" fill="#0d0d0d" stroke="#3a3a3a" stroke-width="1"/>
+      <rect x="688" y="62" width="112" height="62" rx="5" fill="#0d0d0d" stroke="#3a3a3a" stroke-width="1"/>
+      <!-- Reflets -->
+      <rect x="87" y="64" width="30" height="6" rx="2" fill="#ffffff0a"/>
+      <rect x="217" y="64" width="30" height="6" rx="2" fill="#ffffff0a"/>
+      <rect x="370" y="64" width="38" height="6" rx="2" fill="#ffffff0a"/>
+      <rect x="560" y="64" width="30" height="6" rx="2" fill="#ffffff0a"/>
+      <rect x="690" y="64" width="30" height="6" rx="2" fill="#ffffff0a"/>
+      <!-- Fenêtres basses -->
+      <rect x="85" y="148" width="112" height="56" rx="5" fill="#0d0d0d" stroke="#3a3a3a" stroke-width="1"/>
+      <rect x="215" y="148" width="112" height="56" rx="5" fill="#0d0d0d" stroke="#3a3a3a" stroke-width="1"/>
+      <rect x="368" y="148" width="148" height="56" rx="5" fill="#0d0d0d" stroke="#3a3a3a" stroke-width="1"/>
+      <rect x="558" y="148" width="112" height="56" rx="5" fill="#0d0d0d" stroke="#3a3a3a" stroke-width="1"/>
+      <rect x="688" y="148" width="112" height="56" rx="5" fill="#0d0d0d" stroke="#3a3a3a" stroke-width="1"/>
+      <!-- Portes -->
+      <line x1="207" y1="48" x2="207" y2="270" stroke="#3a3a3a" stroke-width="2"/>
+      <line x1="358" y1="48" x2="358" y2="270" stroke="#3a3a3a" stroke-width="2"/>
+      <line x1="548" y1="48" x2="548" y2="270" stroke="#3a3a3a" stroke-width="2"/>
+      <line x1="678" y1="48" x2="678" y2="270" stroke="#3a3a3a" stroke-width="2"/>
+      <rect x="202" y="158" width="8" height="18" rx="1" fill="#222"/>
+      <rect x="353" y="158" width="8" height="18" rx="1" fill="#222"/>
+      <rect x="543" y="158" width="8" height="18" rx="1" fill="#222"/>
+      <rect x="673" y="158" width="8" height="18" rx="1" fill="#222"/>
+      <!-- Châssis -->
+      <rect x="20" y="262" width="840" height="22" fill="#1a1a1a" stroke="#3a3a3a" stroke-width="1"/>
+      ${wheels('#1a1a1a','#3a3a3a')}
+      <rect x="36" y="228" width="58" height="20" rx="2" fill="#1a1a1a" stroke="#3a3a3a"/>
+      <text x="65" y="241" text-anchor="middle" font-family="monospace" font-size="9" fill="#4a4a4a">S-STOCK</text>
+    `
+  },
+
+  'São Paulo — CPTM': {
+    label: 'SÃO PAULO — CPTM',
+    bg: '#0a0806',
+    depot: '#0f0c08',
+    render: () => `
+      <!-- CPTM São Paulo Série 8500 — vert/jaune -->
+      <rect x="20" y="48" width="840" height="228" rx="8" fill="#1a5c1a" stroke="#2d7a2d" stroke-width="1.5"/>
+      <!-- Bande jaune brésilienne -->
+      <rect x="20" y="115" width="840" height="30" fill="#f5c400"/>
+      <!-- Zone grise neutre -->
+      <rect x="20" y="145" width="840" height="80" fill="#e0e0e0"/>
+      <!-- Bas vert -->
+      <rect x="20" y="225" width="840" height="51" fill="#1a5c1a"/>
+      <!-- Lettre CPTM -->
+      <rect x="38" y="58" width="64" height="24" rx="3" fill="#003399"/>
+      <text x="70" y="73" text-anchor="middle" font-family="Arial Black,sans-serif" font-size="11" font-weight="900" fill="white">CPTM</text>
+      <!-- Ligne 11 -->
+      <circle cx="120" cy="70" r="14" fill="#f5c400" stroke="#e0a000" stroke-width="1"/>
+      <text x="120" y="76" text-anchor="middle" font-family="Arial Black,sans-serif" font-size="13" font-weight="900" fill="#1a1a1a">11</text>
+      <!-- Fenêtres -->
+      <rect x="90" y="60" width="100" height="50" rx="4" fill="#0a1f0a" stroke="#1a5c1a" stroke-width="1"/>
+      <rect x="210" y="60" width="100" height="50" rx="4" fill="#0a1f0a" stroke="#1a5c1a" stroke-width="1"/>
+      <rect x="365" y="60" width="140" height="50" rx="4" fill="#0a1f0a" stroke="#1a5c1a" stroke-width="1"/>
+      <rect x="558" y="60" width="100" height="50" rx="4" fill="#0a1f0a" stroke="#1a5c1a" stroke-width="1"/>
+      <rect x="678" y="60" width="100" height="50" rx="4" fill="#0a1f0a" stroke="#1a5c1a" stroke-width="1"/>
+      <!-- Fenêtres basses dans la zone grise -->
+      <rect x="90" y="152" width="100" height="60" rx="4" fill="#0a1f0a" stroke="#ccc" stroke-width="1"/>
+      <rect x="210" y="152" width="100" height="60" rx="4" fill="#0a1f0a" stroke="#ccc" stroke-width="1"/>
+      <rect x="365" y="152" width="140" height="60" rx="4" fill="#0a1f0a" stroke="#ccc" stroke-width="1"/>
+      <rect x="558" y="152" width="100" height="60" rx="4" fill="#0a1f0a" stroke="#ccc" stroke-width="1"/>
+      <rect x="678" y="152" width="100" height="60" rx="4" fill="#0a1f0a" stroke="#ccc" stroke-width="1"/>
+      <!-- Portes -->
+      <line x1="200" y1="48" x2="200" y2="270" stroke="#157015" stroke-width="2"/>
+      <line x1="355" y1="48" x2="355" y2="270" stroke="#157015" stroke-width="2"/>
+      <line x1="548" y1="48" x2="548" y2="270" stroke="#157015" stroke-width="2"/>
+      <line x1="668" y1="48" x2="668" y2="270" stroke="#157015" stroke-width="2"/>
+      <!-- Châssis -->
+      <rect x="20" y="262" width="840" height="22" fill="#0a2a0a" stroke="#1a5c1a" stroke-width="1"/>
+      ${wheels('#0a2a0a','#1a5c1a')}
+    `
+  },
+
+  'Stockholm — T-Bana': {
+    label: 'STOCKHOLM — T-BANA',
+    bg: '#060810',
+    depot: '#080b14',
+    render: () => `
+      <!-- C20 Stockholm T-Bana — bleu royal suédois -->
+      <rect x="20" y="48" width="840" height="228" rx="10" fill="#003f87" stroke="#0050aa" stroke-width="1.5"/>
+      <!-- Bande jaune suédoise -->
+      <rect x="20" y="155" width="840" height="16" fill="#fecc02"/>
+      <!-- Zone fenêtres centrale gris clair -->
+      <rect x="20" y="108" width="840" height="47" fill="#c8d0dc"/>
+      <!-- Bas bleu foncé -->
+      <rect x="20" y="220" width="840" height="56" fill="#002a5c"/>
+      <!-- T logo Tunnelbana -->
+      <circle cx="56" cy="78" r="20" fill="#fecc02" stroke="#e0b800" stroke-width="1"/>
+      <text x="56" y="85" text-anchor="middle" font-family="Arial Black,sans-serif" font-size="20" font-weight="900" fill="#003f87">T</text>
+      <!-- Fenêtres hautes -->
+      <rect x="90" y="56" width="108" height="46" rx="5" fill="#06182e" stroke="#0040a0" stroke-width="1"/>
+      <rect x="218" y="56" width="108" height="46" rx="5" fill="#06182e" stroke="#0040a0" stroke-width="1"/>
+      <rect x="368" y="56" width="144" height="46" rx="5" fill="#06182e" stroke="#0040a0" stroke-width="1"/>
+      <rect x="558" y="56" width="108" height="46" rx="5" fill="#06182e" stroke="#0040a0" stroke-width="1"/>
+      <rect x="686" y="56" width="108" height="46" rx="5" fill="#06182e" stroke="#0040a0" stroke-width="1"/>
+      <!-- Reflets -->
+      <rect x="92" y="58" width="28" height="6" rx="2" fill="#ffffff0c"/>
+      <rect x="220" y="58" width="28" height="6" rx="2" fill="#ffffff0c"/>
+      <rect x="370" y="58" width="36" height="6" rx="2" fill="#ffffff0c"/>
+      <rect x="560" y="58" width="28" height="6" rx="2" fill="#ffffff0c"/>
+      <rect x="688" y="58" width="28" height="6" rx="2" fill="#ffffff0c"/>
+      <!-- Fenêtres basses -->
+      <rect x="90" y="172" width="108" height="44" rx="5" fill="#06182e" stroke="#0040a0" stroke-width="1"/>
+      <rect x="218" y="172" width="108" height="44" rx="5" fill="#06182e" stroke="#0040a0" stroke-width="1"/>
+      <rect x="368" y="172" width="144" height="44" rx="5" fill="#06182e" stroke="#0040a0" stroke-width="1"/>
+      <rect x="558" y="172" width="108" height="44" rx="5" fill="#06182e" stroke="#0040a0" stroke-width="1"/>
+      <rect x="686" y="172" width="108" height="44" rx="5" fill="#06182e" stroke="#0040a0" stroke-width="1"/>
+      <!-- Portes -->
+      <line x1="208" y1="48" x2="208" y2="270" stroke="#0040a0" stroke-width="2"/>
+      <line x1="358" y1="48" x2="358" y2="270" stroke="#0040a0" stroke-width="2"/>
+      <line x1="548" y1="48" x2="548" y2="270" stroke="#0040a0" stroke-width="2"/>
+      <line x1="676" y1="48" x2="676" y2="270" stroke="#0040a0" stroke-width="2"/>
+      <rect x="203" y="158" width="8" height="18" rx="2" fill="#002260"/>
+      <rect x="353" y="158" width="8" height="18" rx="2" fill="#002260"/>
+      <rect x="543" y="158" width="8" height="18" rx="2" fill="#002260"/>
+      <rect x="671" y="158" width="8" height="18" rx="2" fill="#002260"/>
+      <!-- Châssis -->
+      <rect x="20" y="262" width="840" height="22" fill="#001a40" stroke="#003f87" stroke-width="1"/>
+      ${wheels('#001a40','#003f87')}
+      <rect x="36" y="228" width="60" height="20" rx="2" fill="#001a40" stroke="#003f87"/>
+      <text x="66" y="241" text-anchor="middle" font-family="monospace" font-size="9" fill="#0050aa">C20-STO</text>
+    `
+  },
+};
+
+// Génère les roues (partagé entre toutes les villes)
+function wheels(fill, stroke) {
+  return `
+    <ellipse cx="118" cy="304" rx="26" ry="26" fill="${fill}" stroke="${stroke}" stroke-width="1.5"/>
+    <ellipse cx="118" cy="304" rx="12" ry="12" fill="${fill}" stroke="${stroke}" stroke-width="1"/>
+    <ellipse cx="118" cy="304" rx="4" ry="4" fill="${stroke}"/>
+    <ellipse cx="298" cy="304" rx="26" ry="26" fill="${fill}" stroke="${stroke}" stroke-width="1.5"/>
+    <ellipse cx="298" cy="304" rx="12" ry="12" fill="${fill}" stroke="${stroke}" stroke-width="1"/>
+    <ellipse cx="298" cy="304" rx="4" ry="4" fill="${stroke}"/>
+    <ellipse cx="578" cy="304" rx="26" ry="26" fill="${fill}" stroke="${stroke}" stroke-width="1.5"/>
+    <ellipse cx="578" cy="304" rx="12" ry="12" fill="${fill}" stroke="${stroke}" stroke-width="1"/>
+    <ellipse cx="578" cy="304" rx="4" ry="4" fill="${stroke}"/>
+    <ellipse cx="758" cy="304" rx="26" ry="26" fill="${fill}" stroke="${stroke}" stroke-width="1.5"/>
+    <ellipse cx="758" cy="304" rx="12" ry="12" fill="${fill}" stroke="${stroke}" stroke-width="1"/>
+    <ellipse cx="758" cy="304" rx="4" ry="4" fill="${stroke}"/>
+  `;
+}
+
+function loadCity(cityKey) {
+  const city = TRAINS[cityKey];
+  if (!city) return;
+  // Update train SVG
+  document.getElementById('train-bg').innerHTML = city.render();
+  // Update label
+  document.getElementById('city-label').textContent = city.label;
+  // Update depot background color
+  document.getElementById('canvas-area').style.background = city.bg;
+  // Clear canvas when switching
+  if (canvas.width > 0 && canvas.height > 0) {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    drips = [];
+    strokeCount = 0;
+    document.getElementById('stroke-count').textContent = '0';
+    document.getElementById('coverage').textContent = '0%';
+    document.getElementById('can-level').textContent = '100%';
+    canLevel = 100;
+  }
+}
+
+// Init avec Paris
+loadCity('Paris — Ligne 13');
+
 document.getElementById('city-select').addEventListener('change', function() {
-  document.getElementById('city-label').textContent = this.value.toUpperCase();
+  loadCity(this.value);
 });
 
 // ACTIONS
