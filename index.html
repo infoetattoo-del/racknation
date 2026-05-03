@@ -519,7 +519,11 @@
 
       <!-- TRAIN -->
       <div id="train-container">
-        <svg id="train-bg" viewBox="0 0 880 340" xmlns="http://www.w3.org/2000/svg"></svg>
+        <svg id="train-bg" viewBox="0 0 880 340" xmlns="http://www.w3.org/2000/svg" style="display:none;"></svg>
+        <img id="train-img" src="" alt="train"
+          style="position:absolute;top:0;left:0;width:100%;height:100%;
+                 object-fit:contain;mix-blend-mode:multiply;
+                 pointer-events:none;display:none;">
         <canvas id="graffiti-canvas"></canvas>
       </div>
 
@@ -1014,60 +1018,10 @@ canvas.addEventListener('touchend', () => { painting = false; });
 const TRAINS = {
   'Paris — Ligne 13': {
     label: 'PARIS — LIGNE 13',
-    bg: '#0a0f1a',
-    depot: '#0d1520',
-    render: () => `
-      <!-- MF77 Paris Ligne 13 — bleu nuit avec bande blanche -->
-      <rect x="20" y="50" width="840" height="220" rx="10" fill="#1a2744" stroke="#243560" stroke-width="1.5"/>
-      <!-- Bande blanche centrale caractéristique -->
-      <rect x="20" y="118" width="840" height="36" fill="#e8e8e8"/>
-      <!-- Bande bleue foncée haut -->
-      <rect x="20" y="50" width="840" height="68" rx="10" fill="#0f1d3d"/>
-      <rect x="20" y="98" width="840" height="20" fill="#0f1d3d"/>
-      <!-- Bande bleue foncée bas -->
-      <rect x="20" y="154" width="840" height="116" fill="#162040"/>
-      <!-- Numéro de ligne -->
-      <circle cx="60" cy="84" r="20" fill="#3d6bce" stroke="#5580d8" stroke-width="1"/>
-      <text x="60" y="90" text-anchor="middle" font-family="Arial Black,sans-serif" font-size="18" font-weight="900" fill="white">13</text>
-      <!-- Fenêtres rangée haute -->
-      <rect x="100" y="58" width="100" height="54" rx="5" fill="#07111f" stroke="#1a2d50" stroke-width="1"/>
-      <rect x="220" y="58" width="100" height="54" rx="5" fill="#07111f" stroke="#1a2d50" stroke-width="1"/>
-      <rect x="370" y="58" width="140" height="54" rx="5" fill="#07111f" stroke="#1a2d50" stroke-width="1"/>
-      <rect x="560" y="58" width="100" height="54" rx="5" fill="#07111f" stroke="#1a2d50" stroke-width="1"/>
-      <rect x="680" y="58" width="100" height="54" rx="5" fill="#07111f" stroke="#1a2d50" stroke-width="1"/>
-      <!-- Reflets fenêtres -->
-      <rect x="102" y="60" width="28" height="6" rx="2" fill="#ffffff08"/>
-      <rect x="222" y="60" width="28" height="6" rx="2" fill="#ffffff08"/>
-      <rect x="372" y="60" width="35" height="6" rx="2" fill="#ffffff08"/>
-      <rect x="562" y="60" width="28" height="6" rx="2" fill="#ffffff08"/>
-      <rect x="682" y="60" width="28" height="6" rx="2" fill="#ffffff08"/>
-      <!-- Fenêtres rangée basse -->
-      <rect x="100" y="165" width="100" height="60" rx="5" fill="#07111f" stroke="#1a2d50" stroke-width="1"/>
-      <rect x="220" y="165" width="100" height="60" rx="5" fill="#07111f" stroke="#1a2d50" stroke-width="1"/>
-      <rect x="370" y="165" width="140" height="60" rx="5" fill="#07111f" stroke="#1a2d50" stroke-width="1"/>
-      <rect x="560" y="165" width="100" height="60" rx="5" fill="#07111f" stroke="#1a2d50" stroke-width="1"/>
-      <rect x="680" y="165" width="100" height="60" rx="5" fill="#07111f" stroke="#1a2d50" stroke-width="1"/>
-      <!-- Portes -->
-      <line x1="210" y1="50" x2="210" y2="270" stroke="#0d1a33" stroke-width="2"/>
-      <line x1="360" y1="50" x2="360" y2="270" stroke="#0d1a33" stroke-width="2"/>
-      <line x1="540" y1="50" x2="540" y2="270" stroke="#0d1a33" stroke-width="2"/>
-      <line x1="670" y1="50" x2="670" y2="270" stroke="#0d1a33" stroke-width="2"/>
-      <!-- Poignées portes -->
-      <rect x="205" y="158" width="8" height="16" rx="2" fill="#2a3d66"/>
-      <rect x="355" y="158" width="8" height="16" rx="2" fill="#2a3d66"/>
-      <rect x="535" y="158" width="8" height="16" rx="2" fill="#2a3d66"/>
-      <rect x="665" y="158" width="8" height="16" rx="2" fill="#2a3d66"/>
-      <!-- Châssis bas -->
-      <rect x="20" y="262" width="840" height="22" fill="#0c1428" stroke="#1a2744" stroke-width="1"/>
-      <!-- Bogies / roues -->
-      ${wheels('#0c1428','#1a2744')}
-      <!-- Phare avant -->
-      <ellipse cx="34" cy="175" rx="9" ry="9" fill="#1a2744" stroke="#2d4070" stroke-width="1"/>
-      <ellipse cx="34" cy="175" rx="5" ry="5" fill="#0f1d3d"/>
-      <!-- Numéro de rame -->
-      <rect x="36" y="228" width="55" height="22" rx="2" fill="#0c1428" stroke="#1a2744" stroke-width="1"/>
-      <text x="63" y="242" text-anchor="middle" font-family="monospace" font-size="9" fill="#2a3d66">MF-013</text>
-    `
+    bg: '#0a0a0a',
+    depot: '#0d0d0d',
+    img: 'ChatGPT_Image_3_mai_2026__16_46_06.png',
+    render: null
   },
 
   'New York — Subway': {
@@ -1429,13 +1383,25 @@ function wheels(fill, stroke) {
 function loadCity(cityKey) {
   const city = TRAINS[cityKey];
   if (!city) return;
-  // Update train SVG
-  document.getElementById('train-bg').innerHTML = city.render();
-  // Update label
+
+  const trainImg = document.getElementById('train-img');
+  const trainSvg = document.getElementById('train-bg');
+
+  if (city.img) {
+    // Mode image avec mix-blend-mode multiply
+    trainImg.src = city.img;
+    trainImg.style.display = 'block';
+    trainSvg.style.display = 'none';
+  } else {
+    // Mode SVG
+    trainSvg.innerHTML = city.render();
+    trainSvg.style.display = 'block';
+    trainImg.style.display = 'none';
+  }
+
   document.getElementById('city-label').textContent = city.label;
-  // Update depot background color
   document.getElementById('canvas-area').style.background = city.bg;
-  // Clear canvas when switching
+
   if (canvas.width > 0 && canvas.height > 0) {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     drips = [];
