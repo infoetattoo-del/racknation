@@ -55,7 +55,7 @@
     color: var(--accent);
   }
 
-  #logo span { color: var(--accent2); }
+  #logo span { color: #00aaff; }
 
   #city-selector {
     display: flex;
@@ -1782,12 +1782,18 @@ function loadCity(cityKey) {
   if (!city) return;
 
   const trainSvg = document.getElementById('train-bg');
-  // Toujours SVG — on injecte le rendu dans le viewBox 880x340
-  trainSvg.innerHTML = city.render();
-  trainSvg.style.display = 'block';
+
+  if (city.img) {
+    // Paris : image réelle encodée en base64
+    // On l'affiche comme background SVG via foreignObject ou image SVG
+    trainSvg.innerHTML = `<image href="${city.img}" x="0" y="0" width="880" height="340" preserveAspectRatio="xMidYMid slice"/>`;
+    trainSvg.style.display = 'block';
+  } else if (city.render) {
+    trainSvg.innerHTML = city.render();
+    trainSvg.style.display = 'block';
+  }
 
   document.getElementById('city-label').textContent = city.label;
-  // Fond dépôt = couleur bg de la ville sur canvas-area
   document.getElementById('canvas-area').style.background = city.bg || '#070707';
 
   if (canvas.width > 0 && canvas.height > 0) {
@@ -1840,28 +1846,41 @@ function initGameFromLoadout() {
 function buildGameCanPanel() {
   const grid = document.getElementById('color-grid');
   grid.innerHTML = '';
-  grid.style.cssText = 'display:flex;flex-wrap:wrap;gap:4px;';
+  // Ligne horizontale, scroll si besoin
+  grid.style.cssText = 'display:flex;flex-direction:row;flex-wrap:nowrap;gap:5px;overflow-x:auto;padding-bottom:4px;';
+
+  const ICON = loMakeIcon ? null : null; // on utilise CSS mask direct
 
   gameCans.forEach((can, i) => {
     const wrap = document.createElement('div');
-    wrap.style.cssText = 'display:flex;flex-direction:column;align-items:center;gap:2px;cursor:pointer;';
+    wrap.style.cssText = 'display:flex;flex-direction:column;align-items:center;gap:3px;cursor:pointer;flex-shrink:0;';
 
-    // Barre de niveau
+    // Numéro
+    const num = document.createElement('div');
+    num.style.cssText = 'font-size:9px;color:#555;font-family:"Share Tech Mono",monospace;';
+    num.textContent = i + 1;
+
+    // Icône spray colorisée (CSS mask)
+    const iconWrap = document.createElement('div');
+    iconWrap.style.cssText = 'width:22px;height:54px;position:relative;flex-shrink:0;';
+    const iconFill = document.createElement('div');
+    iconFill.id = 'can-icon-' + i;
+    iconFill.style.cssText = `position:absolute;inset:0;background:${can.hex};-webkit-mask:url(${LO_ICON}) center/contain no-repeat;mask:url(${LO_ICON}) center/contain no-repeat;opacity:${can.level > 0 ? 1 : 0.3};transition:opacity .2s;`;
+    iconWrap.appendChild(iconFill);
+
+    // Barre de niveau verticale sous l'icône
     const barWrap = document.createElement('div');
-    barWrap.style.cssText = 'width:18px;height:40px;background:#1a1a1a;border:1px solid #222;border-radius:2px;overflow:hidden;position:relative;';
+    barWrap.style.cssText = 'width:22px;height:6px;background:#1a1a1a;border:1px solid #222;border-radius:3px;overflow:hidden;';
     const bar = document.createElement('div');
     bar.id = 'can-bar-' + i;
-    bar.style.cssText = `position:absolute;bottom:0;left:0;right:0;height:${can.level}%;background:${can.hex};transition:height .15s;`;
-    if (can.level < 20) bar.style.background = '#ff3c00';
+    const barColor = can.level < 20 ? '#ff3c00' : can.hex;
+    bar.style.cssText = `height:100%;width:${can.level}%;background:${barColor};transition:width .15s;border-radius:3px;`;
     barWrap.appendChild(bar);
 
-    // Cercle couleur
-    const dot = document.createElement('div');
-    dot.id = 'can-dot-' + i;
-    dot.style.cssText = `width:18px;height:18px;border-radius:50%;background:${can.hex};border:2px solid ${i===activeCanIdx?'#fff':'transparent'};transition:border-color .1s;`;
-
+    wrap.appendChild(num);
+    wrap.appendChild(iconWrap);
     wrap.appendChild(barWrap);
-    wrap.appendChild(dot);
+
     wrap.title = can.name + ' — ' + Math.round(can.level) + '%';
     wrap.onclick = () => {
       if (can.level <= 0) { showNotif('EMPTY CAN!'); return; }
@@ -1869,15 +1888,19 @@ function buildGameCanPanel() {
       currentColor = gameCans[i].hex;
       updateColorDisplay();
       updatePreview();
-      // Highlight
-      document.querySelectorAll('[id^=can-dot-]').forEach((d,j) => {
-        d.style.borderColor = j === i ? '#fff' : 'transparent';
+      // Highlight actif
+      document.querySelectorAll('[id^=can-icon-]').forEach((d,j) => {
+        d.style.outline = j === i ? '2px solid #fff' : 'none';
       });
       document.getElementById('custom-color').value = currentColor;
       updateStatus();
     };
     grid.appendChild(wrap);
   });
+
+  // Highlight can actif initial
+  const activeIcon = document.getElementById('can-icon-0');
+  if (activeIcon) activeIcon.style.outline = '2px solid #fff';
 }
 
 function drainActiveCan(amount) {
@@ -1898,12 +1921,15 @@ function drainActiveCan(amount) {
     return;
   }
   can.level = Math.max(0, can.level - amount);
-  // Update UI
+  // Update UI barre horizontale (width)
   const bar = document.getElementById('can-bar-' + activeCanIdx);
   if (bar) {
-    bar.style.height = can.level + '%';
+    bar.style.width = can.level + '%';
     bar.style.background = can.level < 20 ? '#ff3c00' : can.hex;
   }
+  // Opacité icône
+  const icon = document.getElementById('can-icon-' + activeCanIdx);
+  if (icon) icon.style.opacity = can.level > 0 ? 1 : 0.3;
   const dot = document.getElementById('can-dot-' + activeCanIdx);
   if (dot) dot.title = can.name + ' — ' + Math.round(can.level) + '%';
   // Header stat
@@ -2018,27 +2044,7 @@ document.getElementById('canvas-area').addEventListener('wheel', (e) => {
 setTimeout(resetZoom, 300);
 
 
-// ─── CURSEUR MAIN CUSTOM ──────────────────────────────────────────────────────
-const sprayHandCursor = document.createElement('div');
-sprayHandCursor.style.cssText = `
-  position: fixed;
-  pointer-events: none;
-  z-index: 9999;
-  font-size: 28px;
-  line-height: 1;
-  transform: translate(-4px, -4px);
-  display: none;
-  user-select: none;
-`;
-sprayHandCursor.textContent = '🖐️';
-document.body.appendChild(sprayHandCursor);
-
-canvas.addEventListener('mouseenter', () => { sprayHandCursor.style.display = 'block'; });
-canvas.addEventListener('mouseleave', () => { sprayHandCursor.style.display = 'none'; });
-canvas.addEventListener('mousemove', (e) => {
-  sprayHandCursor.style.left = e.clientX + 'px';
-  sprayHandCursor.style.top  = e.clientY + 'px';
-});
+// Curseur main via CSS cursor property
 
 // ─── AMBIANCE LUMIÈRE ────────────────────────────────────────────────────────
 const overlay = document.getElementById('ambiance-overlay');
