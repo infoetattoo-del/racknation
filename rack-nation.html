@@ -1841,6 +1841,7 @@ function loadCity(cityKey) {
 
   document.getElementById('city-label').textContent = city.label;
   document.getElementById('canvas-area').style.background = city.bg || '#070707';
+}
 function initGameFromLoadout() {
   const colors = window._loadoutColors || ['#FF3C00'];
   const names  = window._loadoutNames  || colors.map(()=>'—');
