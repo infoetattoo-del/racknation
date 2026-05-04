@@ -173,7 +173,7 @@
     top: 0; left: 0;
     width: 100%;
     height: 100%;
-    cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='28' height='28' viewBox='0 0 28 28'%3E%3Ctext y='22' font-size='22' style='font-family:sans-serif'%3E✋%3C/text%3E%3C/svg%3E") 4 0, pointer;
+    cursor: url("data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="32" height="40" viewBox="0 0 32 40"><!-- Doigt index --><rect x="13" y="1" width="7" height="20" rx="3.5" fill="%23e8ff00" stroke="%23000" stroke-width="1.5"/><!-- Majeur --><rect x="21" y="8" width="6" height="15" rx="3" fill="%23e8ff00" stroke="%23000" stroke-width="1.5"/><!-- Annulaire --><rect x="21" y="13" width="6" height="13" rx="3" fill="%23e8ff00" stroke="%23000" stroke-width="1.5"/><!-- Auriculaire --><rect x="21" y="16" width="5" height="11" rx="2.5" fill="%23e8ff00" stroke="%23000" stroke-width="1.5"/><!-- Pouce --><rect x="5" y="14" width="9" height="6" rx="3" fill="%23e8ff00" stroke="%23000" stroke-width="1.5"/><!-- Paume --><rect x="7" y="17" width="22" height="14" rx="4" fill="%23e8ff00" stroke="%23000" stroke-width="1.5"/></svg>") 16 0, pointer;
     background: transparent;
     z-index: 2;
   }
@@ -454,12 +454,11 @@
   .lo-can-icon{position:relative;cursor:pointer;transition:transform .1s;}
   .lo-can-icon:hover{transform:scale(1.08) translateY(-3px);}
   .lo-can-empty{width:34px;height:92px;border:1px dashed #222;border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:18px;color:#252525;}
-  #lo-preview-section{flex:1;padding:12px 16px;display:flex;flex-direction:column;gap:8px;overflow-y:auto;}
+  #lo-preview-section{flex:1;padding:10px 16px 8px;display:flex;flex-direction:column;gap:8px;}
   #lo-preview-title{font-size:11px;color:#888;text-transform:uppercase;letter-spacing:2px;flex-shrink:0;}
-  #lo-preview-strokes{display:flex;flex-direction:column;gap:7px;}
-  .lo-stroke-row{display:flex;align-items:center;gap:10px;}
-  .lo-stroke-num{font-size:9px;color:#555;width:14px;text-align:right;flex-shrink:0;}
-  .lo-stroke-label{font-size:9px;color:#555;width:52px;flex-shrink:0;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;}
+  #lo-preview-row{display:flex;flex-direction:row;gap:5px;align-items:flex-start;flex-wrap:nowrap;overflow-x:auto;padding-bottom:2px;}
+  #lo-preview-row::-webkit-scrollbar{height:2px;}
+  #lo-preview-row::-webkit-scrollbar-thumb{background:#222;}
   #lo-footer{background:#111;border-top:1px solid #222;padding:10px 20px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;}
   #lo-info{font-size:11px;color:#777;}
   #lo-info span{color:#e8ff00;font-size:13px;}
@@ -1934,15 +1933,19 @@ function drainActiveCan(amount) {
     return;
   }
   can.level = Math.max(0, can.level - amount);
-  // Update UI barre horizontale (width)
+  // Update barre horizontale sous l'icône
   const bar = document.getElementById('can-bar-' + activeCanIdx);
   if (bar) {
     bar.style.width = can.level + '%';
     bar.style.background = can.level < 20 ? '#ff3c00' : can.hex;
   }
-  // Opacité icône
+  // Opacité icône — s'efface au fur et à mesure
   const icon = document.getElementById('can-icon-' + activeCanIdx);
-  if (icon) icon.style.opacity = can.level > 0 ? 1 : 0.3;
+  if (icon) {
+    icon.style.opacity = Math.max(0.15, can.level / 100);
+  }
+  // Barre de niveau header
+  document.getElementById('can-level').textContent = Math.round(can.level) + '%';
   const dot = document.getElementById('can-dot-' + activeCanIdx);
   if (dot) dot.title = can.name + ' — ' + Math.round(can.level) + '%';
   // Header stat
