@@ -895,25 +895,30 @@ const _COL_SVG   = 'M 106.30 64.43 L 18.70 64.44 C 18.70 64.44 28.00 42.00 40.22
 const _FILL_TOP=69, _FILL_BOT=285, _FILL_LEFT=12, _FILL_W=101, _FILL_H=216;
 
 function canSVG(hex, level, isActive, w, h) {
-  w = w||38; h = h||92;
-  const uid = (hex+level+isActive).replace(/[^a-z0-9]/gi,'');
-  const fillColor = level < 20 ? '#ff3c00' : hex;
-  const stroke = isActive ? '#e8ff00' : 'rgba(255,255,255,0.75)';
-  const sw = isActive ? 3 : 2.5;
-  const fillH = Math.round(_FILL_H * level / 100);
-  const fillY = _FILL_BOT - fillH;
-
-  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 125 300" width="${w}" height="${h}">
-  <defs><clipPath id="cc${uid}"><path d="${_BODY_SVG}"/></clipPath></defs>
-  <path d="${_BODY_SVG}" fill="#111" stroke="none"/>
-  <rect x="${_FILL_LEFT}" y="${fillY}" width="${_FILL_W}" height="${fillH}" clip-path="url(#cc${uid})" fill="${fillColor}" opacity="0.9"/>
-  ${fillH>4?`<rect x="${_FILL_LEFT+2}" y="${fillY}" width="14" height="${fillH}" clip-path="url(#cc${uid})" fill="rgba(255,255,255,0.13)" rx="4"/>`:''}
-  <path d="${_BODY_SVG}" fill="none" stroke="${stroke}" stroke-width="${sw}" stroke-linejoin="round" stroke-linecap="round"/>
-  <path d="${_COL_SVG}"  fill="#0d0d0d" stroke="${stroke}" stroke-width="${sw}" stroke-linejoin="round" stroke-linecap="round"/>
-  <path d="${_VALVE_SVG}" fill="#0d0d0d" stroke="${stroke}" stroke-width="${sw}" stroke-linejoin="round" stroke-linecap="round"/>
-  <path d="${_CAP_SVG}"  fill="#0d0d0d" stroke="${stroke}" stroke-width="${sw}" stroke-linejoin="round" stroke-linecap="round"/>
-  ${level<=0?'<text x="62" y="185" font-size="28" text-anchor="middle" fill="rgba(255,60,0,0.4)" font-family="monospace">∅</text>':''}
-</svg>`;
+  w = w || 38; h = h || 92;
+  var uid = (hex + level + (isActive ? 'a' : 'i')).replace(/[^a-z0-9]/gi, '');
+  var fillColor = (level < 20) ? '#ff3c00' : hex;
+  var stroke = isActive ? '#e8ff00' : 'rgba(255,255,255,0.75)';
+  var sw = isActive ? 3 : 2.5;
+  var fillH = Math.round(_FILL_H * level / 100);
+  var fillY = _FILL_BOT - fillH;
+  var reflex = fillH > 4
+    ? '<rect x="' + (_FILL_LEFT+2) + '" y="' + fillY + '" width="14" height="' + fillH + '" clip-path="url(#cc' + uid + ')" fill="rgba(255,255,255,0.13)" rx="4"/>'
+    : '';
+  var empty = (level <= 0)
+    ? '<text x="62" y="185" font-size="28" text-anchor="middle" fill="rgba(255,60,0,0.4)" font-family="monospace">\u2205</text>'
+    : '';
+  return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 125 300" width="' + w + '" height="' + h + '">'
+    + '<defs><clipPath id="cc' + uid + '"><path d="' + _BODY_SVG + '"/></clipPath></defs>'
+    + '<path d="' + _BODY_SVG + '" fill="#111" stroke="none"/>'
+    + '<rect x="' + _FILL_LEFT + '" y="' + fillY + '" width="' + _FILL_W + '" height="' + fillH + '" clip-path="url(#cc' + uid + ')" fill="' + fillColor + '" opacity="0.9"/>'
+    + reflex
+    + '<path d="' + _BODY_SVG + '" fill="none" stroke="' + stroke + '" stroke-width="' + sw + '" stroke-linejoin="round" stroke-linecap="round"/>'
+    + '<path d="' + _COL_SVG + '" fill="#0d0d0d" stroke="' + stroke + '" stroke-width="' + sw + '" stroke-linejoin="round" stroke-linecap="round"/>'
+    + '<path d="' + _VALVE_SVG + '" fill="#0d0d0d" stroke="' + stroke + '" stroke-width="' + sw + '" stroke-linejoin="round" stroke-linecap="round"/>'
+    + '<path d="' + _CAP_SVG + '" fill="#0d0d0d" stroke="' + stroke + '" stroke-width="' + sw + '" stroke-linejoin="round" stroke-linecap="round"/>'
+    + empty
+    + '</svg>';
 }
 
 function loBuildGrid(){
