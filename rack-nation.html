@@ -870,6 +870,46 @@ function loMakeIcon(hex,w,h){
   return wrap;
 }
 
+
+// ─── CAN SVG (bombe avec jauge intérieure) ───────────────────────────────────
+// Points extraits du fichier AI spraycan-outline-clair.ai (125x300 pts, Y inversé)
+const _BODY_PTS  = [[109.85,14.97],[14.09,14.96],[11.33,16.80],[12.98,20.34],[12.98,225.25],[11.16,228.21],[13.26,230.98],[110.54,230.98],[112.40,228.16],[110.50,225.26],[110.50,20.31],[112.45,17.36],[109.85,14.97]];
+const _VALVE_PTS = [[60.52,287.36],[60.30,282.56],[64.43,282.21],[64.73,286.81],[60.52,287.36]];
+const _CAP_PTS   = [[72.36,274.97],[53.59,274.94],[49.74,277.79],[49.71,292.55],[52.84,295.59],[73.34,295.53],[75.28,291.91],[75.29,278.55],[72.36,274.97]];
+
+function _pdfPts(pts){ return pts.map(([x,y])=>[+x.toFixed(2),+(300-y).toFixed(2)]); }
+function _ptsPath(pts){ let d=`M${pts[0][0]} ${pts[0][1]}`; for(let i=1;i<pts.length;i++) d+=` L${pts[i][0]} ${pts[i][1]}`; return d+' Z'; }
+
+const _BODY_SVG  = _ptsPath(_pdfPts(_BODY_PTS));
+const _VALVE_SVG = _ptsPath(_pdfPts(_VALVE_PTS));
+const _CAP_SVG   = _ptsPath(_pdfPts(_CAP_PTS));
+// Col arrondi (courbe Bézier)
+const _COL_SVG   = 'M 106.30 64.43 L 18.70 64.44 C 18.70 64.44 28.00 42.00 40.22 29.67 L 84.16 29.66 C 96.50 42.00 106.30 64.43 106.30 64.43 Z';
+
+const _FILL_TOP=69, _FILL_BOT=285, _FILL_LEFT=12, _FILL_W=101, _FILL_H=216;
+
+function canSVG(hex, level, isActive, w, h) {
+  w = w||38; h = h||92;
+  const uid = (hex+level+isActive).replace(/[^a-z0-9]/gi,'');
+  const fillColor = level < 20 ? '#ff3c00' : hex;
+  const stroke = isActive ? '#e8ff00' : 'rgba(255,255,255,0.75)';
+  const sw = isActive ? 3 : 2.5;
+  const fillH = Math.round(_FILL_H * level / 100);
+  const fillY = _FILL_BOT - fillH;
+
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 125 300" width="${w}" height="${h}">
+  <defs><clipPath id="cc${uid}"><path d="${_BODY_SVG}"/></clipPath></defs>
+  <path d="${_BODY_SVG}" fill="#111" stroke="none"/>
+  <rect x="${_FILL_LEFT}" y="${fillY}" width="${_FILL_W}" height="${fillH}" clip-path="url(#cc${uid})" fill="${fillColor}" opacity="0.9"/>
+  ${fillH>4?`<rect x="${_FILL_LEFT+2}" y="${fillY}" width="14" height="${fillH}" clip-path="url(#cc${uid})" fill="rgba(255,255,255,0.13)" rx="4"/>`:''}
+  <path d="${_BODY_SVG}" fill="none" stroke="${stroke}" stroke-width="${sw}" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="${_COL_SVG}"  fill="#0d0d0d" stroke="${stroke}" stroke-width="${sw}" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="${_VALVE_SVG}" fill="#0d0d0d" stroke="${stroke}" stroke-width="${sw}" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="${_CAP_SVG}"  fill="#0d0d0d" stroke="${stroke}" stroke-width="${sw}" stroke-linejoin="round" stroke-linecap="round"/>
+  ${level<=0?'<text x="62" y="185" font-size="28" text-anchor="middle" fill="rgba(255,60,0,0.4)" font-family="monospace">∅</text>':''}
+</svg>`;
+}
+
 function loBuildGrid(){
   const g=document.getElementById('lo-grid');
   MTN_COLORS.forEach(c=>{
@@ -901,8 +941,10 @@ function loRenderSlots(){
     slot.style.cssText='display:flex;flex-direction:column;align-items:center;gap:3px;flex-shrink:0;';
     if(loSelected[i]){
       const num=document.createElement('div');num.className='lo-slot-num';num.textContent=i+1;
-      const iconWrap=loMakeIcon(loSelected[i].hex,CAN_W,CAN_H);
-      iconWrap.className='lo-can-icon';
+      const iconWrap=loMakeIcon(loSelected[i].hex,CAN_W,CAN_H,100,false);
+      iconWrap.style.cssText='cursor:pointer;transition:transform .1s;flex-shrink:0;';
+      iconWrap.onmouseenter=()=>iconWrap.style.transform='scale(1.08) translateY(-3px)';
+      iconWrap.onmouseleave=()=>iconWrap.style.transform='';
       const idx=i;
       iconWrap.onclick=()=>{loSelected.splice(idx,1);loRenderSlots();loRenderPreview();loUpdateCount();};
       slot.appendChild(num);slot.appendChild(iconWrap);
@@ -1857,41 +1899,25 @@ function initGameFromLoadout() {
 
 function buildGameCanPanel() {
   const grid = document.getElementById('color-grid');
-  grid.innerHTML = '';
-  grid.style.cssText = 'display:none;'; // masqué — palette dans bottom-bar
+  if (grid) { grid.innerHTML=''; grid.style.cssText='display:none;'; }
 
   const btmCans = document.getElementById('btm-cans');
+  if (!btmCans) return;
   btmCans.innerHTML = '';
 
   gameCans.forEach((can, i) => {
     const wrap = document.createElement('div');
-    wrap.style.cssText = 'display:flex;flex-direction:column;align-items:center;gap:3px;cursor:pointer;flex-shrink:0;';
+    wrap.id = 'can-wrap-' + i;
+    wrap.style.cssText = 'display:flex;flex-direction:column;align-items:center;gap:2px;cursor:pointer;flex-shrink:0;';
 
-    // Numéro
     const num = document.createElement('div');
     num.style.cssText = 'font-size:9px;color:#555;font-family:"Share Tech Mono",monospace;';
     num.textContent = i + 1;
 
-    // Icône spray colorisée (CSS mask)
-    const iconWrap = document.createElement('div');
-    iconWrap.style.cssText = 'width:22px;height:54px;position:relative;flex-shrink:0;';
-    const iconFill = document.createElement('div');
-    iconFill.id = 'can-icon-' + i;
-    iconFill.style.cssText = `position:absolute;inset:0;background:${can.hex};-webkit-mask:url(${LO_ICON}) center/contain no-repeat;mask:url(${LO_ICON}) center/contain no-repeat;opacity:${can.level > 0 ? 1 : 0.3};transition:opacity .2s;`;
-    iconWrap.appendChild(iconFill);
-
-    // Barre de niveau verticale sous l'icône
-    const barWrap = document.createElement('div');
-    barWrap.style.cssText = 'width:22px;height:6px;background:#1a1a1a;border:1px solid #222;border-radius:3px;overflow:hidden;';
-    const bar = document.createElement('div');
-    bar.id = 'can-bar-' + i;
-    const barColor = can.level < 20 ? '#ff3c00' : can.hex;
-    bar.style.cssText = `height:100%;width:${can.level}%;background:${barColor};transition:width .15s;border-radius:3px;`;
-    barWrap.appendChild(bar);
-
-    wrap.appendChild(num);
-    wrap.appendChild(iconWrap);
-    wrap.appendChild(barWrap);
+    // SVG can avec jauge intérieure
+    const canEl = document.createElement('div');
+    canEl.id = 'can-svg-' + i;
+    canEl.innerHTML = canSVG(can.hex, can.level, i===activeCanIdx, 26, 64);
 
     wrap.title = can.name + ' — ' + Math.round(can.level) + '%';
     wrap.onclick = () => {
@@ -1900,19 +1926,18 @@ function buildGameCanPanel() {
       currentColor = gameCans[i].hex;
       updateColorDisplay();
       updatePreview();
-      // Highlight actif
-      document.querySelectorAll('[id^=can-icon-]').forEach((d,j) => {
-        d.style.outline = j === i ? '2px solid #fff' : 'none';
+      // Re-render tous les cans pour maj highlight
+      gameCans.forEach((c,j) => {
+        const el = document.getElementById('can-svg-'+j);
+        if (el) el.innerHTML = canSVG(c.hex, c.level, j===activeCanIdx, 26, 64);
       });
       document.getElementById('custom-color').value = currentColor;
       updateStatus();
     };
+    wrap.appendChild(num);
+    wrap.appendChild(canEl);
     btmCans.appendChild(wrap);
   });
-
-  // Highlight can actif initial
-  const activeIcon = document.getElementById('can-icon-0');
-  if (activeIcon) activeIcon.style.outline = '2px solid #fff';
 }
 
 function drainActiveCan(amount) {
@@ -1933,24 +1958,11 @@ function drainActiveCan(amount) {
     return;
   }
   can.level = Math.max(0, can.level - amount);
-  // Update barre horizontale sous l'icône
-  const bar = document.getElementById('can-bar-' + activeCanIdx);
-  if (bar) {
-    bar.style.width = can.level + '%';
-    bar.style.background = can.level < 20 ? '#ff3c00' : can.hex;
-  }
-  // Opacité icône — s'efface au fur et à mesure
-  const icon = document.getElementById('can-icon-' + activeCanIdx);
-  if (icon) {
-    icon.style.opacity = Math.max(0.15, can.level / 100);
-  }
-  // Barre de niveau header
-  document.getElementById('can-level').textContent = Math.round(can.level) + '%';
-  const dot = document.getElementById('can-dot-' + activeCanIdx);
-  if (dot) dot.title = can.name + ' — ' + Math.round(can.level) + '%';
+  // Re-render le SVG du can actif avec nouveau niveau
+  const canEl = document.getElementById('can-svg-' + activeCanIdx);
+  if (canEl) canEl.innerHTML = canSVG(can.hex, can.level, true, 26, 64);
   // Header stat
-  const pct = Math.round(can.level);
-  document.getElementById('can-level').textContent = pct + '%';
+  document.getElementById('can-level').textContent = Math.round(can.level) + '%';
 }
 
 // La ville est chargée via initGameFromLoadout() au lancement
