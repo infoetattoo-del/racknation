@@ -137,19 +137,27 @@
     position: relative;
     overflow: hidden;
   }
-
+  /* Scene prend tout l'espace du canvas-area */
   #scene {
-    position: relative;
-    width: 100%;
-    height: 100%;
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
   }
 
+
+
   /* TRAIN SVG */
-  #train-container {
-    position: absolute;
-    top: 0; left: 0; right: 0; bottom: 0;
-    width: 100%;
-    height: 100%;
+  /* train-wrap : conteneur du wagon, centré, zoomable */
+  #train-wrap {
+    position: relative;
+    width: 880px;
+    height: 340px;
+    flex-shrink: 0;
+    transform-origin: center center;
+    transition: transform 0.15s ease;
     background: transparent;
   }
 
@@ -645,21 +653,20 @@
 
       <div id="city-label">PARIS — LIGNE 13</div>
 
-      <!-- TRAIN -->
-      <div id="train-container">
-        <svg id="train-bg" viewBox="0 0 880 340" xmlns="http://www.w3.org/2000/svg" style="display:none;"></svg>
-        <img id="train-img" src="" alt="train"
-          style="position:absolute;top:0;left:0;width:100%;height:100%;
-                 object-fit:cover;object-position:center;z-index:1;
-                 pointer-events:none;display:none;">
-        <canvas id="graffiti-canvas"></canvas>
-      </div>
-
-      <!-- Ground -->
+      <!-- Ground + Rails (fond fixe) -->
       <div id="ground"></div>
       <div id="rails">
         <div class="rail"></div>
         <div class="rail"></div>
+      </div>
+
+      <!-- TRAIN WRAP (zoomable, centré) -->
+      <div id="train-wrap">
+        <!-- SVG wagon -->
+        <svg id="train-bg" viewBox="0 0 880 340" xmlns="http://www.w3.org/2000/svg"
+          style="display:block;width:100%;height:100%;position:absolute;top:0;left:0;z-index:1;"></svg>
+        <!-- Canvas peinture par-dessus le SVG uniquement -->
+        <canvas id="graffiti-canvas"></canvas>
       </div>
 
       <div id="notif">SAVED TO GALLERY</div>
@@ -747,12 +754,16 @@
   <button class="cap-img-btn" id="btm-cap-ny" onclick="setCap('ny')" title="NY Fat"><span style="font-size:8px;font-family:'Share Tech Mono',monospace;color:inherit">NY<br>FAT</span></button>
   <button class="cap-img-btn" id="btm-cap-filler" onclick="setCap('filler')" title="Filler"><span style="font-size:8px;font-family:'Share Tech Mono',monospace;color:inherit">FILLER<br>FILL</span></button>
   <div class="sep"></div>
+  <div class="sep"></div>
   <div id="zoom-controls">
     <span class="btm-label">Zoom</span>
-    <button class="zoom-btn" onclick="adjustZoom(-0.1)">−</button>
-    <span id="zoom-val">100%</span>
-    <button class="zoom-btn" onclick="adjustZoom(0.1)">+</button>
-    <button class="zoom-btn" onclick="resetZoom()" title="Reset zoom" style="font-size:10px;min-width:36px;">FIT</button>
+    <button class="zoom-btn" onclick="adjustZoom(-0.15)" title="Zoom out">−</button>
+    <input type="range" id="zoom-slider" min="30" max="200" value="75" step="5"
+      oninput="setZoomFromSlider(this.value)"
+      style="width:90px;accent-color:var(--accent);cursor:pointer;">
+    <span id="zoom-val">75%</span>
+    <button class="zoom-btn" onclick="adjustZoom(0.15)" title="Zoom in">+</button>
+    <button class="zoom-btn" onclick="resetZoom()" title="Fit" style="font-size:9px;min-width:32px;letter-spacing:0;">FIT</button>
   </div>
 </div>
 
@@ -968,6 +979,13 @@ function launchGame(){
   window._loadoutCity=document.getElementById('lo-city-sel').value;
   document.getElementById('loadout').classList.add('hidden');
   if(typeof initGameFromLoadout==='function') initGameFromLoadout();
+  // Lancer le son au premier click utilisateur (politique browser)
+  if (!soundOn) {
+    soundOn = true;
+    buildSound();
+    const btn = document.getElementById('sound-btn');
+    if (btn) { btn.textContent = '♪ ON'; btn.style.color='var(--accent)'; btn.style.borderColor='var(--accent)'; }
+  }
 }
 
 loBuildGrid();
@@ -979,7 +997,7 @@ loRenderPreview();
 <script>
 const canvas = document.getElementById('graffiti-canvas');
 const ctx = canvas.getContext('2d');
-const trainContainer = document.getElementById('train-container');
+const trainContainer = document.getElementById('train-wrap');
 
 let painting = false;
 let currentColor = '#FF3C00';
@@ -996,37 +1014,26 @@ let totalPixels = 0;
 let paintedPixels = new Set();
 let animFrame;
 
-// Resize canvas to match train container
+// Canvas = taille fixe du wagon SVG (880x340)
+// Le zoom est géré par transform:scale sur train-wrap, pas sur le canvas
 function resizeCanvas() {
-  const rect = trainContainer.getBoundingClientRect();
-  if (rect.width === 0 || rect.height === 0) return;
+  if (canvas.width === 880 && canvas.height === 340) return;
   let imgData = null;
   if (canvas.width > 0 && canvas.height > 0) {
     try { imgData = ctx.getImageData(0, 0, canvas.width, canvas.height); } catch(e) {}
   }
-  canvas.width = rect.width;
-  canvas.height = rect.height;
+  canvas.width = 880;
+  canvas.height = 340;
   if (imgData) ctx.putImageData(imgData, 0, 0);
 }
 resizeCanvas();
-window.addEventListener('resize', () => { resizeCanvas(); applyTrainClip(); });
 
-// Masque de peinture — zone train uniquement
+// Clip fixe sur le SVG 880x340 — zone wagon uniquement
+// x:20 y:45 w:840 h:237 correspond au corps du wagon sans les roues
+let trainClipRegion = { x: 20, y: 45, w: 840, h: 237 };
 function applyTrainClip() {
-  // Le train occupe approximativement y:45 à y:285 sur le SVG 880x340
-  // On scale ces coordonnées aux dimensions du canvas
-  if (!canvas.width || !canvas.height) return;
-  const scaleX = canvas.width / 880;
-  const scaleY = canvas.height / 340;
-  trainClipRegion = {
-    x: Math.round(20 * scaleX),
-    y: Math.round(45 * scaleY),
-    w: Math.round(840 * scaleX),
-    h: Math.round(240 * scaleY),
-  };
+  trainClipRegion = { x: 20, y: 45, w: 840, h: 237 };
 }
-let trainClipRegion = null;
-setTimeout(applyTrainClip, 200);
 
 // CAP PROFILES
 const capProfiles = {
@@ -1185,14 +1192,15 @@ function updateStatus() {
 
 // SPRAY ENGINE
 function getCanvasPos(e) {
+  // Le canvas est 880x340 mais affiché avec un transform scale
+  // getBoundingClientRect retourne la taille après scale
   const rect = canvas.getBoundingClientRect();
-  const scaleX = canvas.width / rect.width;
-  const scaleY = canvas.height / rect.height;
   const clientX = e.touches ? e.touches[0].clientX : e.clientX;
   const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+  // On divise par trainScale pour retrouver les coordonnées canvas réelles
   return {
-    x: (clientX - rect.left) * scaleX,
-    y: (clientY - rect.top) * scaleY
+    x: (clientX - rect.left) / trainScale,
+    y: (clientY - rect.top) / trainScale
   };
 }
 
@@ -1773,23 +1781,14 @@ function loadCity(cityKey) {
   const city = TRAINS[cityKey];
   if (!city) return;
 
-  const trainImg = document.getElementById('train-img');
   const trainSvg = document.getElementById('train-bg');
-
-  if (city.img) {
-    // Mode image avec mix-blend-mode multiply
-    trainImg.src = city.img;
-    trainImg.style.display = 'block';
-    trainSvg.style.display = 'none';
-  } else {
-    // Mode SVG
-    trainSvg.innerHTML = city.render();
-    trainSvg.style.display = 'block';
-    trainImg.style.display = 'none';
-  }
+  // Toujours SVG — on injecte le rendu dans le viewBox 880x340
+  trainSvg.innerHTML = city.render();
+  trainSvg.style.display = 'block';
 
   document.getElementById('city-label').textContent = city.label;
-  document.getElementById('canvas-area').style.background = city.bg;
+  // Fond dépôt = couleur bg de la ville sur canvas-area
+  document.getElementById('canvas-area').style.background = city.bg || '#070707';
 
   if (canvas.width > 0 && canvas.height > 0) {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -1980,39 +1979,43 @@ document.addEventListener('keydown', (e) => {
 
 
 // ─── ZOOM ────────────────────────────────────────────────────────────────────
-let trainScale = 1.0;
-const ZOOM_MIN = 0.4;
-const ZOOM_MAX = 2.5;
-const ZOOM_STEP = 0.1;
+let trainScale = 0.75;
+const ZOOM_MIN = 0.3;
+const ZOOM_MAX = 2.0;
 
 function applyZoom() {
-  const tc = document.getElementById('train-container');
-  tc.style.transform = `scale(${trainScale})`;
-  tc.style.transformOrigin = 'center center';
-  document.getElementById('zoom-val').textContent = Math.round(trainScale * 100) + '%';
+  const tw = document.getElementById('train-wrap');
+  if (!tw) return;
+  tw.style.transform = `scale(${trainScale})`;
+  const pct = Math.round(trainScale * 100);
+  document.getElementById('zoom-val').textContent = pct + '%';
+  const sl = document.getElementById('zoom-slider');
+  if (sl) sl.value = pct;
 }
 
 function adjustZoom(delta) {
   trainScale = Math.min(ZOOM_MAX, Math.max(ZOOM_MIN, trainScale + delta));
   applyZoom();
-  // Recalc clip region après zoom (le canvas ne change pas, le train visuel oui)
-  setTimeout(applyTrainClip, 50);
+}
+
+function setZoomFromSlider(val) {
+  trainScale = Math.min(ZOOM_MAX, Math.max(ZOOM_MIN, parseInt(val) / 100));
+  applyZoom();
 }
 
 function resetZoom() {
-  trainScale = 0.75; // valeur initiale confortable
+  trainScale = 0.75;
   applyZoom();
-  setTimeout(applyTrainClip, 50);
 }
 
-// Zoom molette souris sur la zone canvas
+// Zoom molette souris
 document.getElementById('canvas-area').addEventListener('wheel', (e) => {
   e.preventDefault();
-  adjustZoom(e.deltaY < 0 ? ZOOM_STEP : -ZOOM_STEP);
+  adjustZoom(e.deltaY < 0 ? 0.05 : -0.05);
 }, { passive: false });
 
-// Init zoom confortable au démarrage
-setTimeout(() => { resetZoom(); }, 300);
+// Init
+setTimeout(resetZoom, 300);
 
 
 // ─── CURSEUR MAIN CUSTOM ──────────────────────────────────────────────────────
@@ -2076,11 +2079,11 @@ function buildSound() {
     bgAudio.volume = 0.55;
     bgAudio.preload = 'auto';
   }
-  bgAudio.play().then(() => {}).catch(() => {
-    document.addEventListener('pointerdown', () => {
-      if (soundOn && bgAudio) bgAudio.play().catch(()=>{});
-    }, { once: true });
-  });
+  // Les browsers bloquent autoplay — on joue sur interaction utilisateur
+  function tryPlay() {
+    bgAudio.play().catch(e => console.warn('Audio blocked:', e));
+  }
+  tryPlay();
 }
 
 function _oldBuildSound_disabled() {
