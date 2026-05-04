@@ -570,6 +570,12 @@
     text-align: center;
   }
 
+  /* Contraindre les SVG dans les slots loadout */
+  .lo-slot svg { display:block; max-width:100%; max-height:100%; }
+  .lo-can-icon svg { display:block; max-width:100%; max-height:100%; }
+  #btm-cans svg { display:block; max-width:26px; max-height:64px; }
+  #btm-cans > div > div { overflow:hidden; }
+
 </style>
 </head>
 <body>
@@ -942,7 +948,7 @@ function loRenderSlots(){
     if(loSelected[i]){
       const num=document.createElement('div');num.className='lo-slot-num';num.textContent=i+1;
       const iconWrap=loMakeIcon(loSelected[i].hex,CAN_W,CAN_H,100,false);
-      iconWrap.style.cssText='cursor:pointer;transition:transform .1s;flex-shrink:0;';
+      iconWrap.style.cssText=`width:${CAN_W}px;height:${CAN_H}px;cursor:pointer;transition:transform .1s;flex-shrink:0;overflow:hidden;display:block;`;
       iconWrap.onmouseenter=()=>iconWrap.style.transform='scale(1.08) translateY(-3px)';
       iconWrap.onmouseleave=()=>iconWrap.style.transform='';
       const idx=i;
@@ -1917,6 +1923,7 @@ function buildGameCanPanel() {
     // SVG can avec jauge intérieure
     const canEl = document.createElement('div');
     canEl.id = 'can-svg-' + i;
+    canEl.style.cssText = 'width:26px;height:64px;flex-shrink:0;overflow:hidden;display:block;';
     canEl.innerHTML = canSVG(can.hex, can.level, i===activeCanIdx, 26, 64);
 
     wrap.title = can.name + ' — ' + Math.round(can.level) + '%';
@@ -1929,7 +1936,10 @@ function buildGameCanPanel() {
       // Re-render tous les cans pour maj highlight
       gameCans.forEach((c,j) => {
         const el = document.getElementById('can-svg-'+j);
-        if (el) el.innerHTML = canSVG(c.hex, c.level, j===activeCanIdx, 26, 64);
+        if (el) {
+          el.innerHTML = canSVG(c.hex, c.level, j===activeCanIdx, 26, 64);
+          el.style.cssText = 'width:26px;height:64px;flex-shrink:0;overflow:hidden;display:block;';
+        }
       });
       document.getElementById('custom-color').value = currentColor;
       updateStatus();
@@ -1960,7 +1970,10 @@ function drainActiveCan(amount) {
   can.level = Math.max(0, can.level - amount);
   // Re-render le SVG du can actif avec nouveau niveau
   const canEl = document.getElementById('can-svg-' + activeCanIdx);
-  if (canEl) canEl.innerHTML = canSVG(can.hex, can.level, true, 26, 64);
+  if (canEl) {
+    canEl.innerHTML = canSVG(can.hex, can.level, true, 26, 64);
+    canEl.style.cssText = 'width:26px;height:64px;flex-shrink:0;overflow:hidden;display:block;';
+  }
   // Header stat
   document.getElementById('can-level').textContent = Math.round(can.level) + '%';
 }
