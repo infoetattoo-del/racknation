@@ -673,10 +673,12 @@
 
       <!-- TRAIN WRAP (zoomable, centré) -->
       <div id="train-wrap">
-        <!-- SVG wagon -->
+        <!-- Canvas train (rendu du wagon) -->
+        <canvas id="train-canvas" style="position:absolute;top:0;left:0;width:100%;height:100%;z-index:1;pointer-events:none;"></canvas>
+        <!-- SVG wagon (fallback villes SVG) -->
         <svg id="train-bg" viewBox="0 0 880 340" xmlns="http://www.w3.org/2000/svg"
-          style="display:block;width:100%;height:100%;position:absolute;top:0;left:0;z-index:1;"></svg>
-        <!-- Canvas peinture par-dessus le SVG uniquement -->
+          style="display:none;width:100%;height:100%;position:absolute;top:0;left:0;z-index:1;"></svg>
+        <!-- Canvas peinture par-dessus -->
         <canvas id="graffiti-canvas"></canvas>
       </div>
 
@@ -1803,51 +1805,71 @@ function loadCity(cityKey) {
   if (!city) return;
 
   var trainSvg = document.getElementById('train-bg');
-  var scene = document.getElementById('scene');
-  var tw = document.getElementById('train-wrap');
+  var trainCanv = document.getElementById('train-canvas');
+  var grafCanvas = document.getElementById('graffiti-canvas');
+  var caEl = document.getElementById('canvas-area');
 
-  // Nettoyer
+  // Nettoyer ancien état
   var oldBg = document.getElementById('scene-bg');
   if (oldBg) oldBg.remove();
   var oldImg = document.getElementById('train-photo');
   if (oldImg) oldImg.remove();
   trainSvg.innerHTML = '';
+  trainSvg.style.display = 'none';
 
   if (city.bg_img && city.train_img) {
-    // Fond de station
-    var bgEl = document.createElement('img');
-    bgEl.id = 'scene-bg';
-    bgEl.src = city.bg_img;
-    bgEl.style.cssText = 'position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:0;pointer-events:none;';
-    scene.insertBefore(bgEl, scene.firstChild);
+    // Fond de station en background CSS
+    caEl.style.backgroundImage = 'url(' + city.bg_img + ')';
+    caEl.style.backgroundSize = 'cover';
+    caEl.style.backgroundPosition = 'center';
 
-    // Train PNG transparent centré
-    trainSvg.style.display = 'none';
-    var trainEl = document.createElement('img');
-    trainEl.id = 'train-photo';
-    trainEl.src = city.train_img;
-    trainEl.style.cssText = 'position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:100%;height:auto;z-index:1;pointer-events:none;';
-    tw.insertBefore(trainEl, document.getElementById('graffiti-canvas'));
-
-    // Zone peignable = flanc blanc du train (calculée sur image 880x195, centrée dans canvas 880x340)
-    var offsetY = Math.round((340 - 195) / 2);
-    trainClipRegion = { x: 24, y: offsetY + 18, w: 837, h: 145 };
+    // Train dessiné sur train-canvas (880x340, train 880x195 centré)
+    trainCanv.width = 880;
+    trainCanv.height = 340;
+    trainCanv.style.display = 'block';
+    var tc = trainCanv.getContext('2d');
+    var trainImg = new Image();
+    trainImg.onload = function() {
+      // Centrer le train verticalement dans le canvas 880x340
+      var trainH = Math.round(880 * trainImg.height / trainImg.width);
+      var offsetY = Math.round((340 - trainH) / 2);
+      tc.clearRect(0, 0, 880, 340);
+      tc.drawImage(trainImg, 0, offsetY, 880, trainH);
+      // Zone peignable = zone non-transparente du train
+      // Flanc blanc : x:24 à x:856, y:(offsetY+18) à y:(offsetY+18+145)
+      trainClipRegion = { x: 24, y: offsetY + 18, w: 832, h: trainH - 36 };
+      console.log('Train loaded, clipRegion:', trainClipRegion);
+    };
+    trainImg.src = city.train_img;
 
   } else if (city.img) {
-    trainSvg.style.display = 'none';
-    var photoEl = document.createElement('img');
-    photoEl.id = 'train-photo';
-    photoEl.src = city.img;
-    photoEl.style.cssText = 'position:absolute;top:0;left:0;width:100%;height:100%;object-fit:cover;z-index:1;pointer-events:none;';
-    tw.insertBefore(photoEl, document.getElementById('graffiti-canvas'));
+    // Legacy : image unique
+    caEl.style.backgroundImage = '';
+    trainCanv.width = 880;
+    trainCanv.height = 340;
+    trainCanv.style.display = 'block';
+    var tc2 = trainCanv.getContext('2d');
+    var img2 = new Image();
+    img2.onload = function() {
+      tc2.clearRect(0, 0, 880, 340);
+      tc2.drawImage(img2, 0, 0, 880, 340);
+      trainClipRegion = { x: 20, y: 45, w: 840, h: 237 };
+    };
+    img2.src = city.img;
+
   } else if (city.render) {
+    caEl.style.backgroundImage = '';
+    trainCanv.style.display = 'none';
     trainSvg.style.display = 'block';
     trainSvg.innerHTML = city.render();
+    trainClipRegion = { x: 20, y: 45, w: 840, h: 237 };
   }
 
   document.getElementById('city-label').textContent = city.label;
-  document.getElementById('canvas-area').style.background = city.bg || '#070707';
+  caEl.style.backgroundColor = city.bg || '#070707';
 }
+
+
 function initGameFromLoadout() {
   const colors = window._loadoutColors || ['#FF3C00'];
   const names  = window._loadoutNames  || colors.map(()=>'—');
