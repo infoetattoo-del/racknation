@@ -136,6 +136,7 @@
     background: #070707;
     position: relative;
     overflow: hidden;
+    /* Le train-wrap sera scale pour remplir cet espace */
   }
   /* Scene prend tout l'espace du canvas-area */
   #scene {
@@ -159,6 +160,7 @@
     transform-origin: center center;
     transition: transform 0.15s ease;
     background: transparent;
+    /* Le scale est calculé dynamiquement pour remplir canvas-area */
   }
 
   #train-bg {
@@ -457,14 +459,12 @@
     gap: 0;
     background: var(--panel);
     border-top: 1px solid var(--border);
-    height: 68px;
+    height: 72px;
     flex-shrink: 0;
-    padding: 0 8px;
+    padding: 0 6px;
     z-index: 10;
-    overflow-x: auto;
+    overflow: visible;
   }
-  #bottom-bar::-webkit-scrollbar { height: 2px; }
-  #bottom-bar::-webkit-scrollbar-thumb { background: #333; }
 
   #bottom-bar .sep {
     width: 1px;
@@ -507,8 +507,8 @@
   .btm-btn.active svg { opacity: 1; }
 
   .cap-img-btn {
-    height: 52px;
-    width: 52px;
+    height: 54px;
+    width: 50px;
     border: 1px solid var(--border);
     background: transparent;
     cursor: pointer;
@@ -566,7 +566,8 @@
   /* Contraindre les SVG dans les slots loadout */
   .lo-slot svg { display:block; max-width:100%; max-height:100%; }
   .lo-can-icon svg { display:block; max-width:100%; max-height:100%; }
-  #btm-cans svg { display:block; max-width:28px; max-height:68px; overflow:visible; }
+  #btm-cans { overflow: visible; }
+  #btm-cans svg { display:block; width:28px; height:68px; overflow:visible; }
   #btm-cans > div > div { overflow:hidden; }
 
 </style>
@@ -910,7 +911,7 @@ function canSVG(hex, level, isActive, w, h) {
   var ref = fh > 4
     ? ('<rect x="' + (_FL+2) + '" y="' + fy + '" width="12" height="' + fh + '" clip-path="url(#cc' + uid + ')" fill="rgba(255,255,255,0.13)" rx="3"/>')
     : '';
-  return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="-2 0 129 300" width="' + w + '" height="' + h + '" style="display:block;width:' + w + 'px;height:' + h + 'px;">'
+  return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="-4 0 133 300" width="' + w + '" height="' + h + '" style="display:block;width:' + w + 'px;height:' + h + 'px;">'
     + '<defs><clipPath id="cc' + uid + '"><path d="' + _BODY + '"/></clipPath></defs>'
     + '<path d="' + _BODY + '" fill="#111"/>'
     + '<rect x="' + _FL + '" y="' + fy + '" width="' + _FW + '" height="' + fh + '" clip-path="url(#cc' + uid + ')" fill="' + fc + '" opacity="0.92"/>'
@@ -1866,8 +1867,15 @@ function initGameFromLoadout() {
   loadCity(city);
   document.getElementById('city-select').value = city;
 
-  // Resize canvas
-  setTimeout(() => { resizeCanvas(); updatePreview(); }, 100);
+  // Resize canvas + mettre à jour couleur initiale
+  setTimeout(() => {
+    resizeCanvas();
+    if (gameCans.length > 0) {
+      currentColor = gameCans[0].hex;
+      updateColorDisplay();
+    }
+    updatePreview();
+  }, 150);
 }
 
 function buildGameCanPanel() {
@@ -2110,19 +2118,34 @@ function applyZoom() {
 }
 
 function adjustZoom(delta) {
-  trainScale = Math.min(ZOOM_MAX, Math.max(ZOOM_MIN, trainScale + delta));
+  var minScale = (typeof ZOOM_FIT !== 'undefined') ? ZOOM_FIT : ZOOM_MIN;
+  trainScale = Math.min(ZOOM_MAX, Math.max(minScale, trainScale + delta));
   applyZoom();
 }
 
 function setZoomFromSlider(val) {
-  trainScale = Math.min(ZOOM_MAX, Math.max(ZOOM_MIN, parseInt(val) / 100));
+  var minScale = (typeof ZOOM_FIT !== 'undefined') ? ZOOM_FIT : ZOOM_MIN;
+  trainScale = Math.min(ZOOM_MAX, Math.max(minScale, parseInt(val) / 100));
   applyZoom();
 }
 
 function resetZoom() {
-  trainScale = 0.75;
+  // Calculer le scale pour que le train remplisse exactement canvas-area
+  var ca = document.getElementById('canvas-area');
+  if (ca) {
+    var caW = ca.clientWidth;
+    var caH = ca.clientHeight;
+    var scaleW = caW / 880;
+    var scaleH = caH / 340;
+    trainScale = Math.min(scaleW, scaleH);
+    ZOOM_FIT = trainScale; // garder le scale fit en mémoire
+  } else {
+    trainScale = 0.75;
+    ZOOM_FIT = 0.75;
+  }
   applyZoom();
 }
+var ZOOM_FIT = 0.75;
 
 // Zoom molette souris
 document.getElementById('canvas-area').addEventListener('wheel', (e) => {
@@ -2130,8 +2153,13 @@ document.getElementById('canvas-area').addEventListener('wheel', (e) => {
   adjustZoom(e.deltaY < 0 ? 0.05 : -0.05);
 }, { passive: false });
 
+// Recalc fit on resize
+window.addEventListener('resize', function() {
+  resetZoom();
+});
+
 // Init
-setTimeout(resetZoom, 300);
+setTimeout(resetZoom, 100);
 
 
 // Curseur main via CSS cursor property
