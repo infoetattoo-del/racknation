@@ -840,6 +840,45 @@ function loSprayCircle(hex, size){
   cx.globalAlpha=1;return c;
 }
 
+
+// ─── CAN SVG (bombe avec jauge, paths extraits du fichier AI) ────────────────
+var _BP=[[109.85,14.97],[14.09,14.96],[11.33,16.80],[12.98,20.34],[12.98,225.25],[11.16,228.21],[13.26,230.98],[110.54,230.98],[112.40,228.16],[110.50,225.26],[110.50,20.31],[112.45,17.36],[109.85,14.97]];
+var _VP=[[60.52,287.36],[60.30,282.56],[64.43,282.21],[64.73,286.81],[60.52,287.36]];
+var _CP=[[72.36,274.97],[53.59,274.94],[49.74,277.79],[49.71,292.55],[52.84,295.59],[73.34,295.53],[75.28,291.91],[75.29,278.55],[72.36,274.97]];
+
+function _pp(pts){return pts.map(function(p){return[+p[0].toFixed(2),+(300-p[1]).toFixed(2)];});}
+function _mkpath(pts){var d='M'+pts[0][0]+' '+pts[0][1];for(var i=1;i<pts.length;i++)d+=' L'+pts[i][0]+' '+pts[i][1];return d+' Z';}
+
+var _BODY  = _mkpath(_pp(_BP));
+var _VALVE = _mkpath(_pp(_VP));
+var _CAP   = _mkpath(_pp(_CP));
+var _COL   = 'M 106.30 64.43 L 18.70 64.44 C 18.70 64.44 28.00 42.00 40.22 29.67 L 84.16 29.66 C 96.50 42.00 106.30 64.43 Z';
+var _FL=12, _FW=101, _FB=285, _FH=216;
+
+function canSVG(hex, level, isActive, w, h) {
+  w = w||22; h = h||54;
+  var uid = hex.replace('#','') + (isActive ? 'a' : 'i');
+  var fc  = level < 20 ? '#ff3c00' : hex;
+  var fh  = Math.round(_FH * level / 100);
+  var fy  = _FB - fh;
+  var sk  = isActive ? '#e8ff00' : 'rgba(255,255,255,0.85)';
+  var sw  = isActive ? 3 : 2.5;
+  var ref = fh > 4
+    ? ('<rect x="' + (_FL+2) + '" y="' + fy + '" width="12" height="' + fh + '" clip-path="url(#cc' + uid + ')" fill="rgba(255,255,255,0.13)" rx="3"/>')
+    : '';
+  return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 125 300" width="' + w + '" height="' + h + '" style="display:block;width:' + w + 'px;height:' + h + 'px;">'
+    + '<defs><clipPath id="cc' + uid + '"><path d="' + _BODY + '"/></clipPath></defs>'
+    + '<path d="' + _BODY + '" fill="#111"/>'
+    + '<rect x="' + _FL + '" y="' + fy + '" width="' + _FW + '" height="' + fh + '" clip-path="url(#cc' + uid + ')" fill="' + fc + '" opacity="0.92"/>'
+    + ref
+    + '<path d="' + _BODY  + '" fill="none" stroke="' + sk + '" stroke-width="' + sw + '" stroke-linejoin="round" stroke-linecap="round"/>'
+    + '<path d="' + _COL   + '" fill="#0d0d0d" stroke="' + sk + '" stroke-width="' + sw + '" stroke-linejoin="round" stroke-linecap="round"/>'
+    + '<path d="' + _VALVE + '" fill="#0d0d0d" stroke="' + sk + '" stroke-width="' + sw + '" stroke-linejoin="round" stroke-linecap="round"/>'
+    + '<path d="' + _CAP   + '" fill="#0d0d0d" stroke="' + sk + '" stroke-width="' + sw + '" stroke-linejoin="round" stroke-linecap="round"/>'
+    + (level <= 0 ? '<text x="62" y="185" font-size="28" text-anchor="middle" fill="rgba(255,60,0,0.35)">∅</text>' : '')
+    + '</svg>';
+}
+
 function loBuildGrid(){
   const g=document.getElementById('lo-grid');
   g.innerHTML='';
