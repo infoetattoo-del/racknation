@@ -476,11 +476,14 @@
     gap: 0;
     background: var(--panel);
     border-top: 1px solid var(--border);
-    height: 52px;
+    height: 64px;
     flex-shrink: 0;
     padding: 0 8px;
     z-index: 10;
+    overflow-x: auto;
   }
+  #bottom-bar::-webkit-scrollbar { height: 2px; }
+  #bottom-bar::-webkit-scrollbar-thumb { background: #333; }
 
   #bottom-bar .sep {
     width: 1px;
@@ -596,7 +599,7 @@
     </div>
     <div id="lo-right">
       <div id="lo-slots-section">
-        <div id="lo-slots-title">Your cans — <span id="lo-can-count">0</span>/12 · click to remove</div>
+        <div id="lo-slots-title">Your cans — <span id="lo-can-count">0</span>/10 · click to remove</div>
         <div id="lo-slots"></div>
       </div>
       <div id="lo-preview-section">
@@ -607,7 +610,7 @@
   </div>
 
   <div id="lo-footer">
-    <div id="lo-info">Cans selected: <span id="lo-cnt">0</span>/12</div>
+    <div id="lo-info">Cans selected: <span id="lo-cnt">0</span>/10</div>
     <button id="lo-bomb-btn" disabled onclick="launchGame()">BOMB IT ↗</button>
   </div>
 </div>
@@ -755,6 +758,9 @@
   <button class="cap-img-btn" id="btm-cap-filler" onclick="setCap('filler')" title="Filler"><span style="font-size:8px;font-family:'Share Tech Mono',monospace;color:inherit">FILLER<br>FILL</span></button>
   <div class="sep"></div>
   <div class="sep"></div>
+  <span class="btm-label">Cans</span>
+  <div id="btm-cans" style="display:flex;flex-direction:row;gap:5px;align-items:flex-end;overflow-x:auto;max-width:340px;padding:4px 0;flex-shrink:1;"></div>
+  <div class="sep"></div>
   <div id="zoom-controls">
     <span class="btm-label">Zoom</span>
     <button class="zoom-btn" onclick="adjustZoom(-0.15)" title="Zoom out">−</button>
@@ -805,7 +811,7 @@ const MTN_COLORS = [
   {n:'Bronze',h:'#cd7f32'},{n:'Beige',h:'#d4b88a'},{n:'Sand',h:'#c8a870'},
 ];
 
-const LO_MAX = 12;
+const LO_MAX = 10;
 let loSelected = [];
 let loActiveCap = 'fat';
 const loCapNames = {fat:'Fat NYC',skinny:'Skinny',ny:'NY Fat',filler:'Filler',outline:'Outline'};
@@ -1782,12 +1788,19 @@ function loadCity(cityKey) {
   if (!city) return;
 
   const trainSvg = document.getElementById('train-bg');
+  // Supprimer ancienne img HTML si présente
+  const oldImg = document.getElementById('train-photo');
+  if (oldImg) oldImg.remove();
 
   if (city.img) {
-    // Paris : image réelle encodée en base64
-    // On l'affiche comme background SVG via foreignObject ou image SVG
-    trainSvg.innerHTML = `<image href="${city.img}" x="0" y="0" width="880" height="340" preserveAspectRatio="xMidYMid slice"/>`;
-    trainSvg.style.display = 'block';
+    // Paris : image réelle — on crée un <img> HTML dans train-wrap
+    trainSvg.innerHTML = '';
+    trainSvg.style.display = 'none';
+    const photoEl = document.createElement('img');
+    photoEl.id = 'train-photo';
+    photoEl.src = city.img;
+    photoEl.style.cssText = 'position:absolute;top:0;left:0;width:100%;height:100%;object-fit:cover;z-index:1;pointer-events:none;display:block;';
+    document.getElementById('train-wrap').insertBefore(photoEl, document.getElementById('graffiti-canvas'));
   } else if (city.render) {
     trainSvg.innerHTML = city.render();
     trainSvg.style.display = 'block';
@@ -1846,10 +1859,10 @@ function initGameFromLoadout() {
 function buildGameCanPanel() {
   const grid = document.getElementById('color-grid');
   grid.innerHTML = '';
-  // Ligne horizontale, scroll si besoin
-  grid.style.cssText = 'display:flex;flex-direction:row;flex-wrap:nowrap;gap:5px;overflow-x:auto;padding-bottom:4px;';
+  grid.style.cssText = 'display:none;'; // masqué — palette dans bottom-bar
 
-  const ICON = loMakeIcon ? null : null; // on utilise CSS mask direct
+  const btmCans = document.getElementById('btm-cans');
+  btmCans.innerHTML = '';
 
   gameCans.forEach((can, i) => {
     const wrap = document.createElement('div');
@@ -1895,7 +1908,7 @@ function buildGameCanPanel() {
       document.getElementById('custom-color').value = currentColor;
       updateStatus();
     };
-    grid.appendChild(wrap);
+    btmCans.appendChild(wrap);
   });
 
   // Highlight can actif initial
