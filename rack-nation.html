@@ -130,12 +130,13 @@
   #canvas-area {
     flex: 1;
     display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
+    flex-direction: row;
+    align-items: flex-start;
+    justify-content: flex-start;
     background: #070707;
     position: relative;
-    overflow: hidden;
+    overflow-x: auto;
+    overflow-y: auto;
     cursor: crosshair;
     /* Le train-wrap sera scale pour remplir cet espace */
   }
@@ -1225,6 +1226,7 @@ function updateStatus() {
 
 // SPRAY ENGINE
 function getCanvasPos(e) {
+  // canvas affiché en CSS à scaledW x scaledH, mais canvas.width = 880, canvas.height = 440
   var rect = canvas.getBoundingClientRect();
   var clientX = e.touches ? e.touches[0].clientX : e.clientX;
   var clientY = e.touches ? e.touches[0].clientY : e.clientY;
@@ -2175,38 +2177,37 @@ var ZOOM_MIN = 0.3;
 var ZOOM_MAX = 3.0;
 
 function applyZoom() {
-  var sc  = document.getElementById('scene');
-  var sw  = document.getElementById('scene-scroll');
-  var ca  = document.getElementById('canvas-area');
-  if (!sc || !sw || !ca) return;
+  var sc = document.getElementById('scene');
+  var ca = document.getElementById('canvas-area');
+  if (!sc || !ca) return;
 
-  // scene garde sa taille naturelle (880x440)
-  // on le scale via transform, et on ajuste la largeur du scroll-wrap
-  sc.style.width  = '880px';
-  sc.style.height = '440px';
-  sc.style.transform = 'scale(' + trainScale + ')';
-  sc.style.transformOrigin = 'center center';
-
-  // scroll-wrap : largeur = max(canvas-area, scene scalée)
   var scaledW = Math.round(880 * trainScale);
   var scaledH = Math.round(440 * trainScale);
-  sw.style.width  = '100%';
-  sw.style.height = '100%';
-  // Pour que le scroll fonctionne, le contenu doit dépasser
-  // On utilise un spacer invisible
-  var spacer = document.getElementById('scene-spacer');
-  if (!spacer) {
-    spacer = document.createElement('div');
-    spacer.id = 'scene-spacer';
-    spacer.style.cssText = 'flex-shrink:0;height:1px;pointer-events:none;';
-    sw.appendChild(spacer);
-  }
-  spacer.style.width = scaledW + 'px';
-  // Margin pour centrer verticalement
+  var caW = ca.clientWidth;
   var caH = ca.clientHeight;
-  sc.style.marginTop  = scaledH < caH ? Math.round((caH - scaledH) / 2) + 'px' : '0';
-  sc.style.marginLeft = '0';
-  sc.style.marginRight = '0';
+
+  // Centrage : marges auto si l'image est plus petite que le viewport
+  var mLeft  = scaledW < caW ? Math.round((caW - scaledW) / 2) : 0;
+  var mTop   = scaledH < caH ? Math.round((caH - scaledH) / 2) : 0;
+
+  // scene : taille scalée réelle (pas transform, pas de décalage)
+  sc.style.width  = scaledW + 'px';
+  sc.style.height = scaledH + 'px';
+  sc.style.transform = 'none';
+  sc.style.flexShrink = '0';
+  sc.style.margin = mTop + 'px ' + mLeft + 'px';
+
+  // Le train-canvas et graffiti-canvas sont dans scene
+  // On scale les enfants directs via CSS
+  var tw = document.getElementById('train-wrap');
+  var tc = document.getElementById('train-canvas');
+  var gc = document.getElementById('graffiti-canvas');
+  var tb = document.getElementById('train-bg');
+
+  if (tw) { tw.style.width = scaledW + 'px'; tw.style.height = scaledH + 'px'; }
+  if (tc) { tc.style.width = scaledW + 'px'; tc.style.height = scaledH + 'px'; }
+  if (gc) { gc.style.width = scaledW + 'px'; gc.style.height = scaledH + 'px'; }
+  if (tb) { tb.style.width = scaledW + 'px'; tb.style.height = scaledH + 'px'; }
 
   var pct = Math.round(trainScale * 100);
   document.getElementById('zoom-val').textContent = pct + '%';
