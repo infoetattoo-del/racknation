@@ -136,6 +136,7 @@
     background: #070707;
     position: relative;
     overflow: hidden;
+    cursor: crosshair;
     /* Le train-wrap sera scale pour remplir cet espace */
   }
   /* Scene prend tout l'espace du canvas-area */
@@ -1815,6 +1816,7 @@ function wheels(fill, stroke) {
 }
 
 function loadCity(cityKey) {
+  if(typeof resetPan==='function'){panX=0;panY=0;}
   var city = TRAINS[cityKey];
   if (!city) return;
 
@@ -2173,18 +2175,35 @@ var trainScale = 0.75;
 var ZOOM_MIN = 0.3;
 var ZOOM_MAX = 3.0;
 
+// Pan state
+var panX = 0, panY = 0;
+var isPanning = false, panStartX = 0, panStartY = 0, panStartTX = 0, panStartTY = 0;
+
 function applyZoom() {
-  // Zoomer le scene entier (fond de station + train + canvas)
   var sc = document.getElementById('scene');
   var tw = document.getElementById('train-wrap');
   if (!sc) return;
-  sc.style.transform = 'scale(' + trainScale + ')';
+  // Limiter le pan selon le zoom (pas de pan si zoom = fit)
+  if (trainScale <= ZOOM_FIT + 0.01) { panX = 0; panY = 0; }
+  sc.style.transform = 'scale(' + trainScale + ') translate(' + panX + 'px,' + panY + 'px)';
   sc.style.transformOrigin = 'center center';
-  if (tw) tw.style.transform = ''; // reset train-wrap individuel
+  if (tw) tw.style.transform = '';
   var pct = Math.round(trainScale * 100);
   document.getElementById('zoom-val').textContent = pct + '%';
   var sl = document.getElementById('zoom-slider');
   if (sl) sl.value = pct;
+}
+
+function resetPan() { panX = 0; panY = 0; }
+
+// Limiter le pan pour ne pas sortir de l'image
+function clampPan() {
+  var ca = document.getElementById('canvas-area');
+  if (!ca) return;
+  var maxX = (ca.clientWidth  * (trainScale - 1)) / (2 * trainScale);
+  var maxY = (ca.clientHeight * (trainScale - 1)) / (2 * trainScale);
+  panX = Math.max(-maxX, Math.min(maxX, panX));
+  panY = Math.max(-maxY, Math.min(maxY, panY));
 }
 
 function adjustZoom(delta) {
@@ -2222,6 +2241,46 @@ document.getElementById('canvas-area').addEventListener('wheel', (e) => {
   e.preventDefault();
   adjustZoom(e.deltaY < 0 ? 0.05 : -0.05);
 }, { passive: false });
+
+// ── PAN : clic droit ou middle-click ou Space+drag ────────────────────────────
+var spaceDown = false;
+document.addEventListener('keydown', function(e) {
+  if (e.code === 'Space') { spaceDown = true; e.preventDefault(); }
+});
+document.addEventListener('keyup', function(e) {
+  if (e.code === 'Space') { spaceDown = false; }
+});
+
+var caEl2 = document.getElementById('canvas-area');
+caEl2.addEventListener('mousedown', function(e) {
+  // Pan avec clic droit OU clic milieu OU Space+clic gauche
+  if (e.button === 1 || e.button === 2 || (e.button === 0 && spaceDown)) {
+    if (trainScale <= ZOOM_FIT + 0.01) return;
+    isPanning = true;
+    panStartX = e.clientX;
+    panStartY = e.clientY;
+    panStartTX = panX;
+    panStartTY = panY;
+    caEl2.style.cursor = 'grabbing';
+    e.preventDefault();
+  }
+});
+document.addEventListener('mousemove', function(e) {
+  if (!isPanning) return;
+  var dx = (e.clientX - panStartX) / trainScale;
+  var dy = (e.clientY - panStartY) / trainScale;
+  panX = panStartTX + dx;
+  panY = panStartTY + dy;
+  clampPan();
+  applyZoom();
+});
+document.addEventListener('mouseup', function(e) {
+  if (isPanning) {
+    isPanning = false;
+    caEl2.style.cursor = '';
+  }
+});
+caEl2.addEventListener('contextmenu', function(e) { e.preventDefault(); });
 
 // Recalc fit on resize
 window.addEventListener('resize', function() {
