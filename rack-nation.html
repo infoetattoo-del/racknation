@@ -774,6 +774,14 @@
     </svg>
     ROLL
   </button>
+  <button class="btm-btn" id="btm-liner" onclick="setTool('liner')">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+      <line x1="4" y1="20" x2="20" y2="4"/>
+      <circle cx="4" cy="20" r="2" fill="currentColor" stroke="none"/>
+      <circle cx="20" cy="4" r="2" fill="currentColor" stroke="none"/>
+    </svg>
+    LINER
+  </button>
   <div class="sep"></div>
   <span class="btm-label">Cap</span>
     <button class="cap-img-btn" id="btm-cap-filler" onclick="setCap('filler')" title="Filler">
@@ -799,7 +807,7 @@
   <div class="sep"></div>
   <div class="sep"></div>
   <span class="btm-label">Cans</span>
-  <div id="btm-cans" style="display:flex;flex-direction:row;gap:5px;align-items:flex-end;overflow-x:auto;max-width:340px;padding:4px 0;flex-shrink:1;"></div>
+  <div id="btm-cans" style="display:flex;flex-direction:row;gap:5px;align-items:flex-end;overflow:visible;padding:4px 0;flex-shrink:1;"></div>
   <div class="sep"></div>
   <div id="zoom-controls">
     <span class="btm-label">Zoom</span>
@@ -1032,6 +1040,11 @@ var ctx = canvas.getContext('2d');
 var trainContainer = document.getElementById('train-wrap');
 
 var painting = false;
+var linerActive = false;
+var linerStart = null;
+var linerActive = false; // mode trait droit
+var linerStart = null;   // point de départ {x,y}
+var linerPreview = null; // canvas preview temporaire
 var currentColor = '#FF3C00';
 var currentTool = 'spray';
 var currentCap = 'fat';
@@ -1186,6 +1199,8 @@ updatePreview();
 // TOOL SELECTION
 function setTool(t) {
   currentTool = t;
+  linerActive = (t === 'liner');
+  linerStart = null;
   // Retirer active de tous les boutons tool
   document.querySelectorAll('.btm-btn').forEach(function(b) {
     b.classList.remove('active');
@@ -1412,6 +1427,42 @@ function updateCoverage() {
 }
 
 // EVENTS
+
+// ── LINER : trait droit A→B ───────────────────────────────────────────────────
+function drawLinerLine(x1, y1, x2, y2) {
+  if (gameCans && gameCans.length > 0 && gameCans.every(function(c){return c.level<=0;})) return;
+  ctx.save();
+  if (trainClipRegion) {
+    ctx.beginPath();
+    if (trainClipRegion.type === 'trapeze' && trainClipRegion.points) {
+      var pts = trainClipRegion.points;
+      ctx.moveTo(pts[0][0], pts[0][1]);
+      for (var pi = 1; pi < pts.length; pi++) ctx.lineTo(pts[pi][0], pts[pi][1]);
+      ctx.closePath();
+    } else {
+      ctx.rect(trainClipRegion.x, trainClipRegion.y, trainClipRegion.w, trainClipRegion.h);
+    }
+    ctx.clip();
+  }
+  var cap = capProfiles[currentCap];
+  var r = (cap.minR + (cap.maxR - cap.minR) * pressure);
+  var alpha = Math.floor(opacityLevel * 255).toString(16).padStart(2, '0');
+  ctx.strokeStyle = currentColor + alpha;
+  ctx.lineWidth = Math.max(1, r * 2);
+  ctx.lineCap = 'round';
+  ctx.lineJoin = 'round';
+  ctx.globalAlpha = opacityLevel;
+  ctx.beginPath();
+  ctx.moveTo(x1, y1);
+  ctx.lineTo(x2, y2);
+  ctx.stroke();
+  ctx.globalAlpha = 1;
+  ctx.restore();
+  drainActiveCan(CAN_DRAIN_PER_STROKE);
+  strokeCount++;
+  updateCoverage();
+}
+
 canvas.addEventListener('mousedown', (e) => {
   painting = true;
   const pos = getCanvasPos(e);
@@ -1426,7 +1477,12 @@ canvas.addEventListener('mousedown', (e) => {
 
 canvas.addEventListener('mousemove', (e) => {
   const pos = getCanvasPos(e);
-  document.getElementById('coords').textContent = `X:${Math.round(pos.x)} Y:${Math.round(pos.y)}`;
+  document.getElementById('coords').textContent = 'X:' + Math.round(pos.x) + ' Y:' + Math.round(pos.y);
+  if (linerActive && linerStart) {
+    // Afficher preview de la ligne
+    document.getElementById('action-status').textContent = 'LINER: cliquer pour tracer';
+    return;
+  }
   if (!painting) return;
   sprayPaint(pos.x, pos.y, true);
   drainActiveCan(CAN_DRAIN_PER_STROKE * 0.2);
@@ -2170,6 +2226,8 @@ document.addEventListener('keydown', (e) => {
   if (e.key === 's') setTool('spray');
   if (e.key === 'm') setTool('marker');
   if (e.key === 'r') setTool('roller');
+  if (e.key === 'l') setTool('liner');
+  if (e.key === 'l') setTool('liner');
   if (e.key === '1') setCap('fat');
   if (e.key === '2') setCap('skinny');
   if (e.key === '3') setCap('ny');
@@ -2273,6 +2331,7 @@ setTimeout(resetZoom, 100);
 
 // ─── AMBIANCE LUMIÈRE ────────────────────────────────────────────────────────
 var overlay = document.getElementById('ambiance-overlay');
+if (overlay) overlay.style.display = 'none'; // filtre sombre désactivé
 var lights = [
   document.getElementById('light-left'),
   document.getElementById('light-mid'),
@@ -2285,7 +2344,7 @@ function animateAmbiance() {
 
   // Overlay nuit — légère pulsation lente
   const pulse = 0.55 + 0.06 * Math.sin(t * 0.3) + 0.04 * Math.sin(t * 0.7);
-  overlay.style.background = `rgba(0,0,0,${pulse})`;
+  overlay.style.background = "rgba(0,0,0,0)"; // filtre sombre désactivé
 
   // Flicker néon — occasionnel
   lights.forEach((l, i) => {
