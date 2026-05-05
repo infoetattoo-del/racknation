@@ -131,12 +131,11 @@
     flex: 1;
     display: flex;
     flex-direction: column;
-    align-items: flex-start;
-    justify-content: flex-start;
+    align-items: center;
+    justify-content: center;
     background: #070707;
     position: relative;
-    overflow-x: auto;
-    overflow-y: hidden;
+    overflow: hidden;
     cursor: crosshair;
     /* Le train-wrap sera scale pour remplir cet espace */
   }
@@ -656,7 +655,7 @@
 
   <!-- CANVAS -->
   <div id="canvas-area">
-    <div id="scene">
+    <div id="scene-scroll"><div id="scene">
 
       <!-- AMBIANCE OVERLAY -->
       <div id="ambiance-overlay" style="position:absolute;top:0;left:0;right:0;bottom:0;pointer-events:none;z-index:10;"></div>
@@ -686,6 +685,7 @@
         <canvas id="graffiti-canvas"></canvas>
       </div>
 
+      </div><!-- end scene-scroll -->
       <div id="notif">SAVED TO GALLERY</div>
       </div>
   </div>
@@ -2175,21 +2175,38 @@ var ZOOM_MIN = 0.3;
 var ZOOM_MAX = 3.0;
 
 function applyZoom() {
-  var sc = document.getElementById('scene');
-  var ca = document.getElementById('canvas-area');
-  if (!sc || !ca) return;
+  var sc  = document.getElementById('scene');
+  var sw  = document.getElementById('scene-scroll');
+  var ca  = document.getElementById('canvas-area');
+  if (!sc || !sw || !ca) return;
 
-  // Largeur native du scene = 880px (train-wrap)
-  // On scale le scene et on ajuste sa taille pour que le scroll natif fonctionne
+  // scene garde sa taille naturelle (880x440)
+  // on le scale via transform, et on ajuste la largeur du scroll-wrap
+  sc.style.width  = '880px';
+  sc.style.height = '440px';
+  sc.style.transform = 'scale(' + trainScale + ')';
+  sc.style.transformOrigin = 'center center';
+
+  // scroll-wrap : largeur = max(canvas-area, scene scalée)
   var scaledW = Math.round(880 * trainScale);
   var scaledH = Math.round(440 * trainScale);
-  sc.style.width  = scaledW + 'px';
-  sc.style.height = scaledH + 'px';
-  sc.style.transform = 'scale(' + trainScale + ')';
-  sc.style.transformOrigin = 'top left';
-  // Centrer verticalement dans canvas-area si plus petit
+  sw.style.width  = '100%';
+  sw.style.height = '100%';
+  // Pour que le scroll fonctionne, le contenu doit dépasser
+  // On utilise un spacer invisible
+  var spacer = document.getElementById('scene-spacer');
+  if (!spacer) {
+    spacer = document.createElement('div');
+    spacer.id = 'scene-spacer';
+    spacer.style.cssText = 'flex-shrink:0;height:1px;pointer-events:none;';
+    sw.appendChild(spacer);
+  }
+  spacer.style.width = scaledW + 'px';
+  // Margin pour centrer verticalement
   var caH = ca.clientHeight;
-  sc.style.marginTop = scaledH < caH ? Math.round((caH - scaledH) / 2) + 'px' : '0';
+  sc.style.marginTop  = scaledH < caH ? Math.round((caH - scaledH) / 2) + 'px' : '0';
+  sc.style.marginLeft = '0';
+  sc.style.marginRight = '0';
 
   var pct = Math.round(trainScale * 100);
   document.getElementById('zoom-val').textContent = pct + '%';
