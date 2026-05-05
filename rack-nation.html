@@ -136,7 +136,7 @@
     background: #070707;
     position: relative;
     overflow-x: auto;
-    overflow-y: auto;
+    overflow-y: hidden;
     cursor: crosshair;
     /* Le train-wrap sera scale pour remplir cet espace */
   }
@@ -804,7 +804,7 @@
   <div id="zoom-controls">
     <span class="btm-label">Zoom</span>
     <button class="zoom-btn" onclick="adjustZoom(-0.15)" title="Zoom out">−</button>
-    <input type="range" id="zoom-slider" min="50" max="300" value="100" step="5"
+    <input type="range" id="zoom-slider" min="50" max="200" value="100" step="5"
       oninput="setZoomFromSlider(this.value)"
       style="width:90px;accent-color:var(--accent);cursor:pointer;">
     <span id="zoom-val">75%</span>
@@ -2181,7 +2181,7 @@ document.addEventListener('keydown', (e) => {
 // ─── ZOOM ────────────────────────────────────────────────────────────────────
 var trainScale = 0.75;
 var ZOOM_MIN = 0.3;
-var ZOOM_MAX = 3.0;
+var ZOOM_MAX = 2.0;
 
 function applyZoom() {
   var sc = document.getElementById('scene');
