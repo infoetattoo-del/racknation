@@ -1841,17 +1841,17 @@ function loadCity(cityKey) {
     si.onload=function(){
       tc.clearRect(0,0,880,440);
       tc.drawImage(si,0,0,880,440);
-      // Zone peignable : flanc blanc du metro dans l'image 1774x887
-      // Scalé à 880x440 → scale=880/1774=0.4962
-      // Zone peignable calculée depuis masque surface_peignable_metro_paris_1.png
-      // Sur canvas 880x440: top=146, bot=274, left=33, right=852
+      // Zone peignable extraite pixel par pixel du masque surface_peignable_metro_paris_1.png
+      // 18 points - forme exacte du flanc sur canvas 880x440
       trainClipRegion={
         type:'trapeze',
         points:[
-          [33, 146],
-          [852, 146],
-          [852, 274],
-          [33, 274]
+          [42.7,152.8],[849.7,152.8],
+          [851.7,168.2],[852.2,183.5],[852.7,199.4],[853.2,215.0],
+          [853.2,230.7],[852.7,246.3],[852.7,261.9],[849.7,274.3],
+          [34.7,274.3],
+          [31.7,261.9],[29.8,246.3],[29.3,230.7],[29.8,215.0],
+          [30.8,199.4],[32.7,183.5],[38.7,168.2]
         ]
       };
     };
