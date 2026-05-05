@@ -867,8 +867,7 @@
   <span id="action-status">READY TO BOMB</span>
 </div>
 
-<script>window.onerror=function(m,s,l){var d=document.createElement('div');d.style.cssText='position:fixed;top:0;left:0;right:0;background:red;color:white;padding:8px;z-index:9999;font-size:11px;font-family:monospace;';d.textContent='ERR line '+l+': '+m;document.body.appendChild(d);return false;};
-
+<script>
 // ─── CONSTANTES GLOBALES ─────────────────────────────────────────────────────
 var CAN_MAX_LEVEL = 100;
 var CAN_DRAIN_PER_STROKE = 0.6;
@@ -1268,14 +1267,12 @@ function updateStatus() {
 
 // SPRAY ENGINE
 function getCanvasPos(e) {
-  // Utiliser getBoundingClientRect + ratio canvas/rect pour coordonnées exactes
   var rect = canvas.getBoundingClientRect();
   var clientX = e.touches ? e.touches[0].clientX : e.clientX;
   var clientY = e.touches ? e.touches[0].clientY : e.clientY;
-  // rect.width = canvas.width * trainScale → ratio = canvas.width / rect.width
   return {
-    x: (clientX - rect.left) * (canvas.width / rect.width),
-    y: (clientY - rect.top) * (canvas.height / rect.height)
+    x: (clientX - rect.left) * (canvas.width  / rect.width),
+    y: (clientY - rect.top)  * (canvas.height / rect.height)
   };
 }
 
@@ -2219,25 +2216,29 @@ var trainScale = 0.75;
 var ZOOM_MIN = 0.3;
 var ZOOM_MAX = 3.0;
 
+// Offset horizontal courant (en px dans l'espace du scene avant scale)
+var sceneOffsetX = 0;
+
 function applyZoom() {
   var sc = document.getElementById('scene');
   var tw = document.getElementById('train-wrap');
   if (!sc) return;
-  // Garder le translateX actuel sauf si zoom = fit
-  var tx = getCurrentTranslateX ? getCurrentTranslateX() : 0;
-  if (trainScale <= ZOOM_FIT + 0.05) tx = 0;
-  if (tx !== 0) {
-    sc.style.transform = 'scale(' + trainScale + ') translateX(' + tx + 'px)';
-  } else {
-    sc.style.transform = 'scale(' + trainScale + ')';
+  // Au fit : reset offset
+  if (trainScale <= ZOOM_FIT + 0.02) sceneOffsetX = 0;
+  // Clamp offset
+  var ca = document.getElementById('canvas-area');
+  if (ca) {
+    var maxOff = Math.max(0, (880 * trainScale - ca.clientWidth) / 2 / trainScale);
+    sceneOffsetX = Math.max(-maxOff, Math.min(maxOff, sceneOffsetX));
   }
+  sc.style.transform = 'scale(' + trainScale + ') translateX(' + sceneOffsetX + 'px)';
   sc.style.transformOrigin = 'center center';
   if (tw) tw.style.transform = '';
   var pct = Math.round(trainScale * 100);
   document.getElementById('zoom-val').textContent = pct + '%';
   var sl = document.getElementById('zoom-slider');
   if (sl) sl.value = pct;
-  if (typeof updateScrollbar === 'function') updateScrollbar();
+  updateScrollbar();
 }
 
 function adjustZoom(delta) {
@@ -2445,44 +2446,27 @@ function toggleSound() {
 // ── SCROLLBAR HORIZONTALE ────────────────────────────────────────────────────
 function updateScrollbar() {
   var wrap = document.getElementById('h-scroll-wrap');
-  var sc   = document.getElementById('scene');
-  if (!wrap || !sc) return;
-  // Afficher seulement si zoomé
-  if (trainScale > ZOOM_FIT + 0.05) {
+  var sl   = document.getElementById('h-scroll');
+  if (!wrap || !sl) return;
+  var ca = document.getElementById('canvas-area');
+  var maxOff = ca ? Math.max(0, (880 * trainScale - ca.clientWidth) / 2 / trainScale) : 0;
+  if (trainScale > ZOOM_FIT + 0.02 && maxOff > 0) {
     wrap.style.display = 'flex';
-    // Sync la valeur du slider avec la position translateX actuelle
-    // sc.style.transform = scale(s) translateX(tx)
-    var tx = getCurrentTranslateX();
-    var ca = document.getElementById('canvas-area');
-    var maxT = ca ? (ca.clientWidth * (trainScale - 1)) / (2 * trainScale) : 200;
-    var pct = maxT > 0 ? Math.round(((tx + maxT) / (2 * maxT)) * 100) : 50;
-    var sl = document.getElementById('h-scroll');
-    if (sl) sl.value = Math.max(0, Math.min(100, pct));
+    // Sync slider : sceneOffsetX va de -maxOff à +maxOff → slider 0..100
+    var pct = Math.round(((sceneOffsetX + maxOff) / (2 * maxOff)) * 100);
+    sl.value = Math.max(0, Math.min(100, pct));
   } else {
     wrap.style.display = 'none';
-    // Reset translateX
-    var sc2 = document.getElementById('scene');
-    if (sc2) sc2.style.transform = 'scale(' + trainScale + ')';
   }
 }
 
-function getCurrentTranslateX() {
-  var sc = document.getElementById('scene');
-  if (!sc) return 0;
-  var t = sc.style.transform;
-  var m = t.match(/translateX\(([^)]+)px\)/);
-  return m ? parseFloat(m[1]) : 0;
-}
-
 function scrollScene(val) {
-  var sc = document.getElementById('scene');
   var ca = document.getElementById('canvas-area');
-  if (!sc || !ca) return;
-  // val = 0..100 → translateX de -maxT à +maxT
-  var maxT = (ca.clientWidth * (trainScale - 1)) / (2 * trainScale);
-  var tx = ((val - 50) / 50) * maxT;
-  sc.style.transform = 'scale(' + trainScale + ') translateX(' + tx + 'px)';
-  sc.style.transformOrigin = 'center center';
+  if (!ca) return;
+  var maxOff = Math.max(0, (880 * trainScale - ca.clientWidth) / 2 / trainScale);
+  // val 0..100 → sceneOffsetX -maxOff..+maxOff
+  sceneOffsetX = ((val - 50) / 50) * maxOff;
+  applyZoom();
 }
 
 </script>
