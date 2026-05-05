@@ -443,7 +443,7 @@
   .lo-slot:hover { transform:translateY(-2px); }
   .lo-slot-num { font-size:8px;color:#444; }
   .lo-can-wrap { width:26px;height:62px;flex-shrink:0;overflow:visible; }
-  .lo-can-empty { width:26px;height:62px;border:1px dashed #1a1a1a;border-radius:2px;display:flex;align-items:center;justify-content:center;font-size:11px;color:#1e1e1e; }
+  .lo-can-empty { width:34px;height:80px;border:1px dashed #1a1a1a;border-radius:2px;display:flex;align-items:center;justify-content:center;font-size:11px;color:#1e1e1e; }
   #lo-preview-row { display:flex;gap:5px;flex-wrap:wrap; }
   #lo-footer { background:#111;border-top:1px solid #222;padding:10px 16px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0; }
   #lo-info { font-size:10px;color:#555; }
@@ -966,7 +966,7 @@ function loRenderSlots(){
     if(loSelected[i]){
       const wrap=document.createElement('div');
       wrap.className='lo-can-wrap';
-      wrap.innerHTML=canSVG(loSelected[i].hex,100,false,26,62);
+      wrap.innerHTML=canSVG(loSelected[i].hex,100,false,34,80);
       wrap.title=loSelected[i].name+' — click to remove';
       const idx=i;
       slot.onclick=()=>{loSelected.splice(idx,1);loRenderSlots();loRenderPreview();loUpdateCount();};
@@ -1046,16 +1046,23 @@ var totalPixels = 0;
 var paintedPixels = new Set();
 var animFrame;
 
-// Canvas = taille fixe du wagon SVG (880x340)
-// Le zoom est géré par transform:scale sur train-wrap, pas sur le canvas
+// Canvas taille fixe selon la ville
+// Paris (spot_img) = 880x440, autres = 880x340
+function getCanvasSize() {
+  var city = TRAINS[document.getElementById('city-select') && document.getElementById('city-select').value || 'Paris — Ligne 13'];
+  if (city && city.spot_img) return {w:880, h:440};
+  return {w:880, h:340};
+}
+
 function resizeCanvas() {
-  if (canvas.width === 880 && canvas.height === 340) return;
-  let imgData = null;
+  var sz = getCanvasSize();
+  if (canvas.width === sz.w && canvas.height === sz.h) return;
+  var imgData = null;
   if (canvas.width > 0 && canvas.height > 0) {
     try { imgData = ctx.getImageData(0, 0, canvas.width, canvas.height); } catch(e) {}
   }
-  canvas.width = 880;
-  canvas.height = 340;
+  canvas.width = sz.w;
+  canvas.height = sz.h;
   if (imgData) ctx.putImageData(imgData, 0, 0);
 }
 resizeCanvas();
@@ -1838,14 +1845,15 @@ function loadCity(cityKey) {
       tc.drawImage(si,0,0,880,440);
       // Zone peignable : flanc blanc du metro dans l'image 1774x887
       // Scalé à 880x440 → scale=880/1774=0.4962
-      var sc=880/1774;
+      // Zone peignable calculée depuis masque surface_peignable_metro_paris_1.png
+      // Sur canvas 880x440: top=146, bot=274, left=33, right=852
       trainClipRegion={
         type:'trapeze',
         points:[
-          [Math.round(75*sc),  Math.round(286*sc*440/887)],
-          [Math.round(1721*sc),Math.round(286*sc*440/887)],
-          [Math.round(1721*sc),Math.round(618*sc*440/887)],
-          [Math.round(75*sc),  Math.round(618*sc*440/887)]
+          [33, 146],
+          [852, 146],
+          [852, 274],
+          [33, 274]
         ]
       };
     };
