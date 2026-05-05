@@ -768,7 +768,7 @@
       <path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/>
       <path d="m15 5 4 4"/>
     </svg>
-    MARK
+    MARKER
   </button>
   <button class="btm-btn" id="btm-roller" onclick="setTool('roller')">
     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
@@ -1077,10 +1077,10 @@ function applyTrainClip() {
 // CAP PROFILES
 var capProfiles = {
   // Ordre taille: filler > fat(pink) > ny(fat) > skinny(banana) > needle
-  fat:    { minR: 10, maxR: 22, scatter: 0.60, solid: false, squash: 1   }, // Fat Pink - moyen
-  skinny: { minR: 4,  maxR: 9,  scatter: 0.25, solid: false, squash: 1   }, // Banana - un peu plus large que needle
-  needle: { minR: 2,  maxR: 5,  scatter: 0.08, solid: true,  squash: 1   }, // Needle - fin mais un peu plus large qu'avant
-  ny:     { minR: 8,  maxR: 18, scatter: 0.50, solid: false, squash: 0.6 }, // NYC Fat - sous fat pink
+  fat:    { minR: 7,  maxR: 16, scatter: 0.55, solid: false, squash: 1   }, // Fat Pink - réduit
+  skinny: { minR: 4,  maxR: 9,  scatter: 0.25, solid: false, squash: 1   }, // Banana
+  needle: { minR: 2,  maxR: 5,  scatter: 0.08, solid: true,  squash: 1   }, // Needle
+  ny:     { minR: 5,  maxR: 12, scatter: 0.45, solid: false, squash: 0.6 }, // NYC Fat - réduit
   filler: { minR: 14, maxR: 30, scatter: 0.70, solid: false, squash: 0.4 }, // Filler - le plus grand
 };
 
@@ -1276,23 +1276,29 @@ function sprayPaint(x, y, isMove) {
   }
 
   if (currentTool === 'marker') {
+    // Marker = taille fixe (equiv banana cap) — ignore le cap sélectionné
+    var markerR = 6;
     if (isMove) {
       ctx.save();
       ctx.beginPath();
       ctx.moveTo(lastX, lastY);
       ctx.lineTo(x, y);
       ctx.strokeStyle = currentColor + Math.floor(opacityLevel * 255).toString(16).padStart(2,'0');
-      ctx.lineWidth = r * 0.6;
+      ctx.lineWidth = markerR * 2;
       ctx.lineCap = 'round';
       ctx.lineJoin = 'round';
       ctx.stroke();
       ctx.restore();
     }
   } else if (currentTool === 'roller') {
+    // Roller = taille fixe — ignore le cap sélectionné
+    var rollerW = 28, rollerH = 12;
     ctx.save();
     ctx.globalAlpha = Math.min(opacityLevel * 0.9, 0.95);
     ctx.fillStyle = currentColor;
-    ctx.fillRect(x - r, y - r * cap.squash, r * 2, r * cap.squash * 2);
+    ctx.beginPath();
+    ctx.roundRect(x - rollerW, y - rollerH, rollerW * 2, rollerH * 2, 3);
+    ctx.fill();
     ctx.restore();
   } else {
     // ── SPRAY: draw particles on offscreen, blur, composite onto main ──
