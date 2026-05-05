@@ -1198,14 +1198,14 @@ function setCap(c) {
     if (b) b.classList.toggle('active', id === c);
   });
   // Right panel legacy
-  document.querySelectorAll('#cap-grid .cap-btn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('#cap-grid .cap-btn').forEach(function(b){ if(b) b.classList.remove('active'); });
   updatePreview();
   updateStatus();
 }
 
 function selectCapRight(c) {
   currentCap = c;
-  document.querySelectorAll('#cap-grid .cap-btn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('#cap-grid .cap-btn').forEach(function(b){ if(b) b.classList.remove('active'); });
   event && event.target && event.target.classList.add('active');
   document.querySelectorAll('[id^=cap-]').forEach(b => b.classList.remove('active'));
   const el = document.getElementById('cap-' + c);
@@ -1215,20 +1215,20 @@ function selectCapRight(c) {
 }
 
 function updateStatus() {
-  document.getElementById('tool-status').textContent = `TOOL: ${currentTool.toUpperCase()} / ${currentCap.toUpperCase()} CAP`;
+  var ts = document.getElementById('tool-status');
+  if (ts) ts.textContent = 'TOOL: ' + currentTool.toUpperCase() + ' / ' + currentCap.toUpperCase() + ' CAP';
 }
 
 // SPRAY ENGINE
 function getCanvasPos(e) {
-  // Le canvas est 880x340 mais affiché avec un transform scale
-  // getBoundingClientRect retourne la taille après scale
-  const rect = canvas.getBoundingClientRect();
-  const clientX = e.touches ? e.touches[0].clientX : e.clientX;
-  const clientY = e.touches ? e.touches[0].clientY : e.clientY;
-  // On divise par trainScale pour retrouver les coordonnées canvas réelles
+  // Utiliser getBoundingClientRect + ratio canvas/rect pour coordonnées exactes
+  var rect = canvas.getBoundingClientRect();
+  var clientX = e.touches ? e.touches[0].clientX : e.clientX;
+  var clientY = e.touches ? e.touches[0].clientY : e.clientY;
+  // rect.width = canvas.width * trainScale → ratio = canvas.width / rect.width
   return {
-    x: (clientX - rect.left) / trainScale,
-    y: (clientY - rect.top) / trainScale
+    x: (clientX - rect.left) * (canvas.width / rect.width),
+    y: (clientY - rect.top) * (canvas.height / rect.height)
   };
 }
 
