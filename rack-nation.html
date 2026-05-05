@@ -829,7 +829,7 @@
 <script>
 // ─── CONSTANTES GLOBALES ─────────────────────────────────────────────────────
 var CAN_MAX_LEVEL = 100;
-var CAN_DRAIN_PER_STROKE = 0.6;
+var CAN_DRAIN_PER_STROKE = 0.15;
 var ZOOM_FIT = 0.75;
 
 
@@ -1190,8 +1190,10 @@ updatePreview();
 // TOOL SELECTION
 function setTool(t) {
   currentTool = t;
-  document.querySelectorAll('[id^=tool-]').forEach(b => b.classList.remove('active'));
-  document.getElementById('tool-' + t).classList.add('active');
+  ['spray','marker','roller'].forEach(function(id) {
+    var b = document.getElementById('btm-' + id);
+    if (b) b.classList.toggle('active', id === t);
+  });
   updateStatus();
 }
 
