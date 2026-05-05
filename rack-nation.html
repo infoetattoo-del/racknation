@@ -1042,9 +1042,6 @@ var trainContainer = document.getElementById('train-wrap');
 var painting = false;
 var linerActive = false;
 var linerStart = null;
-var linerActive = false; // mode trait droit
-var linerStart = null;   // point de départ {x,y}
-var linerPreview = null; // canvas preview temporaire
 var currentColor = '#FF3C00';
 var currentTool = 'spray';
 var currentCap = 'fat';
@@ -1464,8 +1461,23 @@ function drawLinerLine(x1, y1, x2, y2) {
 }
 
 canvas.addEventListener('mousedown', (e) => {
+  if (e.button !== 0) return;
+  var pos = getCanvasPos(e);
+
+  // MODE LINER : clic A puis clic B
+  if (linerActive) {
+    if (!linerStart) {
+      linerStart = {x: pos.x, y: pos.y};
+      document.getElementById('action-status').textContent = 'LINER: cliquer point B...';
+    } else {
+      drawLinerLine(linerStart.x, linerStart.y, pos.x, pos.y);
+      linerStart = null;
+      document.getElementById('action-status').textContent = 'LINER: cliquer point A...';
+    }
+    return; // ne pas activer painting
+  }
+
   painting = true;
-  const pos = getCanvasPos(e);
   lastX = pos.x;
   lastY = pos.y;
   sprayPaint(pos.x, pos.y, false);
