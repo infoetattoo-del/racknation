@@ -731,12 +731,7 @@
     <!-- CAPS -->
     <div>
       <div class="panel-title">Cap</div>
-      <div id="cap-grid">
-        <button class="cap-btn active" onclick="selectCapRight('fat')">FAT<br>NYC</button>
-        <button class="cap-btn" onclick="selectCapRight('skinny')">SKINNY<br>OUTLINE</button>
-        <button class="cap-btn" onclick="selectCapRight('ny')">NY FAT<br>WIDE</button>
-        <button class="cap-btn" onclick="selectCapRight('filler')">FILLER<br>FILL</button>
-      </div>
+
     </div>
 
     <!-- ACTIONS -->
@@ -1277,7 +1272,7 @@ function sprayPaint(x, y, isMove) {
 
   if (currentTool === 'marker') {
     // Marker = taille fixe (equiv banana cap) — ignore le cap sélectionné
-    var markerR = 3;
+    var markerR = 1.5;
     if (isMove) {
       ctx.save();
       ctx.beginPath();
@@ -1292,7 +1287,7 @@ function sprayPaint(x, y, isMove) {
     }
   } else if (currentTool === 'roller') {
     // Roller = taille fixe — ignore le cap sélectionné
-    var rollerW = 16, rollerH = 7;
+    var rollerW = 10, rollerH = 4;
     ctx.save();
     ctx.globalAlpha = Math.min(opacityLevel * 0.9, 0.95);
     ctx.fillStyle = currentColor;
