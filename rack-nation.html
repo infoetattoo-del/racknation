@@ -1048,17 +1048,9 @@ var animFrame;
 
 // Canvas taille fixe selon la ville
 // Paris (spot_img) = 880x440, autres = 880x340
-function getCanvasSize() {
-  // Paris (spot_img) = 880x440, autres villes SVG = 880x340
-  var sel = document.getElementById('city-select');
-  var cityKey = sel ? sel.value : 'Paris — Ligne 13';
-  if (cityKey === 'Paris — Ligne 13') return {w:880, h:440};
-  return {w:880, h:340};
-}
-
 function resizeCanvas() {
-  var sz = {w:880, h:440}; // default Paris
-  try { sz = getCanvasSize(); } catch(e) {}
+  // Canvas toujours 880x440 (couvre Paris et toutes les villes)
+  var sz = {w:880, h:440};
   if (canvas.width === sz.w && canvas.height === sz.h) return;
   var imgData = null;
   if (canvas.width > 0 && canvas.height > 0) {
@@ -1132,12 +1124,14 @@ var pvCanvas = document.createElement('canvas');
 pvCanvas.width = 44; pvCanvas.height = 44;
 pvCanvas.style.cssText = 'position:absolute;top:0;left:0;width:100%;height:100%;';
 if (previewEl) previewEl.appendChild(pvCanvas);
-var pvCtx = pvCanvas.getContext('2d');
+var pvCtx = pvCanvas.getContext('2d') || null;
 
 var pvOff = document.createElement('canvas');
-var pvOctx = pvOff.getContext('2d');
+pvOff.width = 44; pvOff.height = 44;
+var pvOctx = pvOff.getContext('2d') || null;
 
 function updatePreview() {
+  if (!pvCtx || !pvOctx) return;
   pvCtx.clearRect(0, 0, 44, 44);
   pvCtx.fillStyle = '#1a1a1a';
   pvCtx.fillRect(0, 0, 44, 44);
