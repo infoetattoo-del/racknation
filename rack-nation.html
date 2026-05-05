@@ -1073,9 +1073,9 @@ function applyTrainClip() {
 var capProfiles = {
   // Ordre taille: filler > fat(pink) > ny(fat) > skinny(banana) > needle
   fat:    { minR: 5,  maxR: 11, scatter: 0.55, solid: false, squash: 1   }, // Fat Pink
-  skinny: { minR: 2,  maxR: 5,  scatter: 0.20, solid: false, squash: 1   }, // Banana
+  skinny: { minR: 1,  maxR: 3,  scatter: 0.18, solid: false, squash: 1   }, // Banana - plus fin
   needle: { minR: 1,  maxR: 3,  scatter: 0.06, solid: true,  squash: 1   }, // Needle
-  ny:     { minR: 3,  maxR: 7,  scatter: 0.45, solid: false, squash: 0.6 }, // NYC Fat
+  ny:     { minR: 2,  maxR: 5,  scatter: 0.45, solid: false, squash: 0.6 }, // NYC Fat = ancien banana
   filler: { minR: 14, maxR: 30, scatter: 0.70, solid: false, squash: 0.4 }, // Filler - le plus grand
 };
 
@@ -1287,7 +1287,7 @@ function sprayPaint(x, y, isMove) {
     }
   } else if (currentTool === 'roller') {
     // Roller = taille fixe — ignore le cap sélectionné
-    var rollerW = 6, rollerH = 2;
+    var rollerW = 8, rollerH = 3;
     ctx.save();
     ctx.globalAlpha = Math.min(opacityLevel * 0.9, 0.95);
     ctx.fillStyle = currentColor;
