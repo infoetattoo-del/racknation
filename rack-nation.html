@@ -912,7 +912,7 @@ function canSVG(hex, level, isActive, w, h) {
   var ref = fh > 4
     ? ('<rect x="' + (_FL+2) + '" y="' + fy + '" width="12" height="' + fh + '" clip-path="url(#cc' + uid + ')" fill="rgba(255,255,255,0.13)" rx="3"/>')
     : '';
-  return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="-8 0 141 300" width="' + w + '" height="' + h + '" style="display:block;width:' + w + 'px;height:' + h + 'px;">'
+  return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="-15 0 155 300" width="' + w + '" height="' + h + '" style="display:block;width:' + w + 'px;height:' + h + 'px;">'
     + '<defs><clipPath id="cc' + uid + '"><path d="' + _BODY + '"/></clipPath></defs>'
     + '<path d="' + _BODY + '" fill="#111"/>'
     + '<rect x="' + _FL + '" y="' + fy + '" width="' + _FW + '" height="' + fh + '" clip-path="url(#cc' + uid + ')" fill="' + fc + '" opacity="0.92"/>'
@@ -1368,7 +1368,7 @@ function animateDrips() {
   });
   requestAnimationFrame(animateDrips);
 }
-animateDrips();
+// animateDrips(); // Drips désactivés
 
 // COVERAGE TRACKING
 function updateCoverage() {
@@ -1835,9 +1835,9 @@ function loadCity(cityKey) {
       var offsetY = Math.round((340 - trainH) / 2);
       tc.clearRect(0, 0, 880, 340);
       tc.drawImage(trainImg, 0, offsetY, 880, trainH);
-      // Zone peignable = zone non-transparente du train
-      // Flanc blanc : x:24 à x:856, y:(offsetY+18) à y:(offsetY+18+145)
-      trainClipRegion = { x: 24, y: offsetY + 18, w: 832, h: trainH - 36 };
+      // Zone peignable = flanc blanc du wagon (valeurs précises)
+      var clipOffY = Math.round((340 - trainH) / 2);
+      trainClipRegion = { x: 20, y: clipOffY + 2, w: 842, h: trainH - 4 };
       console.log('Train loaded, clipRegion:', trainClipRegion);
     };
     trainImg.src = city.train_img;
@@ -2136,12 +2136,16 @@ var ZOOM_MIN = 0.3;
 var ZOOM_MAX = 3.0;
 
 function applyZoom() {
-  const tw = document.getElementById('train-wrap');
-  if (!tw) return;
-  tw.style.transform = `scale(${trainScale})`;
-  const pct = Math.round(trainScale * 100);
+  // Zoomer le scene entier (fond de station + train + canvas)
+  var sc = document.getElementById('scene');
+  var tw = document.getElementById('train-wrap');
+  if (!sc) return;
+  sc.style.transform = 'scale(' + trainScale + ')';
+  sc.style.transformOrigin = 'center center';
+  if (tw) tw.style.transform = ''; // reset train-wrap individuel
+  var pct = Math.round(trainScale * 100);
   document.getElementById('zoom-val').textContent = pct + '%';
-  const sl = document.getElementById('zoom-slider');
+  var sl = document.getElementById('zoom-slider');
   if (sl) sl.value = pct;
 }
 
