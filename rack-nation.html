@@ -1049,13 +1049,16 @@ var animFrame;
 // Canvas taille fixe selon la ville
 // Paris (spot_img) = 880x440, autres = 880x340
 function getCanvasSize() {
-  var city = TRAINS[document.getElementById('city-select') && document.getElementById('city-select').value || 'Paris — Ligne 13'];
-  if (city && city.spot_img) return {w:880, h:440};
+  // Paris (spot_img) = 880x440, autres villes SVG = 880x340
+  var sel = document.getElementById('city-select');
+  var cityKey = sel ? sel.value : 'Paris — Ligne 13';
+  if (cityKey === 'Paris — Ligne 13') return {w:880, h:440};
   return {w:880, h:340};
 }
 
 function resizeCanvas() {
-  var sz = getCanvasSize();
+  var sz = {w:880, h:440}; // default Paris
+  try { sz = getCanvasSize(); } catch(e) {}
   if (canvas.width === sz.w && canvas.height === sz.h) return;
   var imgData = null;
   if (canvas.width > 0 && canvas.height > 0) {
