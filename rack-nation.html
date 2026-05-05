@@ -1076,11 +1076,12 @@ function applyTrainClip() {
 
 // CAP PROFILES
 var capProfiles = {
-  fat:    { minR: 12, maxR: 28, scatter: 0.65, solid: false, squash: 1 },
-  skinny: { minR: 2,  maxR: 6,  scatter: 0.2,  solid: true,  squash: 1 },
-  needle: { minR: 1,  maxR: 3,  scatter: 0.05, solid: true,  squash: 1 },
-  ny:     { minR: 8,  maxR: 22, scatter: 0.5,  solid: false, squash: 0.6 },
-  filler: { minR: 20, maxR: 40, scatter: 0.8,  solid: false, squash: 0.4 },
+  // Ordre taille: filler > fat(pink) > ny(fat) > skinny(banana) > needle
+  fat:    { minR: 10, maxR: 22, scatter: 0.60, solid: false, squash: 1   }, // Fat Pink - moyen
+  skinny: { minR: 4,  maxR: 9,  scatter: 0.25, solid: false, squash: 1   }, // Banana - un peu plus large que needle
+  needle: { minR: 2,  maxR: 5,  scatter: 0.08, solid: true,  squash: 1   }, // Needle - fin mais un peu plus large qu'avant
+  ny:     { minR: 8,  maxR: 18, scatter: 0.50, solid: false, squash: 0.6 }, // NYC Fat - sous fat pink
+  filler: { minR: 14, maxR: 30, scatter: 0.70, solid: false, squash: 0.4 }, // Filler - le plus grand
 };
 
 // COLORS
@@ -1190,10 +1191,13 @@ updatePreview();
 // TOOL SELECTION
 function setTool(t) {
   currentTool = t;
-  ['spray','marker','roller'].forEach(function(id) {
-    var b = document.getElementById('btm-' + id);
-    if (b) b.classList.toggle('active', id === t);
+  // Retirer active de tous les boutons tool
+  document.querySelectorAll('.btm-btn').forEach(function(b) {
+    b.classList.remove('active');
   });
+  // Mettre active sur le bon bouton
+  var active = document.getElementById('btm-' + t);
+  if (active) active.classList.add('active');
   updateStatus();
 }
 
@@ -1254,7 +1258,7 @@ function sprayPaint(x, y, isMove) {
   // Bloquer si toutes les cans sont vides
   if (gameCans && gameCans.length > 0 && gameCans.every(function(c){return c.level<=0;})) return;
   const cap = capProfiles[currentCap];
-  const r = (cap.minR + (cap.maxR - cap.minR) * pressure) * (currentTool === 'roller' ? 1.2 : 1);
+  const r = (cap.minR + (cap.maxR - cap.minR) * pressure);
 
   // CLIP STRICT: peinture uniquement dans la zone train (trapèze exact)
   ctx.save();
