@@ -571,6 +571,45 @@
   #btm-cans svg { display:block; width:34px; height:68px; overflow:visible; }
   #btm-cans > div > div { overflow:hidden; }
 
+
+  /* Scrollbar horizontale zoom */
+  #h-scroll-wrap {
+    display: none;
+    width: 100%;
+    height: 18px;
+    background: #0a0a0a;
+    flex-shrink: 0;
+    align-items: center;
+    padding: 0 12px;
+    box-sizing: border-box;
+    border-top: 1px solid #1a1a1a;
+  }
+  #h-scroll {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 100%;
+    height: 3px;
+    background: #222;
+    outline: none;
+    cursor: pointer;
+    border-radius: 2px;
+  }
+  #h-scroll::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 32px;
+    height: 10px;
+    background: #333;
+    border: 1px solid #444;
+    border-radius: 2px;
+    cursor: grab;
+  }
+  #h-scroll::-webkit-slider-thumb:active { cursor: grabbing; background: #444; }
+  #h-scroll::-moz-range-thumb {
+    width: 32px; height: 10px;
+    background: #333; border: 1px solid #444;
+    border-radius: 2px; cursor: grab;
+  }
 </style>
 </head>
 <body>
@@ -684,7 +723,13 @@
       </div>
 
       <div id="notif">SAVED TO GALLERY</div>
-    </div>
+      <!-- Scrollbar horizontale de navigation (zoom) -->
+  <div id="h-scroll-wrap" >
+    <input type="range" id="h-scroll" min="0" max="100" value="50" step="1"
+      
+      oninput="scrollScene(this.value)">
+  </div>
+</div>
   </div>
 
   <!-- RIGHT PANEL -->
@@ -1816,7 +1861,6 @@ function wheels(fill, stroke) {
 }
 
 function loadCity(cityKey) {
-  if(typeof resetPan==='function'){panX=0;panY=0;}
   var city = TRAINS[cityKey];
   if (!city) return;
 
@@ -2175,35 +2219,25 @@ var trainScale = 0.75;
 var ZOOM_MIN = 0.3;
 var ZOOM_MAX = 3.0;
 
-// Pan state
-var panX = 0, panY = 0;
-var isPanning = false, panStartX = 0, panStartY = 0, panStartTX = 0, panStartTY = 0;
-
 function applyZoom() {
   var sc = document.getElementById('scene');
   var tw = document.getElementById('train-wrap');
   if (!sc) return;
-  // Limiter le pan selon le zoom (pas de pan si zoom = fit)
-  if (trainScale <= ZOOM_FIT + 0.01) { panX = 0; panY = 0; }
-  sc.style.transform = 'scale(' + trainScale + ') translate(' + panX + 'px,' + panY + 'px)';
+  // Garder le translateX actuel sauf si zoom = fit
+  var tx = getCurrentTranslateX ? getCurrentTranslateX() : 0;
+  if (trainScale <= ZOOM_FIT + 0.05) tx = 0;
+  if (tx !== 0) {
+    sc.style.transform = 'scale(' + trainScale + ') translateX(' + tx + 'px)';
+  } else {
+    sc.style.transform = 'scale(' + trainScale + ')';
+  }
   sc.style.transformOrigin = 'center center';
   if (tw) tw.style.transform = '';
   var pct = Math.round(trainScale * 100);
   document.getElementById('zoom-val').textContent = pct + '%';
   var sl = document.getElementById('zoom-slider');
   if (sl) sl.value = pct;
-}
-
-function resetPan() { panX = 0; panY = 0; }
-
-// Limiter le pan pour ne pas sortir de l'image
-function clampPan() {
-  var ca = document.getElementById('canvas-area');
-  if (!ca) return;
-  var maxX = (ca.clientWidth  * (trainScale - 1)) / (2 * trainScale);
-  var maxY = (ca.clientHeight * (trainScale - 1)) / (2 * trainScale);
-  panX = Math.max(-maxX, Math.min(maxX, panX));
-  panY = Math.max(-maxY, Math.min(maxY, panY));
+  if (typeof updateScrollbar === 'function') updateScrollbar();
 }
 
 function adjustZoom(delta) {
@@ -2242,45 +2276,7 @@ document.getElementById('canvas-area').addEventListener('wheel', (e) => {
   adjustZoom(e.deltaY < 0 ? 0.05 : -0.05);
 }, { passive: false });
 
-// ── PAN : clic droit ou middle-click ou Space+drag ────────────────────────────
-var spaceDown = false;
-document.addEventListener('keydown', function(e) {
-  if (e.code === 'Space') { spaceDown = true; e.preventDefault(); }
-});
-document.addEventListener('keyup', function(e) {
-  if (e.code === 'Space') { spaceDown = false; }
-});
 
-var caEl2 = document.getElementById('canvas-area');
-caEl2.addEventListener('mousedown', function(e) {
-  // Pan avec clic droit OU clic milieu OU Space+clic gauche
-  if (e.button === 1 || e.button === 2 || (e.button === 0 && spaceDown)) {
-    if (trainScale <= ZOOM_FIT + 0.01) return;
-    isPanning = true;
-    panStartX = e.clientX;
-    panStartY = e.clientY;
-    panStartTX = panX;
-    panStartTY = panY;
-    caEl2.style.cursor = 'grabbing';
-    e.preventDefault();
-  }
-});
-document.addEventListener('mousemove', function(e) {
-  if (!isPanning) return;
-  var dx = (e.clientX - panStartX) / trainScale;
-  var dy = (e.clientY - panStartY) / trainScale;
-  panX = panStartTX + dx;
-  panY = panStartTY + dy;
-  clampPan();
-  applyZoom();
-});
-document.addEventListener('mouseup', function(e) {
-  if (isPanning) {
-    isPanning = false;
-    caEl2.style.cursor = '';
-  }
-});
-caEl2.addEventListener('contextmenu', function(e) { e.preventDefault(); });
 
 // Recalc fit on resize
 window.addEventListener('resize', function() {
@@ -2445,6 +2441,50 @@ function toggleSound() {
     btn.style.borderColor = 'var(--border)';
   }
 }
+
+// ── SCROLLBAR HORIZONTALE ────────────────────────────────────────────────────
+function updateScrollbar() {
+  var wrap = document.getElementById('h-scroll-wrap');
+  var sc   = document.getElementById('scene');
+  if (!wrap || !sc) return;
+  // Afficher seulement si zoomé
+  if (trainScale > ZOOM_FIT + 0.05) {
+    wrap.style.display = 'flex';
+    // Sync la valeur du slider avec la position translateX actuelle
+    // sc.style.transform = scale(s) translateX(tx)
+    var tx = getCurrentTranslateX();
+    var ca = document.getElementById('canvas-area');
+    var maxT = ca ? (ca.clientWidth * (trainScale - 1)) / (2 * trainScale) : 200;
+    var pct = maxT > 0 ? Math.round(((tx + maxT) / (2 * maxT)) * 100) : 50;
+    var sl = document.getElementById('h-scroll');
+    if (sl) sl.value = Math.max(0, Math.min(100, pct));
+  } else {
+    wrap.style.display = 'none';
+    // Reset translateX
+    var sc2 = document.getElementById('scene');
+    if (sc2) sc2.style.transform = 'scale(' + trainScale + ')';
+  }
+}
+
+function getCurrentTranslateX() {
+  var sc = document.getElementById('scene');
+  if (!sc) return 0;
+  var t = sc.style.transform;
+  var m = t.match(/translateX\(([^)]+)px\)/);
+  return m ? parseFloat(m[1]) : 0;
+}
+
+function scrollScene(val) {
+  var sc = document.getElementById('scene');
+  var ca = document.getElementById('canvas-area');
+  if (!sc || !ca) return;
+  // val = 0..100 → translateX de -maxT à +maxT
+  var maxT = (ca.clientWidth * (trainScale - 1)) / (2 * trainScale);
+  var tx = ((val - 50) / 50) * maxT;
+  sc.style.transform = 'scale(' + trainScale + ') translateX(' + tx + 'px)';
+  sc.style.transformOrigin = 'center center';
+}
+
 </script>
 
 
