@@ -131,11 +131,12 @@
     flex: 1;
     display: flex;
     flex-direction: column;
-    align-items: center;
-    justify-content: center;
+    align-items: flex-start;
+    justify-content: flex-start;
     background: #070707;
     position: relative;
-    overflow: hidden;
+    overflow-x: auto;
+    overflow-y: hidden;
     cursor: crosshair;
     /* Le train-wrap sera scale pour remplir cet espace */
   }
@@ -572,44 +573,7 @@
   #btm-cans > div > div { overflow:hidden; }
 
 
-  /* Scrollbar horizontale zoom */
-  #h-scroll-wrap {
-    display: none;
-    width: 100%;
-    height: 18px;
-    background: #0a0a0a;
-    flex-shrink: 0;
-    align-items: center;
-    padding: 0 12px;
-    box-sizing: border-box;
-    border-top: 1px solid #1a1a1a;
-  }
-  #h-scroll {
-    -webkit-appearance: none;
-    appearance: none;
-    width: 100%;
-    height: 3px;
-    background: #222;
-    outline: none;
-    cursor: pointer;
-    border-radius: 2px;
-  }
-  #h-scroll::-webkit-slider-thumb {
-    -webkit-appearance: none;
-    appearance: none;
-    width: 32px;
-    height: 10px;
-    background: #333;
-    border: 1px solid #444;
-    border-radius: 2px;
-    cursor: grab;
-  }
-  #h-scroll::-webkit-slider-thumb:active { cursor: grabbing; background: #444; }
-  #h-scroll::-moz-range-thumb {
-    width: 32px; height: 10px;
-    background: #333; border: 1px solid #444;
-    border-radius: 2px; cursor: grab;
-  }
+  
 </style>
 </head>
 <body>
@@ -723,13 +687,7 @@
       </div>
 
       <div id="notif">SAVED TO GALLERY</div>
-      <!-- Scrollbar horizontale de navigation (zoom) -->
-  <div id="h-scroll-wrap" >
-    <input type="range" id="h-scroll" min="0" max="100" value="50" step="1"
-      
-      oninput="scrollScene(this.value)">
-  </div>
-</div>
+      </div>
   </div>
 
   <!-- RIGHT PANEL -->
@@ -2216,29 +2174,27 @@ var trainScale = 0.75;
 var ZOOM_MIN = 0.3;
 var ZOOM_MAX = 3.0;
 
-// Offset horizontal courant (en px dans l'espace du scene avant scale)
-var sceneOffsetX = 0;
-
 function applyZoom() {
   var sc = document.getElementById('scene');
-  var tw = document.getElementById('train-wrap');
-  if (!sc) return;
-  // Au fit : reset offset
-  if (trainScale <= ZOOM_FIT + 0.02) sceneOffsetX = 0;
-  // Clamp offset
   var ca = document.getElementById('canvas-area');
-  if (ca) {
-    var maxOff = Math.max(0, (880 * trainScale - ca.clientWidth) / 2 / trainScale);
-    sceneOffsetX = Math.max(-maxOff, Math.min(maxOff, sceneOffsetX));
-  }
-  sc.style.transform = 'scale(' + trainScale + ') translateX(' + sceneOffsetX + 'px)';
-  sc.style.transformOrigin = 'center center';
-  if (tw) tw.style.transform = '';
+  if (!sc || !ca) return;
+
+  // Largeur native du scene = 880px (train-wrap)
+  // On scale le scene et on ajuste sa taille pour que le scroll natif fonctionne
+  var scaledW = Math.round(880 * trainScale);
+  var scaledH = Math.round(440 * trainScale);
+  sc.style.width  = scaledW + 'px';
+  sc.style.height = scaledH + 'px';
+  sc.style.transform = 'scale(' + trainScale + ')';
+  sc.style.transformOrigin = 'top left';
+  // Centrer verticalement dans canvas-area si plus petit
+  var caH = ca.clientHeight;
+  sc.style.marginTop = scaledH < caH ? Math.round((caH - scaledH) / 2) + 'px' : '0';
+
   var pct = Math.round(trainScale * 100);
   document.getElementById('zoom-val').textContent = pct + '%';
   var sl = document.getElementById('zoom-slider');
   if (sl) sl.value = pct;
-  updateScrollbar();
 }
 
 function adjustZoom(delta) {
@@ -2443,8 +2399,8 @@ function toggleSound() {
   }
 }
 
-// ── SCROLLBAR HORIZONTALE ────────────────────────────────────────────────────
-function updateScrollbar() {
+// Scrollbar native — pas besoin de JS
+function updateScrollbar() { // no-op
   var wrap = document.getElementById('h-scroll-wrap');
   var sl   = document.getElementById('h-scroll');
   if (!wrap || !sl) return;
