@@ -684,7 +684,13 @@
     <div class="hstat"><span class="hstat-val" id="stroke-count">0</span><span>strokes</span></div>
     <div class="hstat"><span class="hstat-val" id="coverage">0%</span><span>coverage</span></div>
     <div class="hstat"><span class="hstat-val" id="can-level">100%</span><span>can</span></div>
-    <button id="sound-btn" onclick="toggleSound()" style="background:transparent;border:1px solid var(--border);color:var(--muted);font-family:'Share Tech Mono',monospace;font-size:10px;padding:4px 10px;cursor:pointer;letter-spacing:1px;" title="Ambient sound">♪ OFF</button>
+    <div id="audio-player" style="display:flex;align-items:center;gap:6px;border:1px solid var(--border);padding:3px 8px;border-radius:2px;">
+      <button id="sound-prev" onclick="audioPlayPrev()" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:12px;padding:0 2px;" title="Previous">&#9664;&#9664;</button>
+      <button id="sound-btn" onclick="toggleSound()" style="background:none;border:none;color:var(--muted);font-size:14px;cursor:pointer;padding:0 2px;" title="Play/Pause">&#9654;</button>
+      <button id="sound-next" onclick="audioPlayNext()" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:12px;padding:0 2px;" title="Next">&#9654;&#9654;</button>
+      <span id="audio-track-name" style="font-family:'Share Tech Mono',monospace;font-size:9px;color:var(--muted);max-width:100px;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;">NO TRACK</span>
+      <input id="audio-vol" type="range" min="0" max="100" value="55" step="1" oninput="setAudioVol(this.value)" style="width:50px;height:3px;accent-color:var(--accent);cursor:pointer;" title="Volume">
+    </div>
   </div>
 </div>
 
@@ -1065,7 +1071,7 @@ function launchGame(){
   if(!soundOn){
     soundOn=true;buildSound();
     const btn=document.getElementById('sound-btn');
-    if(btn){btn.textContent='♪ ON';btn.style.color='var(--accent)';btn.style.borderColor='var(--accent)';}
+    if(btn){btn.innerHTML='&#9646;&#9646;';btn.style.color='var(--accent)';}
   }
 }
 
@@ -2395,19 +2401,48 @@ animateAmbiance();
 // ─── AMBIANCE SONORE — MP3 ───────────────────────────────────────────────────
 var bgAudio = null;
 var soundOn = false;
+var audioCurrentIdx = 0;
+
+// ── PLAYLIST — ajouter les fichiers MP3 ici ────────────────────────────────
+var audioPlaylist = [
+  { name: 'RACK NATION', file: 'Rack_nation.mp3' },
+  // { name: 'TRACK 2', file: 'track2.mp3' },
+  // { name: 'TRACK 3', file: 'track3.mp3' },
+];
 
 function buildSound() {
+  if (audioPlaylist.length === 0) return;
+  var track = audioPlaylist[audioCurrentIdx];
   if (!bgAudio) {
-    bgAudio = new Audio('Rack_nation.mp3');
-    bgAudio.loop = true;
+    bgAudio = new Audio(track.file);
     bgAudio.volume = 0.55;
     bgAudio.preload = 'auto';
+    bgAudio.addEventListener('ended', function() { audioPlayNext(); });
+  } else {
+    bgAudio.src = track.file;
+    bgAudio.load();
   }
-  // Les browsers bloquent autoplay — on joue sur interaction utilisateur
-  function tryPlay() {
-    bgAudio.play().catch(e => console.warn('Audio blocked:', e));
-  }
-  tryPlay();
+  var nameEl = document.getElementById('audio-track-name');
+  if (nameEl) nameEl.textContent = track.name;
+  bgAudio.play().catch(e => console.warn('Audio blocked:', e));
+}
+
+function audioPlayNext() {
+  if (audioPlaylist.length === 0) return;
+  audioCurrentIdx = (audioCurrentIdx + 1) % audioPlaylist.length;
+  if (bgAudio) { bgAudio.pause(); bgAudio.src = ''; bgAudio = null; }
+  if (soundOn) buildSound();
+}
+
+function audioPlayPrev() {
+  if (audioPlaylist.length === 0) return;
+  audioCurrentIdx = (audioCurrentIdx - 1 + audioPlaylist.length) % audioPlaylist.length;
+  if (bgAudio) { bgAudio.pause(); bgAudio.src = ''; bgAudio = null; }
+  if (soundOn) buildSound();
+}
+
+function setAudioVol(val) {
+  if (bgAudio) bgAudio.volume = val / 100;
 }
 
 function _oldBuildSound_disabled() {
@@ -2501,7 +2536,7 @@ function _oldBuildSound_disabled() {
 }
 
 function toggleSound() {
-  const btn = document.getElementById('sound-btn');
+  var btn = document.getElementById('sound-btn');
   if (!soundOn) {
     soundOn = true;
     buildSound();
@@ -2511,9 +2546,7 @@ function toggleSound() {
   } else {
     soundOn = false;
     if (bgAudio) { bgAudio.pause(); bgAudio.currentTime = 0; }
-    btn.textContent = '♪ OFF';
-    btn.style.color = 'var(--muted)';
-    btn.style.borderColor = 'var(--border)';
+    btn.innerHTML='&#9654;';btn.style.color='var(--muted)';
   }
 }
 
