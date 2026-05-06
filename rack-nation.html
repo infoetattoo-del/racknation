@@ -237,25 +237,27 @@
     height: 28px;
     background: transparent;
     border: none;
-    border-bottom: 1px solid var(--border);
+    border-top: 1px solid var(--border);
     cursor: pointer;
     display: flex;
     align-items: center;
     justify-content: flex-start;
     padding: 0 8px;
     color: var(--muted);
-    font-size: 12px;
+    font-size: 11px;
     flex-shrink: 0;
     transition: background 0.15s, color 0.15s;
     font-family: monospace;
+    margin-top: auto;
   }
   #rp-toggle:hover { background: rgba(232,255,0,0.08); color: var(--accent); }
   #right-panel.collapsed #rp-toggle {
     justify-content: center;
     padding: 0;
-    border-bottom: none;
+    border-top: none;
     height: 100%;
     writing-mode: vertical-rl;
+    margin-top: 0;
   }
 
   .panel-title {
@@ -726,9 +728,6 @@
 
   <!-- RIGHT PANEL -->
   <div id="right-panel">
-    <!-- Bouton volet -->
-    <button id="rp-toggle" onclick="toggleRightPanel()" title="Ouvrir/Fermer">‹ réduire</button>
-
     <div class="rp-content" style="padding:12px;display:flex;flex-direction:column;gap:12px;flex:1;overflow-y:auto;">
     <!-- SPRAY PREVIEW -->
     <div>
@@ -778,6 +777,7 @@
       <button class="action-btn danger" onclick="buffCanvas()">BUFF ✕</button>
     </div>
     </div><!-- end rp-content -->
+    <button id="rp-toggle" onclick="toggleRightPanel()" title="Collapse/Expand">‹ collapse</button>
 
   </div>
 </div>
@@ -2565,7 +2565,9 @@ function toggleRightPanel() {
   var btn = document.getElementById('rp-toggle');
   if (!rp || !btn) return;
   var collapsed = rp.classList.toggle('collapsed');
-  btn.textContent = collapsed ? '›' : '‹ réduire';
+  btn.textContent = collapsed ? '› expand' : '‹ collapse';
+  // Recalculer le zoom après la transition CSS (250ms)
+  setTimeout(function() { if (typeof resetZoom === 'function') resetZoom(); }, 260);
 }
 
 </script>
