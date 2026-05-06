@@ -704,7 +704,17 @@
   #flick-preview { width: 100%; aspect-ratio: 2/1; object-fit: cover; border: 1px solid #222; }
 
 </style>
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2">
+function showUpgradeModal() {
+  var m = document.getElementById('upgrade-modal');
+  if (m) { m.style.display = 'flex'; }
+}
+function closeUpgradeModal() {
+  var m = document.getElementById('upgrade-modal');
+  if (m) { m.style.display = 'none'; }
+}
+
+</script>
 <script>
 // ═══════════════════════════════════════════════════════════════════════════
 // SUPABASE AUTH + GALLERY
@@ -732,12 +742,21 @@ function initSupabase() {
         updateAuthUI();
       }
     });
+    // Vérifier session — si pas connecté → redirect landing
     supa.auth.getSession().then(function(r) {
-      if (r.data.session) {
+      if (r.data && r.data.session) {
         currentUser = r.data.session.user;
         loadProfile(currentUser.id);
+      } else {
+        // Non connecté → retour landing
+        window.location.href = 'rack-nation-landing.html';
       }
     });
+  } else {
+    // Supabase non chargé → retour landing
+    setTimeout(function() {
+      window.location.href = 'rack-nation-landing.html';
+    }, 2000);
   }
 }
 
@@ -746,7 +765,56 @@ async function loadProfile(uid) {
   var r = await supa.from('profiles').select('*').eq('id', uid).single();
   if (r.data) {
     currentProfile = r.data;
+    applyPlanRestrictions();
     updateAuthUI();
+  }
+}
+
+// ── PLAN RESTRICTIONS ────────────────────────────────────────────────────────
+var FREE_SPOTS = ['Paris — Ligne 13', 'New York — Subway', 'Barcelona — Metro'];
+var FREE_MAX_CANS = 5;
+var PRO_MAX_CANS = 10;
+
+function isPro() {
+  return currentProfile && currentProfile.is_pro === true;
+}
+
+function applyPlanRestrictions() {
+  if (isPro()) {
+    // PRO — tout débloquer
+    LO_MAX = PRO_MAX_CANS;
+    updatePlanBadge('PRO');
+  } else {
+    // FREE — limiter
+    LO_MAX = FREE_MAX_CANS;
+    updatePlanBadge('FREE');
+    // Griser les spots non disponibles dans le loadout
+    updateSpotOptions();
+  }
+}
+
+function updatePlanBadge(plan) {
+  var badge = document.getElementById('plan-badge');
+  if (!badge) return;
+  badge.textContent = plan;
+  badge.style.color = plan === 'PRO' ? '#e8ff00' : '#888';
+  badge.style.borderColor = plan === 'PRO' ? '#e8ff00' : '#333';
+}
+
+function updateSpotOptions() {
+  var sel = document.getElementById('lo-city-sel');
+  if (!sel) return;
+  Array.from(sel.options).forEach(function(opt) {
+    var isFree = FREE_SPOTS.indexOf(opt.value) >= 0;
+    if (!isFree) {
+      opt.text = opt.text + ' 🔒';
+      opt.disabled = true;
+      opt.style.color = '#444';
+    }
+  });
+  // S'assurer que la valeur sélectionnée est un spot free
+  if (FREE_SPOTS.indexOf(sel.value) < 0) {
+    sel.value = FREE_SPOTS[0];
   }
 }
 
@@ -828,7 +896,9 @@ async function doLogin() {
 
 function openUserMenu() {
   if (confirm('Log out from RACK NATION VANDALS?')) {
-    supa.auth.signOut();
+    supa.auth.signOut().then(function() {
+      window.location.href = 'rack-nation-landing.html';
+    });
   }
 }
 
@@ -1040,6 +1110,7 @@ window.addEventListener('load', function() {
   
   <div id="header-right">
     <button onclick="openGallery()" style="background:transparent;border:1px solid var(--border);color:var(--muted);font-family:'Share Tech Mono',monospace;font-size:10px;padding:4px 10px;cursor:pointer;letter-spacing:1px;margin-right:4px;">THE YARD</button>
+    <span id="plan-badge" style="font-family:'Share Tech Mono',monospace;font-size:9px;border:1px solid #333;color:#888;padding:2px 6px;margin-right:4px;letter-spacing:1px;"></span>
     <button id="auth-header-btn" onclick="openAuth()" style="background:transparent;border:1px solid var(--border);color:var(--muted);font-family:'Share Tech Mono',monospace;font-size:10px;padding:4px 10px;cursor:pointer;letter-spacing:1px;margin-right:8px;">LOGIN</button>
     <button id="new-spot-btn" onclick="goNewSpot()" style="background:#e8ff00;border:none;color:#0a0a0a;font-family:'Share Tech Mono',monospace;font-size:10px;padding:4px 10px;cursor:pointer;letter-spacing:1px;margin-right:8px;font-weight:bold;" title="New spot">↩ NEW SPOT</button>
     <div class="hstat"><span class="hstat-val" id="stroke-count">0</span><span>strokes</span></div>
@@ -1423,10 +1494,20 @@ function loUpdateCount(){
 }
 
 function launchGame(){
+  var cityVal = document.getElementById('lo-city-sel').value;
+  // Vérifier accès spot
+  if (!isPro() && FREE_SPOTS.indexOf(cityVal) < 0) {
+    showUpgradeModal();
+    return;
+  }
+  // Vérifier nombre de cans
+  if (!isPro() && loSelected.length > FREE_MAX_CANS) {
+    loSelected = loSelected.slice(0, FREE_MAX_CANS);
+  }
   window._loadoutColors=loSelected.map(s=>s.hex);
   window._loadoutSelected=loSelected;
   window._loadoutCap=loActiveCap;
-  window._loadoutCity=document.getElementById('lo-city-sel').value;
+  window._loadoutCity=cityVal;
   document.getElementById('loadout').style.display = 'none';
   if(typeof initGameFromLoadout==='function') initGameFromLoadout();
   if(!soundOn){
@@ -2617,7 +2698,16 @@ function downloadFlick() {
     // Watermark
     mctx.font = '11px monospace';
     mctx.fillStyle = 'rgba(255,255,255,0.2)';
-    mctx.fillText('RNV', outW - 35, outH - 10);
+    // Filigrane selon le plan
+  if (!isPro()) {
+    mctx.font = 'bold 13px monospace';
+    mctx.fillStyle = 'rgba(255,255,255,0.35)';
+    mctx.fillText('RACK NATION VANDALS', outW/2 - 85, outH - 12);
+  } else {
+    mctx.font = '11px monospace';
+    mctx.fillStyle = 'rgba(255,255,255,0.15)';
+    mctx.fillText('RNV', outW - 30, outH - 10);
+  }
     // Download
     var link = document.createElement('a');
     link.download = 'racknation-' + Date.now() + '.png';
@@ -3064,5 +3154,23 @@ function goNewSpot() {
   <div id="gallery-grid"></div>
 </div>
 
+
+<!-- ── UPGRADE MODAL ─────────────────────────────────────────────────────── -->
+<div id="upgrade-modal" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.92);z-index:3000;align-items:center;justify-content:center;">
+  <div style="background:#0f0f0f;border:1px solid #222;padding:32px;max-width:360px;width:90%;display:flex;flex-direction:column;gap:16px;text-align:center;">
+    <div style="font-family:'Bebas Neue',sans-serif;font-size:28px;color:#e8ff00;letter-spacing:3px;">GO PRO</div>
+    <div style="font-size:11px;color:#888;font-family:'Share Tech Mono',monospace;line-height:1.8;">
+      FREE plan includes:<br>
+      ✓ 3 spots · 5 cans · Gallery access<br><br>
+      <span style="color:#e8ff00;">PRO plan unlocks:</span><br>
+      ★ All spots worldwide<br>
+      ★ 10 cans per session<br>
+      ★ Download without watermark<br>
+      ★ PRO badge in the gallery
+    </div>
+    <button onclick="closeUpgradeModal()" style="background:#e8ff00;color:#0a0a0a;border:none;font-family:'Bebas Neue',sans-serif;font-size:16px;letter-spacing:2px;padding:12px;cursor:pointer;">COMING SOON</button>
+    <button onclick="closeUpgradeModal()" style="background:transparent;border:1px solid #333;color:#555;font-family:'Share Tech Mono',monospace;font-size:10px;padding:8px;cursor:pointer;letter-spacing:1px;">STAY FREE</button>
+  </div>
+</div>
 </body>
 </html>
