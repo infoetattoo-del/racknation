@@ -215,6 +215,7 @@
   /* RIGHT PANEL */
   #right-panel {
     width: 180px;
+    min-width: 180px;
     background: var(--panel);
     border-left: 1px solid var(--border);
     display: flex;
@@ -223,7 +224,60 @@
     gap: 12px;
     flex-shrink: 0;
     overflow-y: auto;
+    overflow-x: hidden;
+    transition: width 0.25s ease, min-width 0.25s ease, padding 0.25s ease;
+    position: relative;
   }
+  #right-panel.collapsed {
+    width: 28px;
+    min-width: 28px;
+    padding: 12px 0;
+    overflow: hidden;
+  }
+  #right-panel.collapsed .rp-content { display: none; }
+  #rp-toggle {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 20px;
+    height: 40px;
+    background: var(--border);
+    border: none;
+    border-radius: 3px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--muted);
+    font-size: 10px;
+    z-index: 10;
+    transition: background 0.15s;
+  }
+  #rp-toggle:hover { background: var(--accent); color: #000; }
+  #rp-toggle-open {
+    position: absolute;
+    top: 50%;
+    right: -1px;
+    transform: translateY(-50%);
+    width: 14px;
+    height: 40px;
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-right: none;
+    border-radius: 3px 0 0 3px;
+    cursor: pointer;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    color: var(--muted);
+    font-size: 10px;
+    z-index: 10;
+    transition: background 0.15s;
+  }
+  #rp-toggle-open:hover { background: var(--accent); color: #000; }
+  #right-panel.collapsed #rp-toggle-open { display: flex; }
+  #right-panel.collapsed #rp-toggle { display: none; }
 
   .panel-title {
     font-size: 9px;
@@ -693,7 +747,12 @@
 
   <!-- RIGHT PANEL -->
   <div id="right-panel">
+    <!-- Bouton réduire (visible quand ouvert) -->
+    <button id="rp-toggle" onclick="toggleRightPanel()" title="Réduire">‹</button>
+    <!-- Bouton rouvrir (visible quand fermé, déborde à gauche) -->
+    <button id="rp-toggle-open" onclick="toggleRightPanel()" title="Ouvrir">›</button>
 
+    <div class="rp-content">
     <!-- SPRAY PREVIEW -->
     <div>
       <div class="panel-title">Preview</div>
@@ -741,6 +800,7 @@
       <button class="action-btn" onclick="downloadFlick()">DOWNLOAD ↓</button>
       <button class="action-btn danger" onclick="buffCanvas()">BUFF ✕</button>
     </div>
+    </div><!-- end rp-content -->
 
   </div>
 </div>
@@ -2519,6 +2579,13 @@ function scrollScene(val) {
   // val 0..100 → sceneOffsetX -maxOff..+maxOff
   sceneOffsetX = ((val - 50) / 50) * maxOff;
   applyZoom();
+}
+
+
+// ── RIGHT PANEL TOGGLE ────────────────────────────────────────────────────────
+function toggleRightPanel() {
+  var rp = document.getElementById('right-panel');
+  if (rp) rp.classList.toggle('collapsed');
 }
 
 </script>
