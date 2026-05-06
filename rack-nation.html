@@ -2203,39 +2203,54 @@ function saveFlick() {
 }
 
 function downloadFlick() {
-  // Export : train-canvas (image) + graffiti-canvas (peinture) → PNG
-  var trainCanv = document.getElementById('train-canvas');
-  var outW = canvas.width;   // 880
-  var outH = canvas.height;  // 440
+  var outW = canvas.width;
+  var outH = canvas.height;
 
   var merged = document.createElement('canvas');
   merged.width  = outW;
   merged.height = outH;
   var mctx = merged.getContext('2d');
 
-  // 1. Fond noir
+  // Fond noir
   mctx.fillStyle = '#0a0a0a';
   mctx.fillRect(0, 0, outW, outH);
 
-  // 2. Image du train (train-canvas)
-  if (trainCanv && trainCanv.width > 0) {
-    mctx.drawImage(trainCanv, 0, 0, outW, outH);
+  // Récupérer l'image du spot depuis TRAINS
+  var cityKey = window._loadoutCity || 'Paris — Ligne 13';
+  var city = TRAINS[cityKey];
+  var spotSrc = city && city.spot_img ? city.spot_img : null;
+
+  function finalize() {
+    // Graffiti par-dessus
+    mctx.drawImage(canvas, 0, 0, outW, outH);
+    // Watermark
+    mctx.font = '11px monospace';
+    mctx.fillStyle = 'rgba(255,255,255,0.2)';
+    mctx.fillText('RACK NATION', outW - 100, outH - 10);
+    // Download
+    var link = document.createElement('a');
+    link.download = 'racknation-' + Date.now() + '.png';
+    link.href = merged.toDataURL('image/png');
+    link.click();
+    showNotif('DOWNLOADING...');
   }
 
-  // 3. Graffiti par-dessus
-  mctx.drawImage(canvas, 0, 0, outW, outH);
-
-  // 4. Watermark discret
-  mctx.font = '11px monospace';
-  mctx.fillStyle = 'rgba(255,255,255,0.2)';
-  mctx.fillText('RACK NATION', outW - 100, outH - 10);
-
-  // 5. Télécharger
-  var link = document.createElement('a');
-  link.download = 'racknation-' + Date.now() + '.png';
-  link.href = merged.toDataURL('image/png');
-  link.click();
-  showNotif('DOWNLOADING...');
+  if (spotSrc) {
+    var spotImg = new Image();
+    spotImg.onload = function() {
+      mctx.drawImage(spotImg, 0, 0, outW, outH);
+      finalize();
+    };
+    spotImg.onerror = finalize;
+    spotImg.src = spotSrc;
+  } else {
+    // Fallback SVG cities
+    var trainCanv = document.getElementById('train-canvas');
+    if (trainCanv) {
+      try { mctx.drawImage(trainCanv, 0, 0, outW, outH); } catch(e) {}
+    }
+    finalize();
+  }
 }
 
 function showNotif(msg) {
