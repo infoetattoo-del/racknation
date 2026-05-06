@@ -2203,55 +2203,39 @@ function saveFlick() {
 }
 
 function downloadFlick() {
-  // Export complet : train (SVG) + graffiti (canvas) → image PNG finale
-  const trainWrap = document.getElementById('train-wrap');
-  const wrapRect = trainWrap.getBoundingClientRect();
+  // Export : train-canvas (image) + graffiti-canvas (peinture) → PNG
+  var trainCanv = document.getElementById('train-canvas');
+  var outW = canvas.width;   // 880
+  var outH = canvas.height;  // 440
 
-  // Canvas de sortie = dimensions réelles du train-wrap affiché
-  const outW = Math.round(wrapRect.width / trainScale);
-  const outH = Math.round(wrapRect.height / trainScale);
-
-  const merged = document.createElement('canvas');
-  merged.width = outW;
+  var merged = document.createElement('canvas');
+  merged.width  = outW;
   merged.height = outH;
-  const mctx = merged.getContext('2d');
+  var mctx = merged.getContext('2d');
 
-  // Fond couleur du dépôt
-  mctx.fillStyle = document.getElementById('canvas-area').style.background || '#070707';
+  // 1. Fond noir
+  mctx.fillStyle = '#0a0a0a';
   mctx.fillRect(0, 0, outW, outH);
 
-  // 1. Train SVG
-  const trainSvg = document.getElementById('train-bg');
-  const svgStr = new XMLSerializer().serializeToString(trainSvg);
-  const svgBlob = new Blob([svgStr], {type:'image/svg+xml'});
-  const svgUrl = URL.createObjectURL(svgBlob);
-  const svgImg = new window.Image();
-  svgImg.onload = function() {
-    mctx.drawImage(svgImg, 0, 0, outW, outH);
-    URL.revokeObjectURL(svgUrl);
-    // 2. Graffiti canvas par-dessus
-    mctx.drawImage(canvas, 0, 0, outW, outH);
-    // 3. Watermark discret
-    mctx.font = '10px Share Tech Mono, monospace';
-    mctx.fillStyle = 'rgba(255,255,255,0.25)';
-    mctx.fillText('RACK NATION', outW - 90, outH - 10);
-    // 4. Télécharger
-    const link = document.createElement('a');
-    link.download = 'racknation-' + Date.now() + '.png';
-    link.href = merged.toDataURL('image/png');
-    link.click();
-    showNotif('DOWNLOADING...');
-  };
-  svgImg.onerror = function() {
-    // Fallback : juste le canvas graffiti
-    mctx.drawImage(canvas, 0, 0);
-    const link = document.createElement('a');
-    link.download = 'racknation-' + Date.now() + '.png';
-    link.href = merged.toDataURL('image/png');
-    link.click();
-    showNotif('DOWNLOADING...');
-  };
-  svgImg.src = svgUrl;
+  // 2. Image du train (train-canvas)
+  if (trainCanv && trainCanv.width > 0) {
+    mctx.drawImage(trainCanv, 0, 0, outW, outH);
+  }
+
+  // 3. Graffiti par-dessus
+  mctx.drawImage(canvas, 0, 0, outW, outH);
+
+  // 4. Watermark discret
+  mctx.font = '11px monospace';
+  mctx.fillStyle = 'rgba(255,255,255,0.2)';
+  mctx.fillText('RACK NATION', outW - 100, outH - 10);
+
+  // 5. Télécharger
+  var link = document.createElement('a');
+  link.download = 'racknation-' + Date.now() + '.png';
+  link.href = merged.toDataURL('image/png');
+  link.click();
+  showNotif('DOWNLOADING...');
 }
 
 function showNotif(msg) {
