@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>RACK NATION VANDALS — Virtual Graffiti</title>
+<title>RACK NATION VANDALS</title>
 <meta name="description" content="Paint trains, metros and walls virtually. Spray cans, caps, markers — bomb the world from your browser.">
 <meta property="og:title" content="RACK NATION VANDALS">
 <meta property="og:description" content="Virtual graffiti. Real culture. Paint trains across 8 cities worldwide.">
@@ -622,7 +622,362 @@
   ::-webkit-scrollbar-thumb { background: #333; border-radius: 2px; }
   ::-webkit-scrollbar-thumb:hover { background: #444; }
   * { scrollbar-width: thin; scrollbar-color: #333 #0d0d0d; }
+  /* ── AUTH MODAL ─────────────────────────────────────────────────────────── */
+  #auth-modal {
+    position: fixed; top:0; left:0; right:0; bottom:0;
+    background: rgba(0,0,0,0.92); z-index: 2000;
+    display: flex; align-items: center; justify-content: center;
+  }
+  #auth-modal.hidden { display: none; }
+  .auth-box {
+    background: #0f0f0f; border: 1px solid #222;
+    padding: 32px; width: 340px; display: flex; flex-direction: column; gap: 16px;
+  }
+  .auth-title { font-family: 'Bebas Neue', sans-serif; font-size: 28px; color: var(--accent); letter-spacing: 3px; }
+  .auth-sub { font-size: 10px; color: var(--muted); letter-spacing: 2px; text-transform: uppercase; }
+  .auth-input {
+    background: #0a0a0a; border: 1px solid #222; color: #eee;
+    font-family: 'Share Tech Mono', monospace; font-size: 12px;
+    padding: 10px 12px; outline: none; width: 100%; box-sizing: border-box;
+  }
+  .auth-input:focus { border-color: var(--accent); }
+  .auth-btn {
+    background: var(--accent); color: #0a0a0a; border: none;
+    font-family: 'Bebas Neue', sans-serif; font-size: 16px; letter-spacing: 2px;
+    padding: 10px; cursor: pointer; width: 100%;
+  }
+  .auth-btn:hover { background: #fff; }
+  .auth-btn.secondary { background: transparent; border: 1px solid #333; color: var(--muted); font-size: 11px; }
+  .auth-btn.secondary:hover { border-color: var(--accent); color: var(--accent); }
+  .auth-msg { font-size: 11px; color: var(--accent); text-align: center; min-height: 16px; }
+  .auth-err { color: #ff4444; }
+  .auth-tabs { display: flex; gap: 8px; }
+  .auth-tab { flex: 1; padding: 8px; background: #111; border: 1px solid #222; color: var(--muted);
+    font-family: 'Share Tech Mono', monospace; font-size: 10px; cursor: pointer; letter-spacing: 1px; text-align: center; }
+  .auth-tab.active { border-color: var(--accent); color: var(--accent); background: rgba(232,255,0,0.05); }
+
+  /* ── GALLERY MODAL ───────────────────────────────────────────────────────── */
+  #gallery-modal {
+    position: fixed; top:0; left:0; right:0; bottom:0;
+    background: rgba(0,0,0,0.95); z-index: 2000;
+    display: flex; flex-direction: column;
+  }
+  #gallery-modal.hidden { display: none; }
+  #gallery-header {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 12px 20px; border-bottom: 1px solid #1a1a1a; flex-shrink: 0;
+  }
+  #gallery-title { font-family: 'Bebas Neue', sans-serif; font-size: 22px; color: var(--accent); letter-spacing: 3px; }
+  #gallery-close { background: none; border: 1px solid #333; color: var(--muted); padding: 4px 12px;
+    cursor: pointer; font-family: 'Share Tech Mono', monospace; font-size: 10px; }
+  #gallery-close:hover { border-color: var(--accent); color: var(--accent); }
+  #gallery-filters { display: flex; gap: 8px; padding: 10px 20px; flex-shrink: 0; flex-wrap: wrap; }
+  .gallery-filter-btn { background: #111; border: 1px solid #222; color: var(--muted);
+    font-family: 'Share Tech Mono', monospace; font-size: 9px; padding: 4px 10px;
+    cursor: pointer; letter-spacing: 1px; }
+  .gallery-filter-btn.active { border-color: var(--accent); color: var(--accent); }
+  #gallery-grid {
+    flex: 1; overflow-y: auto; display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    gap: 12px; padding: 16px 20px;
+  }
+  .gallery-card { background: #0a0a0a; border: 1px solid #1a1a1a; overflow: hidden; position: relative; }
+  .gallery-card img { width: 100%; display: block; aspect-ratio: 2/1; object-fit: cover; }
+  .gallery-card-info { padding: 8px 10px; display: flex; justify-content: space-between; align-items: center; }
+  .gallery-card-tag { font-family: 'Bebas Neue', sans-serif; font-size: 14px; color: var(--accent); }
+  .gallery-card-spot { font-size: 9px; color: var(--muted); font-family: 'Share Tech Mono', monospace; }
+  .gallery-card-likes { font-size: 10px; color: var(--muted); cursor: pointer; font-family: 'Share Tech Mono', monospace; }
+  .gallery-card-likes:hover { color: var(--accent); }
+  .gallery-empty { color: var(--muted); font-family: 'Share Tech Mono', monospace; font-size: 12px;
+    text-align: center; padding: 60px; grid-column: 1/-1; }
+
+  /* ── FLICK MODAL ─────────────────────────────────────────────────────────── */
+  #flick-modal {
+    position: fixed; top:0; left:0; right:0; bottom:0;
+    background: rgba(0,0,0,0.92); z-index: 2000;
+    display: flex; align-items: center; justify-content: center;
+  }
+  #flick-modal.hidden { display: none; }
+  .flick-box {
+    background: #0f0f0f; border: 1px solid #222;
+    padding: 24px; width: 420px; display: flex; flex-direction: column; gap: 14px;
+  }
+  #flick-preview { width: 100%; aspect-ratio: 2/1; object-fit: cover; border: 1px solid #222; }
+
 </style>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2">
+// ═══════════════════════════════════════════════════════════════════════════
+// SUPABASE AUTH + GALLERY
+// ═══════════════════════════════════════════════════════════════════════════
+var SUPA_URL = 'https://lxotohgaojnrzmpaxeqc.supabase.co';
+var SUPA_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imx4b3RvaGdhb2pucnptcGF4ZXFjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgwOTMwNjYsImV4cCI6MjA5MzY2OTA2Nn0.B1u8-q8Ilc9BQ8Pkw9b-IlBxrgCEbXtCP-XihcFTOQU';
+var supa = null;
+var currentUser = null;
+var currentProfile = null;
+var pendingFlickBlob = null;
+var galleryFilter = 'all';
+var galleryData = [];
+
+// Init Supabase
+function initSupabase() {
+  if (window.supabase) {
+    supa = window.supabase.createClient(SUPA_URL, SUPA_KEY);
+    supa.auth.onAuthStateChange(function(event, session) {
+      if (session && session.user) {
+        currentUser = session.user;
+        loadProfile(currentUser.id);
+      } else {
+        currentUser = null;
+        currentProfile = null;
+        updateAuthUI();
+      }
+    });
+    supa.auth.getSession().then(function(r) {
+      if (r.data.session) {
+        currentUser = r.data.session.user;
+        loadProfile(currentUser.id);
+      }
+    });
+  }
+}
+
+async function loadProfile(uid) {
+  if (!supa) return;
+  var r = await supa.from('profiles').select('*').eq('id', uid).single();
+  if (r.data) {
+    currentProfile = r.data;
+    updateAuthUI();
+  }
+}
+
+function updateAuthUI() {
+  var btn = document.getElementById('auth-header-btn');
+  if (!btn) return;
+  if (currentProfile) {
+    btn.textContent = currentProfile.username.toUpperCase();
+    btn.style.color = 'var(--accent)';
+    btn.style.borderColor = 'var(--accent)';
+    btn.onclick = openUserMenu;
+  } else {
+    btn.textContent = 'LOGIN';
+    btn.style.color = 'var(--muted)';
+    btn.style.borderColor = 'var(--border)';
+    btn.onclick = openAuth;
+  }
+  var gi = document.getElementById('gallery-user-info');
+  if (gi && currentProfile) gi.textContent = 'LOGGED AS ' + currentProfile.username.toUpperCase();
+}
+
+// ── AUTH UI ─────────────────────────────────────────────────────────────────
+function openAuth() {
+  document.getElementById('auth-modal').classList.remove('hidden');
+  document.getElementById('auth-msg').textContent = '';
+}
+function closeAuth() {
+  document.getElementById('auth-modal').classList.add('hidden');
+}
+function switchAuthTab(tab) {
+  document.getElementById('tab-login').classList.toggle('active', tab==='login');
+  document.getElementById('tab-signup').classList.toggle('active', tab==='signup');
+  document.getElementById('auth-login-form').style.display = tab==='login' ? 'block' : 'none';
+  document.getElementById('auth-signup-form').style.display = tab==='signup' ? 'block' : 'none';
+  document.getElementById('auth-msg').textContent = '';
+}
+
+function setAuthMsg(msg, err) {
+  var el = document.getElementById('auth-msg');
+  el.textContent = msg;
+  el.className = 'auth-msg' + (err ? ' auth-err' : '');
+}
+
+async function doSignup() {
+  if (!supa) return;
+  var username = document.getElementById('signup-username').value.trim();
+  var email    = document.getElementById('signup-email').value.trim();
+  var password = document.getElementById('signup-password').value;
+  if (!username || !email || !password) { setAuthMsg('All fields required', true); return; }
+  if (password.length < 6) { setAuthMsg('Password min 6 chars', true); return; }
+  setAuthMsg('Creating account...');
+  
+  // Vérifier que le username est unique
+  var check = await supa.from('profiles').select('id').eq('username', username).single();
+  if (check.data) { setAuthMsg('Tag already taken', true); return; }
+  
+  var r = await supa.auth.signUp({ email: email, password: password,
+    options: { data: { username: username } } });
+  if (r.error) { setAuthMsg(r.error.message, true); return; }
+  
+  // Créer le profil
+  if (r.data.user) {
+    await supa.from('profiles').insert({ id: r.data.user.id, username: username });
+  }
+  setAuthMsg('✓ Check your email to confirm!');
+}
+
+async function doLogin() {
+  if (!supa) return;
+  var email    = document.getElementById('login-email').value.trim();
+  var password = document.getElementById('login-password').value;
+  if (!email || !password) { setAuthMsg('Email and password required', true); return; }
+  setAuthMsg('Logging in...');
+  var r = await supa.auth.signInWithPassword({ email, password });
+  if (r.error) { setAuthMsg(r.error.message, true); return; }
+  setAuthMsg('✓ Welcome back!');
+  setTimeout(closeAuth, 1000);
+}
+
+function openUserMenu() {
+  if (confirm('Log out from RACK NATION VANDALS?')) {
+    supa.auth.signOut();
+  }
+}
+
+// ── FLICK IT ────────────────────────────────────────────────────────────────
+async function saveFlick() {
+  // Vérifier si connecté
+  if (!currentUser || !currentProfile) {
+    openAuth();
+    showNotif('LOGIN TO FLICK!');
+    return;
+  }
+  
+  // Générer l'image de preview
+  var outW = canvas.width, outH = canvas.height;
+  var merged = document.createElement('canvas');
+  merged.width = outW; merged.height = outH;
+  var mctx = merged.getContext('2d');
+  mctx.fillStyle = '#0a0a0a';
+  mctx.fillRect(0, 0, outW, outH);
+  
+  var cityKey = window._loadoutCity || 'Paris — Ligne 13';
+  var city = TRAINS[cityKey];
+  
+  function showFlickModal(dataUrl) {
+    document.getElementById('flick-preview').src = dataUrl;
+    document.getElementById('flick-spot-label').textContent = cityKey.toUpperCase();
+    document.getElementById('flick-msg').textContent = '';
+    document.getElementById('flick-modal').classList.remove('hidden');
+    // Stocker le blob
+    merged.toBlob(function(blob) { pendingFlickBlob = blob; }, 'image/jpeg', 0.85);
+  }
+  
+  if (city && city.spot_img) {
+    var img = new Image();
+    img.onload = function() {
+      mctx.drawImage(img, 0, 0, outW, outH);
+      mctx.drawImage(canvas, 0, 0, outW, outH);
+      showFlickModal(merged.toDataURL('image/jpeg', 0.85));
+    };
+    img.src = city.spot_img;
+  } else {
+    mctx.drawImage(canvas, 0, 0, outW, outH);
+    showFlickModal(merged.toDataURL('image/jpeg', 0.85));
+  }
+}
+
+async function confirmFlick() {
+  if (!pendingFlickBlob || !currentUser || !currentProfile) return;
+  document.getElementById('flick-msg').textContent = 'Uploading...';
+  
+  var cityKey = window._loadoutCity || 'Paris — Ligne 13';
+  var city = TRAINS[cityKey] || {};
+  var cityName = cityKey.split('—')[0].trim();
+  var fileName = currentProfile.username + '-' + Date.now() + '.jpg';
+  
+  // Upload image
+  var upload = await supa.storage.from('graffs').upload(fileName, pendingFlickBlob, {
+    contentType: 'image/jpeg', upsert: false
+  });
+  if (upload.error) { document.getElementById('flick-msg').textContent = 'Upload failed: ' + upload.error.message; return; }
+  
+  var imageUrl = SUPA_URL + '/storage/v1/object/public/graffs/' + fileName;
+  
+  // Insérer dans gallery
+  var ins = await supa.from('gallery').insert({
+    user_id: currentUser.id,
+    username: currentProfile.username,
+    spot: cityKey,
+    city: cityName,
+    image_url: imageUrl,
+    likes: 0
+  });
+  
+  if (ins.error) { document.getElementById('flick-msg').textContent = 'Error: ' + ins.error.message; return; }
+  
+  document.getElementById('flick-msg').textContent = '✓ Flicked to the yard!';
+  setTimeout(function() {
+    document.getElementById('flick-modal').classList.add('hidden');
+    showNotif('FLICK POSTED!');
+  }, 1200);
+}
+
+// ── GALLERY ──────────────────────────────────────────────────────────────────
+async function openGallery() {
+  document.getElementById('gallery-modal').classList.remove('hidden');
+  updateAuthUI();
+  await loadGallery();
+}
+
+function closeGallery() {
+  document.getElementById('gallery-modal').classList.add('hidden');
+}
+
+async function loadGallery() {
+  if (!supa) return;
+  var grid = document.getElementById('gallery-grid');
+  grid.innerHTML = '<div class="gallery-empty">Loading...</div>';
+  
+  var q = supa.from('gallery').select('*').order('created_at', {ascending: false}).limit(50);
+  if (galleryFilter !== 'all') q = q.ilike('city', galleryFilter + '%');
+  
+  var r = await q;
+  galleryData = r.data || [];
+  renderGallery();
+}
+
+function renderGallery() {
+  var grid = document.getElementById('gallery-grid');
+  if (!galleryData.length) {
+    grid.innerHTML = '<div class="gallery-empty">NO FLICKS YET — BE THE FIRST TO BOMB!</div>';
+    return;
+  }
+  grid.innerHTML = galleryData.map(function(f) {
+    var date = new Date(f.created_at).toLocaleDateString();
+    return '<div class="gallery-card">' +
+      '<img src="' + f.image_url + '" alt="' + f.username + '" loading="lazy">' +
+      '<div class="gallery-card-info">' +
+        '<div><div class="gallery-card-tag">' + f.username.toUpperCase() + '</div>' +
+        '<div class="gallery-card-spot">' + f.spot + ' · ' + date + '</div></div>' +
+        '<div class="gallery-card-likes" onclick="likeFlick('' + f.id + '', this)">♥ ' + f.likes + '</div>' +
+      '</div>' +
+    '</div>';
+  }).join('');
+}
+
+function filterGallery(city) {
+  galleryFilter = city;
+  document.querySelectorAll('.gallery-filter-btn').forEach(function(b) {
+    b.classList.toggle('active', b.textContent.toLowerCase().includes(city.toLowerCase()) || (city==='all' && b.textContent==='ALL CITIES'));
+  });
+  loadGallery();
+}
+
+async function likeFlick(id, el) {
+  if (!supa) return;
+  var item = galleryData.find(function(f) { return f.id === id; });
+  if (!item) return;
+  item.likes++;
+  el.textContent = '♥ ' + item.likes;
+  await supa.from('gallery').update({ likes: item.likes }).eq('id', id);
+}
+
+// Init au chargement
+window.addEventListener('load', function() {
+  setTimeout(initSupabase, 500);
+});
+
+
+</script>
 </head>
 <body>
 
@@ -682,6 +1037,8 @@
   <div id="logo">RACK <span>NATION</span></div>
   
   <div id="header-right">
+    <button onclick="openGallery()" style="background:transparent;border:1px solid var(--border);color:var(--muted);font-family:'Share Tech Mono',monospace;font-size:10px;padding:4px 10px;cursor:pointer;letter-spacing:1px;margin-right:4px;">THE YARD</button>
+    <button id="auth-header-btn" onclick="openAuth()" style="background:transparent;border:1px solid var(--border);color:var(--muted);font-family:'Share Tech Mono',monospace;font-size:10px;padding:4px 10px;cursor:pointer;letter-spacing:1px;margin-right:8px;">LOGIN</button>
     <button id="new-spot-btn" onclick="goNewSpot()" style="background:#e8ff00;border:none;color:#0a0a0a;font-family:'Share Tech Mono',monospace;font-size:10px;padding:4px 10px;cursor:pointer;letter-spacing:1px;margin-right:8px;font-weight:bold;" title="New spot">↩ NEW SPOT</button>
     <div class="hstat"><span class="hstat-val" id="stroke-count">0</span><span>strokes</span></div>
     <div class="hstat"><span class="hstat-val" id="coverage">0%</span><span>coverage</span></div>
@@ -2645,6 +3002,65 @@ function goNewSpot() {
 
 </script>
 
+
+
+<!-- ── AUTH MODAL ────────────────────────────────────────────────────────── -->
+<div id="auth-modal" class="hidden">
+  <div class="auth-box">
+    <div class="auth-title">RACK NATION VANDALS</div>
+    <div class="auth-tabs">
+      <div class="auth-tab active" id="tab-login" onclick="switchAuthTab('login')">LOGIN</div>
+      <div class="auth-tab" id="tab-signup" onclick="switchAuthTab('signup')">SIGN UP</div>
+    </div>
+    <div id="auth-login-form">
+      <div style="display:flex;flex-direction:column;gap:10px;">
+        <input class="auth-input" id="login-email" type="email" placeholder="EMAIL">
+        <input class="auth-input" id="login-password" type="password" placeholder="PASSWORD">
+        <button class="auth-btn" onclick="doLogin()">LOGIN</button>
+      </div>
+    </div>
+    <div id="auth-signup-form" style="display:none;">
+      <div style="display:flex;flex-direction:column;gap:10px;">
+        <input class="auth-input" id="signup-username" type="text" placeholder="TAG / PSEUDO">
+        <input class="auth-input" id="signup-email" type="email" placeholder="EMAIL">
+        <input class="auth-input" id="signup-password" type="password" placeholder="PASSWORD (min 6 chars)">
+        <button class="auth-btn" onclick="doSignup()">CREATE ACCOUNT</button>
+      </div>
+    </div>
+    <div class="auth-msg" id="auth-msg"></div>
+    <button class="auth-btn secondary" onclick="closeAuth()">CANCEL</button>
+  </div>
+</div>
+
+<!-- ── FLICK MODAL ────────────────────────────────────────────────────────── -->
+<div id="flick-modal" class="hidden">
+  <div class="flick-box">
+    <div class="auth-title" style="font-size:20px;">FLICK IT ↗</div>
+    <img id="flick-preview" src="" alt="preview">
+    <div style="font-size:10px;color:var(--muted);font-family:'Share Tech Mono',monospace;" id="flick-spot-label"></div>
+    <button class="auth-btn" onclick="confirmFlick()">POST TO GALLERY</button>
+    <button class="auth-btn secondary" onclick="document.getElementById('flick-modal').classList.add('hidden')">CANCEL</button>
+    <div class="auth-msg" id="flick-msg"></div>
+  </div>
+</div>
+
+<!-- ── GALLERY MODAL ──────────────────────────────────────────────────────── -->
+<div id="gallery-modal" class="hidden">
+  <div id="gallery-header">
+    <span id="gallery-title">THE YARD</span>
+    <div style="display:flex;gap:10px;align-items:center;">
+      <span style="font-size:10px;color:var(--muted);font-family:'Share Tech Mono',monospace;" id="gallery-user-info"></span>
+      <button id="gallery-close" onclick="closeGallery()">✕ CLOSE</button>
+    </div>
+  </div>
+  <div id="gallery-filters">
+    <button class="gallery-filter-btn active" onclick="filterGallery('all')">ALL CITIES</button>
+    <button class="gallery-filter-btn" onclick="filterGallery('Paris')">PARIS</button>
+    <button class="gallery-filter-btn" onclick="filterGallery('New York')">NEW YORK</button>
+    <button class="gallery-filter-btn" onclick="filterGallery('Barcelona')">BARCELONA</button>
+  </div>
+  <div id="gallery-grid"></div>
+</div>
 
 </body>
 </html>
