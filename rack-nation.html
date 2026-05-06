@@ -680,7 +680,7 @@
   <div id="logo">RACK <span>NATION</span></div>
   
   <div id="header-right">
-    <button id="new-spot-btn" onclick="goNewSpot()" style="background:transparent;border:1px solid var(--border);color:var(--muted);font-family:'Share Tech Mono',monospace;font-size:10px;padding:4px 10px;cursor:pointer;letter-spacing:1px;margin-right:8px;" title="New spot">↩ NEW SPOT</button>
+    <button id="new-spot-btn" onclick="goNewSpot()" style="background:#e8ff00;border:none;color:#0a0a0a;font-family:'Share Tech Mono',monospace;font-size:10px;padding:4px 10px;cursor:pointer;letter-spacing:1px;margin-right:8px;font-weight:bold;" title="New spot">↩ NEW SPOT</button>
     <div class="hstat"><span class="hstat-val" id="stroke-count">0</span><span>strokes</span></div>
     <div class="hstat"><span class="hstat-val" id="coverage">0%</span><span>coverage</span></div>
     <div class="hstat"><span class="hstat-val" id="can-level">100%</span><span>can</span></div>
@@ -1060,7 +1060,7 @@ function launchGame(){
   window._loadoutSelected=loSelected;
   window._loadoutCap=loActiveCap;
   window._loadoutCity=document.getElementById('lo-city-sel').value;
-  document.getElementById('loadout').classList.add('hidden');
+  document.getElementById('loadout').style.display = 'none';
   if(typeof initGameFromLoadout==='function') initGameFromLoadout();
   if(!soundOn){
     soundOn=true;buildSound();
@@ -1949,12 +1949,12 @@ function loadCity(cityKey) {
       tc.drawImage(si,0,0,880,440);
       // Zone peignable : utiliser clip_points de la ville si dispo, sinon Paris par défaut
       var clipPts = city.clip_points || [
-          [42.7,152.8],[849.7,152.8],
-          [851.7,168.2],[852.2,183.5],[852.7,199.4],[853.2,215.0],
+          [42.7,161.0],[849.7,161.0],
+          [851.7,171.0],[852.2,183.5],[852.7,199.4],[853.2,215.0],
           [853.2,230.7],[852.7,246.3],[852.7,261.9],[849.7,274.3],
           [34.7,274.3],
           [31.7,261.9],[29.8,246.3],[29.3,230.7],[29.8,215.0],
-          [30.8,199.4],[32.7,183.5],[38.7,168.2]
+          [30.8,199.4],[32.7,183.5],[38.7,171.0]
       ];
       trainClipRegion={type:'trapeze', points: clipPts};
     };
