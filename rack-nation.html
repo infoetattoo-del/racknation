@@ -230,6 +230,13 @@
     width: 24px;
     min-width: 24px;
     overflow: hidden;
+    background: var(--panel);
+  }
+  #right-panel.collapsed * {
+    visibility: hidden;
+  }
+  #right-panel.collapsed #rp-toggle {
+    visibility: visible;
   }
   #right-panel.collapsed .rp-content { display: none; }
   #rp-toggle {
@@ -744,7 +751,7 @@
       </div>
     </div>
 
-    <input type="color" id="custom-color" value="#ff3c00" style="display:none;">
+    <input type="color" id="custom-color" value="#ff3c00" style="display:none;position:absolute;width:0;height:0;opacity:0;">
 
     <!-- PRESSURE -->
     <div>
