@@ -678,19 +678,7 @@
 
 <div id="header">
   <div id="logo">RACK <span>NATION</span></div>
-  <div id="city-selector">
-    <label>Spot</label>
-    <select id="city-select">
-      <option value="Paris — Ligne 13">Paris — Ligne 13</option>
-      <option value="New York — Subway">New York — Subway</option>
-      <option value="Berlin — S-Bahn">Berlin — S-Bahn</option>
-      <option value="Barcelona — L5">Barcelona — L5</option>
-      <option value="Tokyo — Yamanote">Tokyo — Yamanote</option>
-      <option value="London — Underground">London — Underground</option>
-      <option value="São Paulo — CPTM">São Paulo — CPTM</option>
-      <option value="Stockholm — T-Bana">Stockholm — T-Bana</option>
-    </select>
-  </div>
+  
   <div id="header-right">
     <button id="new-spot-btn" onclick="goNewSpot()" style="background:transparent;border:1px solid var(--border);color:var(--muted);font-family:'Share Tech Mono',monospace;font-size:10px;padding:4px 10px;cursor:pointer;letter-spacing:1px;margin-right:8px;" title="New spot">↩ NEW SPOT</button>
     <div class="hstat"><span class="hstat-val" id="stroke-count">0</span><span>strokes</span></div>
@@ -2020,7 +2008,6 @@ function loadCity(cityKey) {
 
 
 function initGameFromLoadout() {
-  document.getElementById("city-select").disabled = true;
   const colors = window._loadoutColors || ['#FF3C00'];
   const names  = window._loadoutNames  || colors.map(()=>'—');
   const cap    = window._loadoutCap    || 'fat';
@@ -2043,7 +2030,6 @@ function initGameFromLoadout() {
 
   // Charger la ville
   loadCity(city);
-  document.getElementById('city-select').value = city;
 
   // Resize canvas + mettre à jour couleur initiale
   setTimeout(() => {
@@ -2136,9 +2122,7 @@ function drainActiveCan(amount) {
 
 // La ville est chargée via initGameFromLoadout() au lancement
 
-document.getElementById('city-select').addEventListener('change', function() {
-  loadCity(this.value);
-});
+
 
 // ACTIONS
 function clearCanvas() {
@@ -2574,22 +2558,25 @@ function toggleRightPanel() {
 
 // ── NEW SPOT — revenir au loadout ────────────────────────────────────────────
 function goNewSpot() {
-  // Réactiver le select
-  var sel = document.getElementById('city-select');
-  if (sel) sel.disabled = false;
   // Effacer le canvas
   if (ctx) ctx.clearRect(0, 0, canvas.width, canvas.height);
-  // Réinitialiser les cans
+  // Réinitialiser l'état de jeu
   gameCans = [];
   activeCanIdx = 0;
   strokeCount = 0;
+  painting = false;
+  linerStart = null;
+  trainClipRegion = null;
+  // Reset loadout
+  loSelected = [];
+  loActiveCap = 'fat';
+  // Rebuild UI loadout complet
+  loBuildGrid();
+  loRenderSlots();
+  loUpdateCount();
   // Afficher le loadout
   var lo = document.getElementById('loadout');
   if (lo) lo.style.display = 'flex';
-  // Reset loadout UI
-  loSelected = [];
-  loBuildGrid();
-  loRenderSlots();
 }
 
 </script>
