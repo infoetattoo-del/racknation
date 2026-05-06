@@ -616,6 +616,12 @@
 
 
   
+  /* Scrollbar globale sombre */
+  ::-webkit-scrollbar { height: 8px; width: 8px; }
+  ::-webkit-scrollbar-track { background: #0d0d0d; }
+  ::-webkit-scrollbar-thumb { background: #333; border-radius: 2px; }
+  ::-webkit-scrollbar-thumb:hover { background: #444; }
+  * { scrollbar-width: thin; scrollbar-color: #333 #0d0d0d; }
 </style>
 </head>
 <body>
@@ -784,7 +790,7 @@
       <button class="action-btn danger" onclick="buffCanvas()">BUFF ✕</button>
     </div>
     </div><!-- end rp-content -->
-    <button id="rp-toggle" onclick="toggleRightPanel()" title="Collapse/Expand">‹ collapse</button>
+    <button id="rp-toggle" onclick="toggleRightPanel()" title="Collapse/Expand">› collapse</button>
 
   </div>
 </div>
@@ -2572,7 +2578,7 @@ function toggleRightPanel() {
   var btn = document.getElementById('rp-toggle');
   if (!rp || !btn) return;
   var collapsed = rp.classList.toggle('collapsed');
-  btn.textContent = collapsed ? '› expand' : '‹ collapse';
+  btn.textContent = collapsed ? '+ expand' : '› collapse';
   // Recalculer le zoom après la transition CSS (250ms)
   setTimeout(function() { if (typeof resetZoom === 'function') resetZoom(); }, 260);
 }
