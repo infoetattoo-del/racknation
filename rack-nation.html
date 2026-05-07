@@ -900,8 +900,10 @@ function openUserMenu() {
 async function saveFlick() {
   // Vérifier si connecté
   if (!currentUser || !currentProfile) {
-    openAuth();
     showNotif('LOGIN TO FLICK!');
+    setTimeout(function() {
+      window.location.href = 'rack-nation-landing.html';
+    }, 1000);
     return;
   }
   
@@ -941,45 +943,59 @@ async function saveFlick() {
 
 async function confirmFlick() {
   if (!pendingFlickBlob || !currentUser || !currentProfile) return;
-  document.getElementById('flick-msg').textContent = 'Uploading...';
-  
+
   var cityKey = window._loadoutCity || 'Paris — Ligne 13';
-  var city = TRAINS[cityKey] || {};
   var cityName = cityKey.split('—')[0].trim();
+  var isPro = currentProfile && currentProfile.is_pro;
+  var maxGraffs = isPro ? 50 : 3;
+
+  // Vérifier limite FREE
+  document.getElementById('flick-msg').textContent = 'Checking...';
+  var countR = await supa.from('gallery').select('id', {count: 'exact'}).eq('user_id', currentUser.id);
+  var count = countR.count || 0;
+  if (count >= maxGraffs) {
+    document.getElementById('flick-msg').textContent = isPro
+      ? 'Max ' + maxGraffs + ' graffs reached!'
+      : 'FREE limit (3 graffs). Upgrade to PRO!';
+    return;
+  }
+
+  document.getElementById('flick-msg').textContent = 'Uploading...';
   var fileName = currentProfile.username + '-' + Date.now() + '.jpg';
-  
-  // Upload image
+
   var upload = await supa.storage.from('graffs').upload(fileName, pendingFlickBlob, {
     contentType: 'image/jpeg', upsert: false
   });
-  if (upload.error) { document.getElementById('flick-msg').textContent = 'Upload failed: ' + upload.error.message; return; }
-  
+  if (upload.error) {
+    document.getElementById('flick-msg').textContent = 'Upload failed: ' + upload.error.message;
+    return;
+  }
+
   var imageUrl = SUPA_URL + '/storage/v1/object/public/graffs/' + fileName;
-  
-  // Insérer dans gallery
+
   var ins = await supa.from('gallery').insert({
     user_id: currentUser.id,
     username: currentProfile.username,
     spot: cityKey,
     city: cityName,
     image_url: imageUrl,
-    likes: 0
+    likes: 0,
+    is_pro: isPro || false
   });
-  
-  if (ins.error) { document.getElementById('flick-msg').textContent = 'Error: ' + ins.error.message; return; }
-  
-  document.getElementById('flick-msg').textContent = '✓ Flicked to the yard!';
-  setTimeout(function() {
-    document.getElementById('flick-modal').classList.add('hidden');
-    showNotif('FLICK POSTED! +25 pts');
-  // Ajouter 25 points
-  if (currentUser && supa) {
-    supa.from('profiles').select('points').eq('id', currentUser.id).single().then(function(r) {
-      var pts = ((r.data && r.data.points) || 0) + 25;
-      supa.from('profiles').update({points: pts}).eq('id', currentUser.id);
-    });
+
+  if (ins.error) {
+    document.getElementById('flick-msg').textContent = 'Error: ' + ins.error.message;
+    return;
   }
-  }, 1200);
+
+  // Points +25
+  var newPts = (currentProfile.points || 0) + 25;
+  await supa.from('profiles').update({points: newPts}).eq('id', currentUser.id);
+  currentProfile.points = newPts;
+
+  document.getElementById('flick-modal').classList.add('hidden');
+  showNotif('FLICKED! +25 pts');
+  setTimeout(function() { window.location.href = 'rack-nation-dashboard.html'; }, 1200);
 }
 
 // ── GALLERY ──────────────────────────────────────────────────────────────────
@@ -1110,9 +1126,7 @@ window.addEventListener('load', function() {
   </div>
   
   <div id="header-right">
-    <button onclick="openGallery()" style="background:transparent;border:1px solid var(--border);color:var(--muted);font-family:'Share Tech Mono',monospace;font-size:10px;padding:4px 10px;cursor:pointer;letter-spacing:1px;margin-right:4px;">THE YARD</button>
-    <span id="plan-badge" style="font-family:'Share Tech Mono',monospace;font-size:9px;border:1px solid #333;color:#888;padding:2px 6px;margin-right:4px;letter-spacing:1px;"></span>
-    <button id="auth-header-btn" onclick="openAuth()" style="background:transparent;border:1px solid var(--border);color:var(--muted);font-family:'Share Tech Mono',monospace;font-size:10px;padding:4px 10px;cursor:pointer;letter-spacing:1px;margin-right:8px;">LOGIN</button>
+    <button onclick="window.location.href='rack-nation-halloffame.html'" style="background:transparent;border:1px solid var(--border);color:var(--muted);font-family:'Share Tech Mono',monospace;font-size:10px;padding:4px 10px;cursor:pointer;letter-spacing:1px;margin-right:4px;">HALL OF FAME</button>
     <button id="new-spot-btn" onclick="goNewSpot()" style="background:#e8ff00;border:none;color:#0a0a0a;font-family:'Share Tech Mono',monospace;font-size:10px;padding:4px 10px;cursor:pointer;letter-spacing:1px;margin-right:8px;font-weight:bold;" title="New spot">↩ NEW SPOT</button>
     <div class="hstat"><span class="hstat-val" id="stroke-count">0</span><span>strokes</span></div>
     <div class="hstat"><span class="hstat-val" id="coverage">0%</span><span>coverage</span></div>
