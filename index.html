@@ -218,7 +218,7 @@
 </div>
 
 <!-- Lien admin caché -->
-<a href="rack-nation-landing.html" class="admin-link" id="admin-link">·</a>
+<a href="/rack-nation-landing.html" class="admin-link" id="admin-link">·</a>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
@@ -230,7 +230,7 @@ var secret = '';
 document.addEventListener('keydown', function(e) {
   secret += e.key.toUpperCase();
   if (secret.includes('VANDAL')) {
-    window.location.href = 'rack-nation-landing.html';
+    window.location.href = '/rack-nation-landing.html';
   }
   if (secret.length > 20) secret = secret.slice(-20);
 });
@@ -242,7 +242,7 @@ document.querySelector('.logo').addEventListener('click', function() {
   clearTimeout(clickTimer);
   clickTimer = setTimeout(function() { clickCount = 0; }, 2000);
   if (clickCount >= 5) {
-    window.location.href = 'rack-nation-landing.html';
+    window.location.href = '/rack-nation-landing.html';
   }
 });
 
