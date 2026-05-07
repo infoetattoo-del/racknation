@@ -2647,49 +2647,8 @@ function buffCanvas() {
   }, 30);
 }
 
-function saveFlick() {
-  // Envoyer à la galerie utilisateur (backend à connecter — Supabase phase 2)
-  // Pour l'instant : stocker en localStorage + notif
-  try {
-    const merged = document.createElement('canvas');
-    merged.width = canvas.width;
-    merged.height = canvas.height;
-    const mctx = merged.getContext('2d');
-    // Dessiner le fond SVG train
-    const trainSvg = document.getElementById('train-bg');
-    const svgStr = new XMLSerializer().serializeToString(trainSvg);
-    const svgBlob = new Blob([svgStr], {type:'image/svg+xml'});
-    const svgUrl = URL.createObjectURL(svgBlob);
-    const svgImg = new window.Image();
-    svgImg.onload = function() {
-      mctx.drawImage(svgImg, 0, 0, merged.width, merged.height);
-      mctx.drawImage(canvas, 0, 0);
-      URL.revokeObjectURL(svgUrl);
-      // Sauvegarder dans localStorage (galerie locale)
-      const flicks = JSON.parse(localStorage.getItem('rn_gallery') || '[]');
-      flicks.unshift({
-        img: merged.toDataURL('image/jpeg', 0.85),
-        city: document.getElementById('city-label') ? document.getElementById('city-label').textContent : 'Unknown',
-        date: new Date().toISOString(),
-        strokes: strokeCount
-      });
-      if (flicks.length > 50) flicks.pop();
-      localStorage.setItem('rn_gallery', JSON.stringify(flicks));
-      showNotif('FLICK SAVED TO GALLERY ↗');
-    };
-    svgImg.onerror = function() {
-      // Fallback si SVG non chargeable
-      mctx.drawImage(canvas, 0, 0);
-      const flicks = JSON.parse(localStorage.getItem('rn_gallery') || '[]');
-      flicks.unshift({img: merged.toDataURL('image/jpeg',0.85), date: new Date().toISOString()});
-      localStorage.setItem('rn_gallery', JSON.stringify(flicks));
-      showNotif('FLICK SAVED TO GALLERY ↗');
-    };
-    svgImg.src = svgUrl;
-  } catch(e) {
-    showNotif('GALLERY — COMING SOON');
-  }
-}
+// saveFlick défini plus haut (version Supabase)
+
 
 function downloadFlick() {
   var outW = canvas.width, outH = canvas.height;
