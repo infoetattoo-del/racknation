@@ -931,15 +931,46 @@ async function saveFlick() {
   
   if (city && city.spot_img) {
     var img = new Image();
+    img.crossOrigin = 'anonymous';
     img.onload = function() {
-      mctx.drawImage(img, 0, 0, outW, outH);
+      try {
+        mctx.drawImage(img, 0, 0, outW, outH);
+      } catch(e) {
+        console.warn('drawImage failed, using graff only:', e);
+      }
       mctx.drawImage(canvas, 0, 0, outW, outH);
-      showFlickModal(merged.toDataURL('image/jpeg', 0.85));
+      merged.toBlob(function(blob) {
+        if (!blob) { console.error('toBlob returned null'); showNotif('ERROR: try again'); return; }
+        pendingFlickBlob = blob;
+        document.getElementById('flick-preview').src = URL.createObjectURL(blob);
+        document.getElementById('flick-spot-label').textContent = cityKey.toUpperCase();
+        document.getElementById('flick-msg').textContent = '';
+        document.getElementById('flick-modal').classList.remove('hidden');
+      }, 'image/jpeg', 0.85);
+    };
+    img.onerror = function() {
+      // Si image bloquée - utiliser juste le canvas graffiti
+      mctx.drawImage(canvas, 0, 0, outW, outH);
+      merged.toBlob(function(blob) {
+        if (!blob) { showNotif('ERROR: try again'); return; }
+        pendingFlickBlob = blob;
+        document.getElementById('flick-preview').src = URL.createObjectURL(blob);
+        document.getElementById('flick-spot-label').textContent = cityKey.toUpperCase();
+        document.getElementById('flick-msg').textContent = '';
+        document.getElementById('flick-modal').classList.remove('hidden');
+      }, 'image/jpeg', 0.85);
     };
     img.src = city.spot_img;
   } else {
     mctx.drawImage(canvas, 0, 0, outW, outH);
-    showFlickModal(merged.toDataURL('image/jpeg', 0.85));
+    merged.toBlob(function(blob) {
+      if (!blob) { showNotif('ERROR: try again'); return; }
+      pendingFlickBlob = blob;
+      document.getElementById('flick-preview').src = URL.createObjectURL(blob);
+      document.getElementById('flick-spot-label').textContent = cityKey.toUpperCase();
+      document.getElementById('flick-msg').textContent = '';
+      document.getElementById('flick-modal').classList.remove('hidden');
+    }, 'image/jpeg', 0.85);
   }
 }
 
