@@ -868,6 +868,133 @@ footer {
     margin: 4px 0;
   }
 
+
+  /* ── AUTH MODAL ────────────────────────────────────────────────────────── */
+  #auth-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.88);
+    z-index: 1000;
+    align-items: center;
+    justify-content: center;
+    backdrop-filter: blur(4px);
+  }
+  #auth-overlay.open { display: flex; }
+  .auth-popup {
+    background: #0a0a0a;
+    border: 1px solid #1e1e1e;
+    width: 380px;
+    max-width: 95vw;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    overflow: hidden;
+  }
+  .auth-popup-header {
+    padding: 24px 28px 0;
+  }
+  .auth-popup-logo {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 13px;
+    color: #333;
+    letter-spacing: 3px;
+    margin-bottom: 20px;
+  }
+  .auth-popup-tabs {
+    display: flex;
+    border-bottom: 1px solid #1a1a1a;
+  }
+  .auth-popup-tab {
+    flex: 1;
+    padding: 12px;
+    background: none;
+    border: none;
+    border-bottom: 2px solid transparent;
+    color: #444;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 2px;
+    cursor: pointer;
+    transition: all 0.15s;
+    margin-bottom: -1px;
+  }
+  .auth-popup-tab.active {
+    color: #e8ff00;
+    border-bottom-color: #e8ff00;
+  }
+  .auth-popup-body {
+    padding: 24px 28px 28px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .auth-popup-close {
+    position: absolute;
+    top: 16px;
+    right: 16px;
+    background: none;
+    border: none;
+    color: #444;
+    font-size: 18px;
+    cursor: pointer;
+    line-height: 1;
+    padding: 4px;
+    transition: color 0.15s;
+  }
+  .auth-popup-close:hover { color: #e8ff00; }
+  .ap-input {
+    background: #0d0d0d;
+    border: 1px solid #1a1a1a;
+    color: #ddd;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 12px;
+    padding: 12px 14px;
+    outline: none;
+    width: 100%;
+    box-sizing: border-box;
+    transition: border-color 0.15s;
+  }
+  .ap-input:focus { border-color: #e8ff00; }
+  .ap-input::placeholder { color: #333; }
+  .ap-btn {
+    background: #e8ff00;
+    color: #0a0a0a;
+    border: none;
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 18px;
+    letter-spacing: 3px;
+    padding: 14px;
+    cursor: pointer;
+    width: 100%;
+    transition: background 0.15s;
+    margin-top: 6px;
+  }
+  .ap-btn:hover { background: #fff; }
+  .ap-msg {
+    font-size: 10px;
+    color: #e8ff00;
+    font-family: 'Share Tech Mono', monospace;
+    text-align: center;
+    min-height: 16px;
+    line-height: 1.8;
+  }
+  .ap-msg.err { color: #ff5555; }
+  .ap-hint {
+    font-size: 9px;
+    color: #333;
+    text-align: center;
+    font-family: 'Share Tech Mono', monospace;
+    letter-spacing: 1px;
+  }
+  /* Accent line top */
+  .auth-popup::before {
+    content: '';
+    display: block;
+    height: 3px;
+    background: linear-gradient(90deg, #e8ff00, transparent);
+  }
+
 </style>
   <link rel="icon" type="image/png" sizes="64x64" href="data:image/png;base64,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">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -905,15 +1032,12 @@ footer {
     style="max-width:600px;width:90%;display:block;margin:0 auto 8px;filter:drop-shadow(0 0 30px rgba(255,255,255,0.15));">
 
   <p class="hero-sub mono">Paint trains · Bomb metros · Tag the world</p>
+  <div style="display:flex;gap:12px;justify-content:center;margin-top:32px;flex-wrap:wrap;">
+    <button onclick="openAuthModal('login')" class="btn-hero btn-hero-primary display" style="font-size:20px;padding:16px 40px;cursor:pointer;border:none;">ENTER THE YARD</button>
+    <button onclick="openAuthModal('signup')" style="background:transparent;border:2px solid #e8ff00;color:#e8ff00;font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:2px;padding:16px 40px;cursor:pointer;">CREATE ACCOUNT</button>
+  </div>
 
   <div class="hero-actions">
-    <div id="landing-auth">
-    <!-- Tabs Login / Sign Up -->
-    <div class="l-tabs">
-      <button class="l-tab active" id="ltab-login" onclick="lSwitchTab('login')">LOGIN</button>
-      <button class="l-tab" id="ltab-signup" onclick="lSwitchTab('signup')">SIGN UP</button>
-    </div>
-
     <!-- Login form -->
     <div class="l-form" id="lform-login">
       <input class="l-input" id="l-email" type="email" placeholder="EMAIL">
@@ -1338,6 +1462,31 @@ window.addEventListener('scroll', () => {
 </script>
 
 <script>
+function openAuthModal(tab) {
+  var overlay = document.getElementById('auth-overlay');
+  overlay.classList.add('open');
+  // Activer le bon onglet
+  tab = tab || 'login';
+  document.getElementById('ptab-login').classList.toggle('active', tab === 'login');
+  document.getElementById('ptab-signup').classList.toggle('active', tab === 'signup');
+  document.getElementById('pform-login').style.display = tab === 'login' ? 'block' : 'none';
+  document.getElementById('pform-signup').style.display = tab === 'signup' ? 'block' : 'none';
+  document.getElementById('p-msg').textContent = '';
+  // Focus premier champ
+  setTimeout(function() {
+    var first = document.querySelector('#auth-overlay input:not([disabled])');
+    if (first) first.focus();
+  }, 100);
+}
+function closeAuthModal(e) {
+  if (e && e.target !== document.getElementById('auth-overlay')) return;
+  document.getElementById('auth-overlay').classList.remove('open');
+}
+// Fermer avec Escape
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'Escape') closeAuthModal();
+});
+
 var SUPA_URL = 'https://lxotohgaojnrzmpaxeqc.supabase.co';
 var SUPA_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imx4b3RvaGdhb2pucnptcGF4ZXFjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgwOTMwNjYsImV4cCI6MjA5MzY2OTA2Nn0.B1u8-q8Ilc9BQ8Pkw9b-IlBxrgCEbXtCP-XihcFTOQU';
 var lSupa = null;
@@ -1363,15 +1512,15 @@ function lSwitchTab(tab) {
 }
 
 function lSetMsg(msg, err) {
-  var el = document.getElementById('l-msg');
+  var el = document.getElementById('p-msg') || document.getElementById('l-msg');
   el.textContent = msg;
   el.className = 'l-msg' + (err ? ' err' : '');
 }
 
 async function lDoLogin() {
   if (!lSupa) return;
-  var email = document.getElementById('l-email').value.trim();
-  var pass  = document.getElementById('l-pass').value;
+  var email = (document.getElementById('p-email') || document.getElementById('l-email')).value.trim();
+  var pass  = (document.getElementById('p-pass') || document.getElementById('l-pass')).value;
   if (!email || !pass) { lSetMsg('Email and password required', true); return; }
   lSetMsg('Logging in...');
   var r = await lSupa.auth.signInWithPassword({ email, password: pass });
@@ -1397,9 +1546,9 @@ async function lDoLogin() {
 
 async function lDoSignup() {
   if (!lSupa) return;
-  var tag   = document.getElementById('s-tag').value.trim();
-  var email = document.getElementById('s-email').value.trim();
-  var pass  = document.getElementById('s-pass').value;
+  var tag   = (document.getElementById('p-tag') || document.getElementById('s-tag')).value.trim();
+  var email = (document.getElementById('p-semail') || document.getElementById('s-email')).value.trim();
+  var pass  = (document.getElementById('p-spass') || document.getElementById('s-pass')).value;
   if (!tag || !email || !pass) { lSetMsg('All fields required', true); return; }
   if (pass.length < 6) { lSetMsg('Password min 6 chars', true); return; }
   lSetMsg('Creating account...');
@@ -1419,12 +1568,51 @@ async function lDoSignup() {
     await lSupa.from('profiles').insert({ id: r.data.user.id, username: tag });
   }
   // Afficher message clair et basculer vers login
-  document.getElementById('lform-signup').style.display = 'none';
-  var msgEl = document.getElementById('l-msg');
+  var sf = document.getElementById('pform-signup') || document.getElementById('lform-signup'); if(sf) sf.style.display = 'none';
+  var msgEl = document.getElementById('p-msg') || document.getElementById('l-msg');
   msgEl.style.lineHeight = '2';
   msgEl.innerHTML = '✓ Account created!<br><span style="color:#aaa;font-size:10px;">Check your inbox and click the confirmation link.<br>Then come back to login.</span>';
-  setTimeout(function() { lSwitchTab('login'); document.getElementById('lform-signup').style.display = 'flex'; }, 5000);
+  setTimeout(function() { openAuthModal('login'); }, 4000);
 }
 </script>
+
+<!-- ── AUTH MODAL ──────────────────────────────────────────────────────────── -->
+<div id="auth-overlay" onclick="closeAuthModal(event)">
+  <div class="auth-popup" onclick="event.stopPropagation()">
+    <button class="auth-popup-close" onclick="closeAuthModal()">✕</button>
+    <div class="auth-popup-header">
+      <div class="auth-popup-logo">RACK NATION VANDALS</div>
+      <div class="auth-popup-tabs">
+        <button class="auth-popup-tab active" id="ptab-login" onclick="openAuthModal('login')">LOGIN</button>
+        <button class="auth-popup-tab" id="ptab-signup" onclick="openAuthModal('signup')">SIGN UP</button>
+      </div>
+    </div>
+    <div class="auth-popup-body">
+
+      <!-- LOGIN -->
+      <div id="pform-login">
+        <div style="display:flex;flex-direction:column;gap:10px;">
+          <input class="ap-input" id="p-email" type="email" placeholder="EMAIL" autocomplete="email">
+          <input class="ap-input" id="p-pass" type="password" placeholder="PASSWORD" autocomplete="current-password">
+          <button class="ap-btn" onclick="lDoLogin()">ENTER THE YARD</button>
+        </div>
+      </div>
+
+      <!-- SIGNUP -->
+      <div id="pform-signup" style="display:none;">
+        <div style="display:flex;flex-direction:column;gap:10px;">
+          <input class="ap-input" id="p-tag" type="text" placeholder="YOUR TAG / PSEUDO" autocomplete="username">
+          <input class="ap-input" id="p-semail" type="email" placeholder="EMAIL" autocomplete="email">
+          <input class="ap-input" id="p-spass" type="password" placeholder="PASSWORD (min 6 chars)" autocomplete="new-password">
+          <button class="ap-btn" onclick="lDoSignup()">CREATE ACCOUNT</button>
+          <div class="ap-hint">You'll receive a confirmation email</div>
+        </div>
+      </div>
+
+      <div class="ap-msg" id="p-msg"></div>
+    </div>
+  </div>
+</div>
+
 </body>
 </html>
