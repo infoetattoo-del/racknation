@@ -919,12 +919,14 @@ async function saveFlick() {
   var city = TRAINS[cityKey];
   
   function showFlickModal(dataUrl) {
-    document.getElementById('flick-preview').src = dataUrl;
-    document.getElementById('flick-spot-label').textContent = cityKey.toUpperCase();
-    document.getElementById('flick-msg').textContent = '';
-    document.getElementById('flick-modal').classList.remove('hidden');
-    // Stocker le blob
-    merged.toBlob(function(blob) { pendingFlickBlob = blob; }, 'image/jpeg', 0.85);
+    // Créer le blob D'ABORD, puis afficher le modal
+    merged.toBlob(function(blob) {
+      pendingFlickBlob = blob;
+      document.getElementById('flick-preview').src = dataUrl;
+      document.getElementById('flick-spot-label').textContent = cityKey.toUpperCase();
+      document.getElementById('flick-msg').textContent = '';
+      document.getElementById('flick-modal').classList.remove('hidden');
+    }, 'image/jpeg', 0.85);
   }
   
   if (city && city.spot_img) {
