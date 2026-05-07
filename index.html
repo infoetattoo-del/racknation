@@ -1375,8 +1375,23 @@ async function lDoLogin() {
   if (!email || !pass) { lSetMsg('Email and password required', true); return; }
   lSetMsg('Logging in...');
   var r = await lSupa.auth.signInWithPassword({ email, password: pass });
-  if (r.error) { lSetMsg(r.error.message, true); return; }
-  lSetMsg('✓ Welcome back! Loading...');
+  if (r.error) {
+    // Email non confirmé
+    if (r.error.message.includes('Email not confirmed') || r.error.message.includes('not confirmed')) {
+      lSetMsg('⚠ Please confirm your email first. Check your inbox!', true);
+    } else {
+      lSetMsg(r.error.message, true);
+    }
+    return;
+  }
+  // Vérifier que l'email est bien confirmé
+  var user = r.data.user;
+  if (!user.email_confirmed_at) {
+    await lSupa.auth.signOut();
+    lSetMsg('⚠ Please confirm your email before logging in.', true);
+    return;
+  }
+  lSetMsg('✓ Welcome! Loading the yard...');
   setTimeout(function() { window.location.href = 'rack-nation.html'; }, 800);
 }
 
@@ -1403,7 +1418,12 @@ async function lDoSignup() {
   if (r.data.user) {
     await lSupa.from('profiles').insert({ id: r.data.user.id, username: tag });
   }
-  lSetMsg('✓ Check your email to confirm your account!');
+  // Afficher message clair et basculer vers login
+  document.getElementById('lform-signup').style.display = 'none';
+  var msgEl = document.getElementById('l-msg');
+  msgEl.style.lineHeight = '2';
+  msgEl.innerHTML = '✓ Account created!<br><span style="color:#aaa;font-size:10px;">Check your inbox and click the confirmation link.<br>Then come back to login.</span>';
+  setTimeout(function() { lSwitchTab('login'); document.getElementById('lform-signup').style.display = 'flex'; }, 5000);
 }
 </script>
 </body>
