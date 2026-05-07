@@ -1032,9 +1032,8 @@ footer {
     style="max-width:600px;width:90%;display:block;margin:0 auto 8px;filter:drop-shadow(0 0 30px rgba(255,255,255,0.15));">
 
   <p class="hero-sub mono">Paint trains · Bomb metros · Tag the world</p>
-  <div style="display:flex;gap:12px;justify-content:center;margin-top:32px;flex-wrap:wrap;">
-    <button onclick="openAuthModal('login')" class="btn-hero btn-hero-primary display" style="font-size:20px;padding:16px 40px;cursor:pointer;border:none;">ENTER THE YARD</button>
-    <button onclick="openAuthModal('signup')" style="background:transparent;border:2px solid #e8ff00;color:#e8ff00;font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:2px;padding:16px 40px;cursor:pointer;">CREATE ACCOUNT</button>
+  <div style="display:flex;justify-content:center;margin-top:32px;">
+    <button onclick="enterTheYard()" class="btn-hero btn-hero-primary display" style="font-size:24px;padding:18px 56px;cursor:pointer;border:none;">ENTER THE YARD</button>
   </div>
 
   <div class="hero-actions">
@@ -1503,6 +1502,20 @@ window.addEventListener('load', function() {
   }
 });
 
+function enterTheYard() {
+  if (!lSupa) { openAuthModal('signup'); return; }
+  lSupa.auth.getSession().then(function(r) {
+    if (r.data && r.data.session) {
+      // Déjà connecté → jeu direct
+      window.location.href = 'rack-nation.html';
+    } else {
+      // Pas de session → signup (premier visiteur)
+      // Si email/pass déjà saisis → login, sinon signup
+      openAuthModal('signup');
+    }
+  });
+}
+
 function lSwitchTab(tab) {
   document.getElementById('ltab-login').classList.toggle('active', tab === 'login');
   document.getElementById('ltab-signup').classList.toggle('active', tab === 'signup');
@@ -1595,6 +1608,7 @@ async function lDoSignup() {
           <input class="ap-input" id="p-email" type="email" placeholder="EMAIL" autocomplete="email">
           <input class="ap-input" id="p-pass" type="password" placeholder="PASSWORD" autocomplete="current-password">
           <button class="ap-btn" onclick="lDoLogin()">ENTER THE YARD</button>
+          <div class="ap-hint" style="margin-top:6px;">New here? <span onclick="openAuthModal('signup')" style="color:#e8ff00;cursor:pointer;text-decoration:underline;">Create account</span></div>
         </div>
       </div>
 
@@ -1606,6 +1620,7 @@ async function lDoSignup() {
           <input class="ap-input" id="p-spass" type="password" placeholder="PASSWORD (min 6 chars)" autocomplete="new-password">
           <button class="ap-btn" onclick="lDoSignup()">CREATE ACCOUNT</button>
           <div class="ap-hint">You'll receive a confirmation email</div>
+          <div class="ap-hint" style="margin-top:6px;">Already have an account? <span onclick="openAuthModal('login')" style="color:#e8ff00;cursor:pointer;text-decoration:underline;">Login</span></div>
         </div>
       </div>
 
