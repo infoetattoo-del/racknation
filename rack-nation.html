@@ -898,51 +898,31 @@ function openUserMenu() {
 
 // ── FLICK IT ────────────────────────────────────────────────────────────────
 async function saveFlick() {
-  // Vérifier si connecté
   if (!currentUser || !currentProfile) {
     showNotif('LOGIN TO FLICK!');
-    setTimeout(function() {
-      window.location.href = 'rack-nation-landing.html';
-    }, 1000);
+    setTimeout(function() { window.location.href = 'rack-nation-landing.html'; }, 1000);
     return;
   }
-  
-  // Générer l'image de preview
-  var outW = canvas.width, outH = canvas.height;
-  var merged = document.createElement('canvas');
-  merged.width = outW; merged.height = outH;
-  var mctx = merged.getContext('2d');
-  mctx.fillStyle = '#0a0a0a';
-  mctx.fillRect(0, 0, outW, outH);
-  
   var cityKey = window._loadoutCity || 'Paris — Ligne 13';
-  var city = TRAINS[cityKey];
-  
-  function showFlickModal(dataUrl) {
-    // Créer le blob D'ABORD, puis afficher le modal
-    merged.toBlob(function(blob) {
-      pendingFlickBlob = blob;
-      document.getElementById('flick-preview').src = dataUrl;
-      document.getElementById('flick-spot-label').textContent = cityKey.toUpperCase();
-      document.getElementById('flick-msg').textContent = '';
-      document.getElementById('flick-modal').classList.remove('hidden');
-    }, 'image/jpeg', 0.85);
+
+  try {
+    // Tester si canvas est accessible
+    canvas.toDataURL();
+  } catch(e) {
+    showNotif('Canvas error: ' + e.message);
+    return;
   }
-  
-  // Utiliser directement le canvas graffiti (pas tainté)
-  // L'image du train sera rechargée côté serveur lors de l'affichage
+
   canvas.toBlob(function(blob) {
-    if (!blob) { showNotif('ERROR: canvas empty'); return; }
+    if (!blob) { showNotif('Paint something first!'); return; }
     pendingFlickBlob = blob;
-    
-    // Preview : montrer juste le graffiti canvas
-    var dataUrl = canvas.toDataURL('image/jpeg', 0.85);
-    document.getElementById('flick-preview').src = dataUrl;
+    document.getElementById('flick-preview').src = canvas.toDataURL('image/jpeg', 0.85);
     document.getElementById('flick-spot-label').textContent = cityKey.toUpperCase();
     document.getElementById('flick-msg').textContent = '';
     document.getElementById('flick-modal').classList.remove('hidden');
   }, 'image/jpeg', 0.85);
 }
+
 
 async function confirmFlick() {
   if (!pendingFlickBlob) { showNotif('Paint something first!'); return; }
