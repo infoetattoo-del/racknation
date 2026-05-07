@@ -1489,15 +1489,6 @@ function loUpdateCount(){
 
 function launchGame(){
   var cityVal = document.getElementById('lo-city-sel').value;
-  // Vérifier accès spot
-  if (!isPro() && FREE_SPOTS.indexOf(cityVal) < 0) {
-    showUpgradeModal();
-    return;
-  }
-  // Vérifier nombre de cans
-  if (!isPro() && loSelected.length > FREE_MAX_CANS) {
-    loSelected = loSelected.slice(0, FREE_MAX_CANS);
-  }
   window._loadoutColors=loSelected.map(s=>s.hex);
   window._loadoutSelected=loSelected;
   window._loadoutCap=loActiveCap;
