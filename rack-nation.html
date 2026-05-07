@@ -742,26 +742,17 @@ function initSupabase() {
         updateAuthUI();
       }
     });
-    // Vérifier session — si pas connecté → redirect landing
-    setTimeout(function() {
-      supa.auth.getSession().then(function(r) {
-        if (r.data && r.data.session) {
-          currentUser = r.data.session.user;
-          sessionStorage.setItem('rnv_auth', '1');
-          loadProfile(currentUser.id);
-        } else {
-          // Rediriger seulement si on n'arrive pas depuis la landing
-          if (!sessionStorage.getItem('rnv_auth')) {
-            window.location.href = 'rack-nation-landing.html';
-          }
-        }
-      });
-    }, 1000);
+    // Charger le profil si session active
+    supa.auth.getSession().then(function(r) {
+      if (r.data && r.data.session) {
+        currentUser = r.data.session.user;
+        loadProfile(currentUser.id);
+      }
+      // Pas de redirection — le jeu est accessible, seul FLICK IT requiert un compte
+    });
   } else {
-    // Supabase non chargé → retour landing
-    setTimeout(function() {
-      window.location.href = 'rack-nation-landing.html';
-    }, 2000);
+    // Supabase non chargé — continuer sans auth
+    console.warn('Supabase not loaded');
   }
 }
 
