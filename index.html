@@ -1554,6 +1554,7 @@ async function lDoLogin() {
     return;
   }
   lSetMsg('✓ Welcome! Loading the yard...');
+  sessionStorage.setItem('rnv_auth', '1');
   setTimeout(function() { window.location.href = 'rack-nation.html'; }, 800);
 }
 

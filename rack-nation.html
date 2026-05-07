@@ -743,18 +743,20 @@ function initSupabase() {
       }
     });
     // Vérifier session — si pas connecté → redirect landing
-    // Délai de 1.5s pour laisser le temps à la session de s'établir après login
     setTimeout(function() {
       supa.auth.getSession().then(function(r) {
         if (r.data && r.data.session) {
           currentUser = r.data.session.user;
+          sessionStorage.setItem('rnv_auth', '1');
           loadProfile(currentUser.id);
         } else {
-          // Non connecté → retour landing
-          window.location.href = 'rack-nation-landing.html';
+          // Rediriger seulement si on n'arrive pas depuis la landing
+          if (!sessionStorage.getItem('rnv_auth')) {
+            window.location.href = 'rack-nation-landing.html';
+          }
         }
       });
-    }, 1500);
+    }, 1000);
   } else {
     // Supabase non chargé → retour landing
     setTimeout(function() {
