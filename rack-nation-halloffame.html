@@ -145,7 +145,7 @@
 <div id="hof-main">
   <div id="hof-gallery">
     <div class="gallery-grid" id="gallery-grid">
-      <div class="empty"><span class="empty-icon">🎨</span>Loading graffs...</div>
+      <div class="empty">Loading graffs...</div>
     </div>
   </div>
   <div id="hof-sidebar">
@@ -214,7 +214,7 @@ async function loadGallery() {
 function renderGallery(graffs) {
   var grid = document.getElementById('gallery-grid');
   if (!graffs.length) {
-    grid.innerHTML = '<div class="empty"><span class="empty-icon">🎨</span>NO GRAFFS YET</div>';
+    grid.innerHTML = '<div class="empty">NO GRAFFS YET</div>';
     return;
   }
   grid.innerHTML = graffs.map(function(g, i) {

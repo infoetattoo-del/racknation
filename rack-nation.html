@@ -978,6 +978,7 @@ async function confirmFlick() {
 
   if (upload.error) {
     document.getElementById('flick-msg').textContent = 'Upload failed: ' + upload.error.message;
+    console.error('Storage upload error:', upload.error);
     return;
   }
 
@@ -990,12 +991,12 @@ async function confirmFlick() {
     spot: cityKey,
     city: cityName,
     image_url: imageUrl,
-    likes: 0,
-    is_pro: userIsPro || false
+    likes: 0
   });
 
   if (ins.error) {
     document.getElementById('flick-msg').textContent = 'Error: ' + ins.error.message;
+    console.error('Gallery insert error:', ins.error);
     return;
   }
 
@@ -1005,7 +1006,7 @@ async function confirmFlick() {
   if (currentProfile) currentProfile.points = newPts;
 
   document.getElementById('flick-modal').classList.add('hidden');
-  showNotif('FLICKED! +25 pts 🔥');
+  showNotif('FLICKED! +25 pts');
   setTimeout(function() { window.location.href = 'rack-nation-dashboard.html'; }, 1200);
 }
 

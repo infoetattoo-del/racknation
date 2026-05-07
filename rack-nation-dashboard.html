@@ -459,7 +459,7 @@
       <div class="section-title">My Graffs <span id="graff-count" style="color:var(--muted);font-size:11px;"></span></div>
       <div class="graffs-grid" id="my-graffs-grid">
         <div class="empty-state">
-          <div class="empty-state-icon">🎨</div>
+          
           Loading your graffs...
         </div>
       </div>
@@ -575,7 +575,7 @@ async function loadGraffs() {
   var grid = document.getElementById('my-graffs-grid');
 
   if (graffs.length === 0) {
-    grid.innerHTML = '<div class="empty-state"><div class="empty-state-icon">🎨</div>NO GRAFFS YET<br><br>Enter a spot and leave your mark.</div>';
+    grid.innerHTML = '<div class="empty-state">NO GRAFFS YET<br><br>Enter a spot and leave your mark.</div>';
     return;
   }
 
