@@ -891,7 +891,7 @@ async function doLogin() {
 function openUserMenu() {
   if (confirm('Log out from RACK NATION VANDALS?')) {
     supa.auth.signOut().then(function() {
-      window.location.href = 'rack-nation-landing.html';
+      window.location.href = 'rack-nation-dashboard.html';
     });
   }
 }
@@ -971,7 +971,14 @@ async function confirmFlick() {
   document.getElementById('flick-msg').textContent = '✓ Flicked to the yard!';
   setTimeout(function() {
     document.getElementById('flick-modal').classList.add('hidden');
-    showNotif('FLICK POSTED!');
+    showNotif('FLICK POSTED! +25 pts');
+  // Ajouter 25 points
+  if (currentUser && supa) {
+    supa.from('profiles').select('points').eq('id', currentUser.id).single().then(function(r) {
+      var pts = ((r.data && r.data.points) || 0) + 25;
+      supa.from('profiles').update({points: pts}).eq('id', currentUser.id);
+    });
+  }
   }, 1200);
 }
 
