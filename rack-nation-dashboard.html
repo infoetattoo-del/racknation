@@ -610,6 +610,17 @@ async function loadProfile() {
   }
 }
 
+// Event delegation pour les boutons delete
+document.addEventListener('click', function(e) {
+  var btn = e.target.closest('.graff-delete');
+  if (!btn) return;
+  e.stopPropagation();
+  e.preventDefault();
+  var id = btn.getAttribute('data-id');
+  var url = btn.getAttribute('data-url');
+  if (id && url) deleteGraff(id, url);
+});
+
 async function loadGraffs() {
   var r = await supa.from('gallery')
     .select('*')
@@ -643,7 +654,7 @@ async function loadGraffs() {
     return '<div class="graff-card" onclick="openLightbox(\''+g.image_url+'\',\''+g.spot+'\')">'+
 
       '<img src="' + g.image_url + '" loading="lazy" alt="' + g.spot + '">' +
-      '<button class="graff-delete" onclick="event.stopPropagation();deleteGraff(\'+g.id+\'\',\'+g.image_url+\'\')" style="position:absolute;top:6px;right:6px;background:rgba(0,0,0,0.75);border:1px solid #444;color:#aaa;font-size:10px;padding:3px 8px;cursor:pointer;letter-spacing:1px;">✕ DEL</button>' +
+      '<button class="graff-delete" data-id="' + g.id + '" data-url="' + g.image_url + '" style="position:absolute;top:6px;right:6px;background:rgba(0,0,0,0.75);border:1px solid #444;color:#aaa;font-size:10px;padding:3px 8px;cursor:pointer;letter-spacing:1px;z-index:10;">✕ DEL</button>' +
       '<div class="graff-card-info">' +
         '<div><div class="graff-spot">' + g.spot + '</div></div>' +
         '<div style="display:flex;gap:8px;align-items:center;">' +
