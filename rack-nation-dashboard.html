@@ -651,15 +651,13 @@ async function loadGraffs() {
 
   grid.innerHTML = graffs.map(function(g) {
     var date = new Date(g.created_at).toLocaleDateString('en-US', {month:'short', day:'numeric'});
-    return '<div class="graff-card" onclick="openLightbox(\''+g.image_url+'\',\''+g.spot+'\')">'+
-
-      '<img src="' + g.image_url + '" loading="lazy" alt="' + g.spot + '">' +
-      '<button class="graff-delete" data-id="' + g.id + '" data-url="' + g.image_url + '" style="position:absolute;top:6px;right:6px;background:rgba(0,0,0,0.75);border:1px solid #444;color:#aaa;font-size:10px;padding:3px 8px;cursor:pointer;letter-spacing:1px;z-index:10;">✕ DEL</button>' +
+    return '<div class="graff-card" style="position:relative;">' +
+      '<img src="' + g.image_url + '" loading="lazy" alt="' + g.spot + '" onclick="openLightbox(this.src,\''+g.spot+'\')" style="cursor:pointer;width:100%;aspect-ratio:2/1;object-fit:cover;display:block;">' +
       '<div class="graff-card-info">' +
-        '<div><div class="graff-spot">' + g.spot + '</div></div>' +
+        '<div class="graff-spot">' + g.spot + ' · ' + date + '</div>' +
         '<div style="display:flex;gap:8px;align-items:center;">' +
           '<span class="graff-likes">♥ ' + (g.likes||0) + '</span>' +
-          '<span class="graff-date">' + date + '</span>' +
+          '<button onclick="deleteGraff(\''+g.id+'\',\''+g.image_url+'\')" style="background:transparent;border:1px solid #333;color:#555;font-family:monospace;font-size:9px;padding:2px 8px;cursor:pointer;margin-left:auto;">✕ DEL</button>' +
         '</div>' +
       '</div>' +
     '</div>';
