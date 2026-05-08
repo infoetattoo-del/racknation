@@ -1172,10 +1172,33 @@ async function saveFlick() {
     return;
   }
 
-  canvas.toBlob(function(blob) {
-    if (!blob) { showNotif('Paint something first!'); return; }
+  // Créer un canvas merged pour la preview et le blob
+  var previewCanvas = document.createElement('canvas');
+  previewCanvas.width = 880; previewCanvas.height = 440;
+  var pctx = previewCanvas.getContext('2d');
+  pctx.fillStyle = '#0a0a0a';
+  pctx.fillRect(0, 0, 880, 440);
+  // Dessiner le train
+  var tc = document.getElementById('train-canvas');
+  if (tc) { try { pctx.drawImage(tc, 0, 0, 880, 440); } catch(e) {} }
+  // Dessiner le graffiti
+  pctx.drawImage(canvas, 0, 0, 880, 440);
+  
+  previewCanvas.toBlob(function(blob) {
+    if (!blob) {
+      // Fallback graffiti seul
+      canvas.toBlob(function(b2) {
+        if (!b2) { showNotif('Paint something first!'); return; }
+        pendingFlickBlob = b2;
+        document.getElementById('flick-preview').src = canvas.toDataURL('image/jpeg', 0.85);
+        document.getElementById('flick-spot-label').textContent = cityKey.toUpperCase();
+        document.getElementById('flick-msg').textContent = '';
+        document.getElementById('flick-modal').classList.remove('hidden');
+      }, 'image/jpeg', 0.85);
+      return;
+    }
     pendingFlickBlob = blob;
-    document.getElementById('flick-preview').src = canvas.toDataURL('image/jpeg', 0.85);
+    document.getElementById('flick-preview').src = previewCanvas.toDataURL('image/jpeg', 0.85);
     document.getElementById('flick-spot-label').textContent = cityKey.toUpperCase();
     document.getElementById('flick-msg').textContent = '';
     document.getElementById('flick-modal').classList.remove('hidden');

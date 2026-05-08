@@ -98,6 +98,42 @@
   ::-webkit-scrollbar{width:6px;height:6px;}
   ::-webkit-scrollbar-track{background:#0a0a0a;}
   ::-webkit-scrollbar-thumb{background:#222;border-radius:2px;}
+
+  /* Lightbox */
+  #lightbox {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.95);
+    z-index: 2000;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    gap: 16px;
+  }
+  #lightbox.open { display: flex; }
+  #lightbox img {
+    max-width: 90vw;
+    max-height: 80vh;
+    object-fit: contain;
+    border: 1px solid #222;
+  }
+  #lightbox-close {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    background: none;
+    border: 1px solid #333;
+    color: #888;
+    font-size: 20px;
+    cursor: pointer;
+    padding: 6px 14px;
+    font-family: monospace;
+    transition: all 0.15s;
+  }
+  #lightbox-close:hover { border-color: #e8ff00; color: #e8ff00; }
+  #lightbox-info { font-size: 10px; color: #555; letter-spacing: 2px; font-family: 'Share Tech Mono', monospace; }
+
 </style>
 </head>
 <body>
@@ -224,7 +260,7 @@ function renderGallery(graffs) {
     var topClass = i === 0 ? 'top-1' : i === 1 ? 'top-2' : i === 2 ? 'top-3' : '';
     var liked = likedIds[g.id] ? 'liked' : '';
     var date = new Date(g.created_at).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});
-    return '<div class="hof-card ' + topClass + '">' +
+    return '<div class="hof-card ' + topClass + '" onclick="openLightbox(\''+g.image_url+'\',\''+g.username+' · '+g.spot+'\')">' +
       '<div class="hof-card-img-wrap">' +
         '<img src="' + g.image_url + '" loading="lazy" alt="' + g.username + '">' +
         medal +
@@ -292,6 +328,19 @@ async function loadLeaderboard() {
   document.getElementById('leaderboard').innerHTML = board.length ? html2 : '<div style="color:var(--muted);font-size:10px;">No writers yet</div>';
 }
 
+
+function openLightbox(url, info) {
+  document.getElementById('lightbox-img').src = url;
+  document.getElementById('lightbox-info').textContent = info || '';
+  document.getElementById('lightbox').classList.add('open');
+}
+function closeLightbox() {
+  document.getElementById('lightbox').classList.remove('open');
+}
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'Escape') closeLightbox();
+});
+
 function setFilter(type, val, btn) {
   filterCity = val;
   document.querySelectorAll('.filter-btn').forEach(function(b){b.classList.remove('active');});
@@ -311,5 +360,12 @@ function goBack() {
   else window.location.href = 'rack-nation-landing.html';
 }
 </script>
+
+<div id="lightbox" onclick="closeLightbox()">
+  <button id="lightbox-close" onclick="closeLightbox()">✕</button>
+  <img id="lightbox-img" src="" alt="">
+  <div id="lightbox-info"></div>
+</div>
+
 </body>
 </html>
