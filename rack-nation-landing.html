@@ -1522,6 +1522,40 @@ function lSetMsg(msg, err) {
   el.className = 'l-msg' + (err ? ' err' : '');
 }
 
+
+async function lVerifyOTP() {
+  if (!lSupa) return;
+  var code = document.getElementById('p-otp').value.trim();
+  var email = window._pendingOTPEmail || '';
+  if (!code || code.length < 6) { lSetMsg('Enter the 6-digit code', true); return; }
+  if (!email) { lSetMsg('Session expired. Please sign up again.', true); return; }
+  
+  lSetMsg('Verifying...');
+  var r = await lSupa.auth.verifyOtp({
+    email: email,
+    token: code,
+    type: 'signup'
+  });
+  
+  if (r.error) {
+    lSetMsg('Invalid or expired code. Try again.', true);
+    return;
+  }
+  
+  lSetMsg('✓ Account confirmed! Welcome to the yard...');
+  setTimeout(function() { window.location.href = 'rack-nation-dashboard.html'; }, 1000);
+}
+
+async function lResendOTP() {
+  if (!lSupa || !window._pendingOTPEmail) return;
+  lSetMsg('Resending code...');
+  await lSupa.auth.resend({
+    type: 'signup',
+    email: window._pendingOTPEmail
+  });
+  lSetMsg('Code resent! Check your email.');
+}
+
 async function lDoLogin() {
   if (!lSupa) return;
   var email = (document.getElementById('p-email') || document.getElementById('l-email')).value.trim();
@@ -1573,12 +1607,11 @@ async function lDoSignup() {
   if (r.data.user) {
     await lSupa.from('profiles').insert({ id: r.data.user.id, username: tag });
   }
-  // Afficher message clair et basculer vers login
-  var sf = document.getElementById('pform-signup') || document.getElementById('lform-signup'); if(sf) sf.style.display = 'none';
-  var msgEl = document.getElementById('p-msg') || document.getElementById('l-msg');
-  msgEl.style.lineHeight = '2';
-  msgEl.innerHTML = '✓ Account created!<br><span style="color:#aaa;font-size:10px;">Check your inbox and click the confirmation link.<br>Then come back to login.</span>';
-  setTimeout(function() { openAuthModal('login'); }, 4000);
+  // Afficher l'écran OTP
+  document.getElementById('pform-signup').style.display = 'none';
+  document.getElementById('pform-otp').style.display = 'block';
+  window._pendingOTPEmail = email;
+  lSetMsg('✓ Code sent! Check your email.');
 }
 </script>
 
@@ -1612,8 +1645,20 @@ async function lDoSignup() {
           <input class="ap-input" id="p-semail" type="email" placeholder="EMAIL" autocomplete="email">
           <input class="ap-input" id="p-spass" type="password" placeholder="PASSWORD (min 6 chars)" autocomplete="new-password">
           <button class="ap-btn" onclick="lDoSignup()">CREATE ACCOUNT</button>
-          <div class="ap-hint">You'll receive a confirmation email</div>
+          <div class="ap-hint">A confirmation code will be sent to your email</div>
           <div class="ap-hint" style="margin-top:6px;">Already have an account? <span onclick="openAuthModal('login')" style="color:#e8ff00;cursor:pointer;text-decoration:underline;">Login</span></div>
+        </div>
+      </div>
+
+      <!-- OTP VERIFICATION -->
+      <div id="pform-otp" style="display:none;">
+        <div style="display:flex;flex-direction:column;gap:10px;">
+          <div class="ap-hint" style="color:#aaa;font-size:11px;line-height:1.8;">A 6-digit code has been sent to your email.<br>Enter it below to confirm your account.</div>
+          <input class="ap-input" id="p-otp" type="text" placeholder="000000" maxlength="6" style="text-align:center;font-size:24px;letter-spacing:8px;" autocomplete="one-time-code">
+          <button class="ap-btn" onclick="lVerifyOTP()">VERIFY CODE</button>
+          <div class="ap-hint" style="margin-top:4px;">
+            <span onclick="lResendOTP()" style="color:#e8ff00;cursor:pointer;text-decoration:underline;">Resend code</span>
+          </div>
         </div>
       </div>
 
