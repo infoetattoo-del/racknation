@@ -705,6 +705,15 @@
 
 </style>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+const _sb=supabase.createClient("https://lxotohgaojnrzmpaxeqc.supabase.co","sb_publishable_b0H_7iEbHqmD377WGrnZGQ_77NW3qI2");
+_sb.auth.getSession().then(({data:{session}})=>{
+  if(!session)window.location.href="rack-nation-auth.html";
+});
+_sb.auth.getSession().then(({data:{session}})=>{
+  if(!session)window.location.href="rack-nation-auth.html";
+});
+</script>
 </head>
 <body>
 

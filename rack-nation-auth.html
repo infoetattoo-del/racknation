@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#e8ff00">
+<title>RACK NATION VANDALS — LOGIN</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+:root{--bg:#0a0a0a;--panel:#111111;--border:#222222;--accent:#e8ff00;--accent2:#ff3c00;--blue:#00aaff;--text:#cccccc;--muted:#555555;}
+body{background:var(--bg);color:var(--text);font-family:'Share Tech Mono',monospace;min-height:100vh;display:flex;align-items:center;justify-content:center;overflow:hidden;}
+.noise{position:fixed;inset:0;opacity:0.03;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");pointer-events:none;z-index:0;}
+.bg-text{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;font-family:'Bebas Neue',sans-serif;font-size:180px;color:var(--accent);opacity:0.02;transform:rotate(-12deg);pointer-events:none;z-index:0;letter-spacing:10px;}
+.card{position:relative;z-index:10;background:var(--panel);border:1px solid var(--border);width:100%;max-width:420px;padding:0;margin:16px;}
+.card-header{background:#0f0f0f;border-bottom:1px solid var(--border);padding:16px 24px;display:flex;align-items:center;justify-content:space-between;}
+.logo{font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:3px;color:var(--accent);}
+.logo span{color:var(--blue);}
+.tagline{font-size:9px;color:var(--muted);letter-spacing:2px;text-transform:uppercase;margin-top:2px;}
+.card-body{padding:28px 24px;}
+.tabs{display:flex;border-bottom:1px solid var(--border);margin-bottom:24px;}
+.tab{flex:1;padding:10px;text-align:center;font-family:'Share Tech Mono',monospace;font-size:12px;letter-spacing:2px;color:var(--muted);cursor:pointer;border:none;background:transparent;text-transform:uppercase;transition:all 0.2s;border-bottom:2px solid transparent;margin-bottom:-1px;}
+.tab.active{color:var(--accent);border-bottom-color:var(--accent);}
+.tab:hover:not(.active){color:var(--text);}
+.form-group{margin-bottom:16px;}
+label{display:block;font-size:10px;color:var(--muted);letter-spacing:2px;text-transform:uppercase;margin-bottom:8px;}
+input,select{width:100%;background:#070707;border:1px solid var(--border);padding:12px 14px;color:var(--text);font-family:'Share Tech Mono',monospace;font-size:14px;outline:none;transition:border-color 0.2s;}
+input:focus,select:focus{border-color:var(--accent);}
+input::placeholder{color:#333;}
+select{cursor:pointer;appearance:none;-webkit-appearance:none;}
+select option{background:#111;}
+.prefix-wrap{position:relative;}
+.prefix{position:absolute;left:14px;top:50%;transform:translateY(-50%);color:var(--accent);font-size:14px;pointer-events:none;}
+.prefix-wrap input{padding-left:26px;}
+.btn{width:100%;padding:14px;border:1px solid var(--accent);background:var(--accent);color:var(--bg);font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:3px;cursor:pointer;margin-top:8px;transition:all 0.2s;}
+.btn:hover{background:#fff;border-color:#fff;}
+.btn:disabled{opacity:0.4;cursor:not-allowed;}
+.btn.secondary{background:transparent;color:var(--accent);margin-top:8px;}
+.btn.secondary:hover{background:rgba(232,255,0,0.08);}
+.msg{margin-top:14px;padding:10px 14px;font-size:12px;letter-spacing:1px;text-align:center;display:none;}
+.msg.success{border:1px solid #00ff80;color:#00ff80;background:rgba(0,255,128,0.05);display:block;}
+.msg.error{border:1px solid var(--accent2);color:var(--accent2);background:rgba(255,60,0,0.05);display:block;}
+.forgot{text-align:center;margin-top:14px;font-size:11px;color:var(--muted);cursor:pointer;letter-spacing:1px;transition:color 0.2s;}
+.forgot:hover{color:var(--accent);}
+@keyframes spin{to{transform:rotate(360deg);}}
+.spinner{display:inline-block;width:14px;height:14px;border:2px solid rgba(232,255,0,0.3);border-top-color:var(--accent);border-radius:50%;animation:spin 0.6s linear infinite;vertical-align:middle;margin-right:8px;}
+.confirm-screen,.logged-screen,.code-screen{display:none;text-align:center;}
+.confirm-screen .icon,.logged-screen .icon,.code-screen .icon{font-size:48px;margin-bottom:16px;}
+.confirm-screen h2,.logged-screen h2,.code-screen h2{font-family:'Bebas Neue',sans-serif;font-size:28px;letter-spacing:3px;color:var(--accent);margin-bottom:8px;}
+.confirm-screen p,.code-screen p{color:var(--muted);font-size:12px;line-height:1.8;margin-bottom:20px;}
+.confirm-screen p span,.code-screen p span{color:var(--accent);}
+.logged-screen .username{font-family:'Bebas Neue',sans-serif;font-size:36px;color:var(--blue);letter-spacing:4px;margin-bottom:24px;}
+.code-input{display:flex;gap:8px;justify-content:center;margin:20px 0;}
+.code-input input{width:48px;height:56px;text-align:center;font-size:24px;font-family:'Bebas Neue',sans-serif;color:var(--accent);border:1px solid var(--border);background:#070707;padding:0;}
+.code-input input:focus{border-color:var(--accent);}
+.status-bar{background:#070707;border-top:1px solid var(--border);padding:8px 24px;display:flex;justify-content:space-between;font-size:10px;color:var(--muted);letter-spacing:1px;}
+.status-dot{display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--accent);margin-right:6px;animation:blink 2s infinite;}
+@keyframes blink{0%,100%{opacity:1;}50%{opacity:0.3;}}
+</style>
+</head>
+<body>
+<div class="noise"></div>
+<div class="bg-text">VANDALS</div>
+<div class="card">
+  <div class="card-header">
+    <div>
+      <div class="logo">RACK NATION <span>VANDALS</span></div>
+      <div class="tagline">// auth terminal //</div>
+    </div>
+    <div style="font-size:10px;color:var(--muted);text-align:right;">v2.0<br><span style="color:var(--accent);">ONLINE</span></div>
+  </div>
+  <div class="card-body">
+
+    <!-- LOGGED IN -->
+    <div class="logged-screen" id="logged-screen">
+      
+      <h2>ACCESS GRANTED</h2>
+      <div class="username" id="logged-username">BOMBER</div>
+      <button class="btn" onclick="goToApp()">ENTER THE YARD</button>
+      <button class="btn secondary" onclick="logout()">DISCONNECT</button>
+    </div>
+
+    <!-- AUTH -->
+    <div id="auth-screens">
+      <div class="tabs">
+        <button class="tab active" onclick="switchTab('login')" id="tab-login">// LOGIN</button>
+        <button class="tab" onclick="switchTab('signup')" id="tab-signup">// JOIN THE CREW</button>
+      </div>
+
+      <!-- LOGIN -->
+      <div id="form-login">
+        <div class="form-group"><label>Email</label><input type="email" id="login-email" placeholder="your@email.com" autocomplete="email"></div>
+        <div class="form-group"><label>Password</label><input type="password" id="login-password" placeholder="••••••••" autocomplete="current-password"></div>
+        <button class="btn" onclick="login()" id="btn-login">ENTER THE YARD</button>
+        <div class="forgot" onclick="switchTab('reset')">// forgot your password?</div>
+        <div class="msg" id="msg-login"></div>
+      </div>
+
+      <!-- SIGNUP -->
+      <div id="form-signup" style="display:none;">
+        <div class="form-group">
+          <label>Your tag (username)</label>
+          <div class="prefix-wrap">
+            <span class="prefix">@</span>
+            <input type="text" id="signup-username" placeholder="BOMBER69" style="text-transform:uppercase;">
+          </div>
+        </div>
+        <div class="form-group"><label>Email</label><input type="email" id="signup-email" placeholder="your@email.com" autocomplete="email"></div>
+        <div class="form-group"><label>Password</label><input type="password" id="signup-password" placeholder="Min. 8 characters" autocomplete="new-password"></div>
+        <div class="form-group">
+          <label>Country <span id="flag-display" style="font-size:16px;margin-left:6px;"></span></label>
+          <select id="signup-country" onchange="updateFlag()">
+            <option value="">— select your country —</option>
+            <option value="FR|🇫🇷">France 🇫🇷</option>
+            <option value="ES|🇪🇸">Spain 🇪🇸</option>
+            <option value="DE|🇩🇪">Germany 🇩🇪</option>
+            <option value="IT|🇮🇹">Italy 🇮🇹</option>
+            <option value="GB|🇬🇧">United Kingdom 🇬🇧</option>
+            <option value="US|🇺🇸">United States 🇺🇸</option>
+            <option value="BR|🇧🇷">Brazil 🇧🇷</option>
+            <option value="MX|🇲🇽">Mexico 🇲🇽</option>
+            <option value="AR|🇦🇷">Argentina 🇦🇷</option>
+            <option value="PT|🇵🇹">Portugal 🇵🇹</option>
+            <option value="NL|🇳🇱">Netherlands 🇳🇱</option>
+            <option value="BE|🇧🇪">Belgium 🇧🇪</option>
+            <option value="CH|🇨🇭">Switzerland 🇨🇭</option>
+            <option value="PL|🇵🇱">Poland 🇵🇱</option>
+            <option value="SE|🇸🇪">Sweden 🇸🇪</option>
+            <option value="NO|🇳🇴">Norway 🇳🇴</option>
+            <option value="DK|🇩🇰">Denmark 🇩🇰</option>
+            <option value="JP|🇯🇵">Japan 🇯🇵</option>
+            <option value="AU|🇦🇺">Australia 🇦🇺</option>
+            <option value="CA|🇨🇦">Canada 🇨🇦</option>
+            <option value="ZA|🇿🇦">South Africa 🇿🇦</option>
+            <option value="MA|🇲🇦">Morocco 🇲🇦</option>
+            <option value="SN|🇸🇳">Senegal 🇸🇳</option>
+            <option value="OTHER|🌍">Other 🌍</option>
+          </select>
+        </div>
+        <button class="btn" onclick="signup()" id="btn-signup">ENTER THE YARD</button>
+        <div class="msg" id="msg-signup"></div>
+      </div>
+
+      <!-- RESET -->
+      <div id="form-reset" style="display:none;">
+        <div class="form-group"><label>Your email</label><input type="email" id="reset-email" placeholder="your@email.com"></div>
+        <button class="btn" onclick="resetPassword()" id="btn-reset">SEND RESET LINK</button>
+        <div class="forgot" onclick="switchTab('login')">← back to login</div>
+        <div class="msg" id="msg-reset"></div>
+      </div>
+    </div>
+
+    <!-- CODE VERIFICATION -->
+    <div class="code-screen" id="code-screen">
+      <div class="icon">🔐</div>
+      <h2>ENTER YOUR CODE</h2>
+      <p>We sent a 6-digit code to<br><span id="code-email"></span><br><br>Enter it below to activate your account.</p>
+      <div class="code-input">
+        <input type="text" maxlength="1" id="c1" oninput="moveNext(this,'c2')">
+        <input type="text" maxlength="1" id="c2" oninput="moveNext(this,'c3')">
+        <input type="text" maxlength="1" id="c3" oninput="moveNext(this,'c4')">
+        <input type="text" maxlength="1" id="c4" oninput="moveNext(this,'c5')">
+        <input type="text" maxlength="1" id="c5" oninput="moveNext(this,'c6')">
+        <input type="text" maxlength="1" id="c6" oninput="moveNext(this,null)">
+      </div>
+      <button class="btn" onclick="verifyCode()" id="btn-verify">VERIFY CODE</button>
+      <div class="forgot" onclick="resendCode()">// resend code</div>
+      <div class="msg" id="msg-code"></div>
+    </div>
+
+    <!-- CONFIRM (fallback) -->
+    <div class="confirm-screen" id="confirm-screen">
+      <div class="icon">📬</div>
+      <h2>CHECK YOUR INBOX</h2>
+      <p>Confirmation link sent to<br><span id="confirm-email"></span><br><br>Click the link to activate your account.</p>
+      <button class="btn" onclick="backToLogin()">I CONFIRMED →</button>
+    </div>
+
+  </div>
+  <div class="status-bar">
+    <span><span class="status-dot"></span>SUPABASE CONNECTED</span>
+    <span>racknationvandals.com</span>
+  </div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+const SUPABASE_URL='https://lxotohgaojnrzmpaxeqc.supabase.co';
+const SUPABASE_KEY='sb_publishable_b0H_7iEbHqmD377WGrnZGQ_77NW3qI2';
+const sb=supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
+
+let pendingUser=null;
+let verificationCode=null;
+let pendingEmail=null;
+
+function generateCode(){return Math.floor(100000+Math.random()*900000).toString();}
+
+window.addEventListener('DOMContentLoaded',async()=>{
+  const{data:{session}}=await sb.auth.getSession();
+  if(session)showLoggedIn(session.user);
+});
+
+function updateFlag(){
+  const val=document.getElementById('signup-country').value;
+  document.getElementById('flag-display').textContent=val?val.split('|')[1]:'';
+}
+
+function switchTab(tab){
+  ['login','signup','reset'].forEach(t=>{
+    document.getElementById('form-'+t).style.display=t===tab?'block':'none';
+    const el=document.getElementById('tab-'+t);
+    if(el)el.classList.toggle('active',t===tab);
+  });
+  document.querySelectorAll('.msg').forEach(m=>{m.className='msg';m.textContent='';});
+}
+
+function showMsg(id,text,type){const el=document.getElementById(id);el.textContent=text;el.className='msg '+type;}
+function setLoading(id,on,label){const b=document.getElementById(id);b.disabled=on;b.innerHTML=on?'<span class="spinner"></span>LOADING...':label;}
+
+function moveNext(el,nextId){
+  el.value=el.value.replace(/[^0-9]/g,'');
+  if(el.value&&nextId)document.getElementById(nextId).focus();
+}
+
+async function login(){
+  const email=document.getElementById('login-email').value.trim();
+  const pass=document.getElementById('login-password').value;
+  if(!email||!pass)return showMsg('msg-login','// fill in all fields','error');
+  setLoading('btn-login',true);
+  const{data,error}=await sb.auth.signInWithPassword({email,password:pass});
+  setLoading('btn-login',false,'ENTER THE YARD');
+  if(error){
+    const m={'Invalid login credentials':'// wrong email or password','Email not confirmed':'// please confirm your email first'};
+    return showMsg('msg-login',m[error.message]||error.message,'error');
+  }
+  showLoggedIn(data.user);
+}
+
+async function signup(){
+  const username=document.getElementById('signup-username').value.trim().toUpperCase();
+  const email=document.getElementById('signup-email').value.trim();
+  const pass=document.getElementById('signup-password').value;
+  const countryRaw=document.getElementById('signup-country').value;
+  const country=countryRaw?countryRaw.split('|')[0]:'';
+  const flag=countryRaw?countryRaw.split('|')[1]:'';
+  if(!username||!email||!pass)return showMsg('msg-signup','// fill in all fields','error');
+  if(pass.length<8)return showMsg('msg-signup','// password: 8 characters minimum','error');
+  setLoading('btn-signup',true);
+
+  // 1. Create user in Supabase (unconfirmed)
+  const{data,error}=await sb.auth.signUp({
+    email,password:pass,
+    options:{data:{username,country,flag,level:1,xp:0,bombs:0}}
+  });
+  if(error){setLoading('btn-signup',false,'ENTER THE YARD');return showMsg('msg-signup',error.message,'error');}
+
+  // 2. Generate code and send via Edge Function
+  verificationCode=generateCode();
+  pendingEmail=email;
+  pendingUser=data.user;
+
+  const fnRes=await fetch(`${SUPABASE_URL}/functions/v1/send-confirmation`,{
+    method:'POST',
+    headers:{'Content-Type':'application/json','Authorization':`Bearer ${SUPABASE_KEY}`},
+    body:JSON.stringify({email,username,code:verificationCode})
+  });
+
+  setLoading('btn-signup',false,'ENTER THE YARD');
+
+  if(!fnRes.ok){
+    // Fallback to confirm screen if edge function fails
+    document.getElementById('auth-screens').style.display='none';
+    document.getElementById('confirm-screen').style.display='block';
+    document.getElementById('confirm-email').textContent=email;
+    return;
+  }
+
+  // 3. Show code input screen
+  document.getElementById('auth-screens').style.display='none';
+  document.getElementById('code-screen').style.display='block';
+  document.getElementById('code-email').textContent=email;
+  document.getElementById('c1').focus();
+}
+
+async function verifyCode(){
+  const entered=[1,2,3,4,5,6].map(i=>document.getElementById('c'+i).value).join('');
+  if(entered.length<6)return showMsg('msg-code','// enter all 6 digits','error');
+  if(entered===verificationCode){
+    showMsg('msg-code','// code verified! welcome to the crew.','success');
+    setTimeout(()=>showLoggedIn(pendingUser),1000);
+  } else {
+    showMsg('msg-code','// wrong code. try again.','error');
+  }
+}
+
+async function resendCode(){
+  if(!pendingEmail)return;
+  verificationCode=generateCode();
+  await fetch(`${SUPABASE_URL}/functions/v1/send-confirmation`,{
+    method:'POST',
+    headers:{'Content-Type':'application/json','Authorization':`Bearer ${SUPABASE_KEY}`},
+    body:JSON.stringify({email:pendingEmail,username:'VANDAL',code:verificationCode})
+  });
+  showMsg('msg-code','// new code sent!','success');
+}
+
+async function resetPassword(){
+  const email=document.getElementById('reset-email').value.trim();
+  if(!email)return showMsg('msg-reset','// enter your email','error');
+  setLoading('btn-reset',true);
+  const{error}=await sb.auth.resetPasswordForEmail(email);
+  setLoading('btn-reset',false,'SEND RESET LINK');
+  if(error)return showMsg('msg-reset',error.message,'error');
+  showMsg('msg-reset','// link sent! check your inbox.','success');
+}
+
+function showLoggedIn(user){
+  const u=user?.user_metadata?.username||user?.email?.split('@')[0].toUpperCase()||'VANDAL';
+  document.getElementById('auth-screens').style.display='none';
+  document.getElementById('code-screen').style.display='none';
+  document.getElementById('confirm-screen').style.display='none';
+  document.getElementById('logged-screen').style.display='block';
+  document.getElementById('logged-username').textContent=u;
+}
+
+function goToApp(){window.location.href='rack-nation.html';}
+
+async function logout(){
+  await sb.auth.signOut();
+  document.getElementById('logged-screen').style.display='none';
+  document.getElementById('auth-screens').style.display='block';
+  switchTab('login');
+}
+
+function backToLogin(){
+  document.getElementById('confirm-screen').style.display='none';
+  document.getElementById('auth-screens').style.display='block';
+  switchTab('login');
+}
+
+document.addEventListener('keydown',e=>{
+  if(e.key!=='Enter')return;
+  const t=document.querySelector('.tab.active')?.id?.replace('tab-','');
+  if(t==='login')login();
+  else if(t==='signup')signup();
+});
+</script>
+</body>
+</html>
