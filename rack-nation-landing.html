@@ -1036,14 +1036,6 @@ footer {
     <button onclick="enterTheYard()" class="btn-hero btn-hero-primary display" style="font-size:24px;padding:18px 56px;cursor:pointer;border:none;">ENTER THE YARD</button>
   </div>
 
-  <div class="hero-actions">
-    <!-- Login form -->
-    <div class="l-form" id="lform-login">
-      <input class="l-input" id="l-email" type="email" placeholder="EMAIL">
-      <input class="l-input" id="l-pass" type="password" placeholder="PASSWORD">
-      <button class="l-btn" onclick="lDoLogin()">ENTER THE YARD</button>
-    </div>
-
     <!-- Signup form -->
     <div class="l-form" id="lform-signup" style="display:none;">
       <input class="l-input" id="s-tag" type="text" placeholder="YOUR TAG / PSEUDO">
@@ -1054,10 +1046,10 @@ footer {
 
     <div class="l-msg" id="l-msg"></div>
   </div>
-    <a href="#how" class="btn-hero btn-hero-ghost display">HOW IT WORKS</a>
+    <a href="#how" class="btn-hero btn-hero-ghost display" style="margin-top:24px;display:inline-block;">HOW IT WORKS</a>
   </div>
 
-  <div class="hero-stats">
+  <div class="hero-stats" style="margin-top:32px;">
     <div class="stat">
       <span class="stat-val display">20+</span>
       <span class="stat-label mono">Cities</span>
@@ -1503,7 +1495,7 @@ window.addEventListener('load', function() {
 });
 
 function enterTheYard() {
-  if (!lSupa) { openAuthModal('signup'); return; }
+  if (!lSupa) { setTimeout(enterTheYard, 300); return; }
   lSupa.auth.getSession().then(function(r) {
     if (r.data && r.data.session) {
       // Déjà connecté → jeu direct
