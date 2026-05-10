@@ -1014,8 +1014,6 @@ footer {
     <li><a href="#pricing">Pricing</a></li>
   </ul>
   <div class="nav-cta">
-    <a href="#" class="btn btn-ghost" onclick="openModal('login');return false;">Log in</a>
-    <a href="#" class="btn btn-primary" onclick="openModal('register');return false;">Start for free</a>
   </div>
 </nav>
 
@@ -1033,7 +1031,7 @@ footer {
 
   <p class="hero-sub mono">Paint trains · Bomb metros · Tag the world</p>
   <div style="display:flex;justify-content:center;margin-top:32px;">
-    <button onclick="enterTheYard()" class="btn-hero btn-hero-primary display" style="font-size:24px;padding:18px 56px;cursor:pointer;border:none;">ENTER THE YARD</button>
+    <button onclick="openAuthModal('signup')" class="btn-hero btn-hero-primary display" style="font-size:24px;padding:18px 56px;cursor:pointer;border:none;">ENTER THE YARD</button>
   </div>
 
     <!-- Signup form -->
@@ -1255,7 +1253,7 @@ footer {
         <li class="muted">All spots (20+)</li>
         <li class="muted">Exclusive caps</li>
       </ul>
-      <a href="#" class="price-cta display" onclick="openModal('register');return false;">START FREE</a>
+      <a href="#" class="price-cta display" onclick="openAuthModal('signup')">START FREE</a>
     </div>
 
     <div class="price-card featured">
@@ -1272,7 +1270,7 @@ footer {
         <li>Hall of Fame submission</li>
         <li class="muted">City packs (coming soon)</li>
       </ul>
-      <a href="#" class="price-cta primary display" onclick="openModal('register');return false;">GO PRO</a>
+      <a href="#" class="price-cta primary display" onclick="openAuthModal('signup')">GO PRO</a>
     </div>
 
     <div class="price-card">
@@ -1288,7 +1286,7 @@ footer {
         <li>Brand collab opportunities</li>
         <li>Priority support</li>
       </ul>
-      <a href="#" class="price-cta display" onclick="openModal('register');return false;">START CREW</a>
+      <a href="#" class="price-cta display" onclick="openAuthModal('signup')">START CREW</a>
     </div>
   </div>
 </section>
