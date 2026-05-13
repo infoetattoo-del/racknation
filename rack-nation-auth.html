@@ -191,10 +191,6 @@ const sb=supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
 let pendingUser=null;
 let verificationCode=null;
 let pendingEmail=null;
-let pendingPass=null;
-let pendingUsername=null;
-let pendingCountry=null;
-let pendingFlag=null;
 
 function generateCode(){return Math.floor(100000+Math.random()*900000).toString();}
 
@@ -250,12 +246,17 @@ async function signup(){
   if(pass.length<8)return showMsg('msg-signup','// password: 8 characters minimum','error');
   setLoading('btn-signup',true);
 
+  // 1. Create user in Supabase (unconfirmed)
+  const{data,error}=await sb.auth.signUp({
+    email,password:pass,
+    options:{data:{username,country,flag,level:1,xp:0,bombs:0},emailRedirectTo:null}
+  });
+  if(error){setLoading('btn-signup',false,'ENTER THE YARD');return showMsg('msg-signup','// '+error.message,'error');}
+
+  // 2. Generate code and send via Edge Function
   verificationCode=generateCode();
   pendingEmail=email;
-  pendingPass=pass;
-  pendingUsername=username;
-  pendingCountry=country;
-  pendingFlag=flag;
+  pendingUser=data.user;
 
   const fnRes=await fetch(`${SUPABASE_URL}/functions/v1/send-confirmation`,{
     method:'POST',
@@ -265,10 +266,14 @@ async function signup(){
 
   setLoading('btn-signup',false,'ENTER THE YARD');
 
+  const fnData=await fnRes.json().catch(()=>({}));
+  console.log('[send-confirmation]',fnRes.status,fnData);
   if(!fnRes.ok){
-    return showMsg('msg-signup','// error sending code. try again.','error');
+    // Show error message instead of silent fallback
+    return showMsg('msg-signup','// error sending code: '+JSON.stringify(fnData),'error');
   }
 
+  // 3. Show code input screen
   document.getElementById('auth-screens').style.display='none';
   document.getElementById('code-screen').style.display='block';
   document.getElementById('code-email').textContent=email;
@@ -283,22 +288,41 @@ async function verifyCode(){
   showMsg('msg-code','// code verified! creating your account...','success');
   document.getElementById('btn-verify').disabled=true;
 
-  const{data,error}=await sb.auth.signUp({
-    email:pendingEmail,
-    password:pendingPass,
-    options:{data:{username:pendingUsername,country:pendingCountry,flag:pendingFlag,level:1,xp:0,bombs:0}}
+  // Create user via Edge Function admin API (no Supabase email sent)
+  const res=await fetch(`${SUPABASE_URL}/functions/v1/send-confirmation`,{
+    method:'POST',
+    headers:{'Content-Type':'application/json','Authorization':`Bearer ${SUPABASE_KEY}`,'apikey':SUPABASE_KEY},
+    body:JSON.stringify({
+      type:'create_user',
+      email:pendingEmail,
+      password:pendingPass,
+      username:pendingUsername,
+      country:pendingCountry,
+      flag:pendingFlag
+    })
   });
 
-  if(error){
+  const data=await res.json();
+
+  if(!res.ok||data.error){
     document.getElementById('btn-verify').disabled=false;
-    return showMsg('msg-code','// '+error.message,'error');
+    return showMsg('msg-code','// '+(data.error?.message||data.msg||'error creating account'),'error');
   }
 
-  pendingUser=data.user;
-  showMsg('msg-code','// welcome to the crew!','success');
-  setTimeout(()=>showLoggedIn(pendingUser),1200);
-}
+  // Account created — now sign in
+  const{data:signIn,error:signInErr}=await sb.auth.signInWithPassword({
+    email:pendingEmail,
+    password:pendingPass
+  });
 
+  if(signInErr){
+    document.getElementById('btn-verify').disabled=false;
+    return showMsg('msg-code','// '+signInErr.message,'error');
+  }
+
+  showMsg('msg-code','// welcome to the crew!','success');
+  setTimeout(()=>showLoggedIn(signIn.user),1200);
+}
 async function resendCode(){
   if(!pendingEmail)return;
   verificationCode=generateCode();
