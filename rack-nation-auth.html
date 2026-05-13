@@ -234,7 +234,12 @@ async function login(){
   setLoading('btn-login',false,'ENTER THE YARD');
   if(error){
     const m={'Invalid login credentials':'// wrong email or password','Email not confirmed':'// please confirm your email first'};
-    return sasync function signup(){
+    return showMsg('msg-login',m[error.message]||error.message,'error');
+  }
+  showLoggedIn(data.user);
+}
+
+async function signup(){
   const username=document.getElementById('signup-username').value.trim().toUpperCase();
   const email=document.getElementById('signup-email').value.trim();
   const pass=document.getElementById('signup-password').value;
@@ -245,7 +250,6 @@ async function login(){
   if(pass.length<8)return showMsg('msg-signup','// password: 8 characters minimum','error');
   setLoading('btn-signup',true);
 
-  // 1. Send code FIRST via Edge Function — no Supabase signUp yet
   verificationCode=generateCode();
   pendingEmail=email;
   pendingPass=pass;
@@ -265,12 +269,9 @@ async function login(){
     return showMsg('msg-signup','// error sending code. try again.','error');
   }
 
-  // 2. Show code screen
   document.getElementById('auth-screens').style.display='none';
   document.getElementById('code-screen').style.display='block';
   document.getElementById('code-email').textContent=email;
-  document.getElementById('c1').focus();
-}ent.getElementById('code-email').textContent=email;
   document.getElementById('c1').focus();
 }
 
@@ -279,7 +280,6 @@ async function verifyCode(){
   if(entered.length<6)return showMsg('msg-code','// enter all 6 digits','error');
   if(entered!==verificationCode)return showMsg('msg-code','// wrong code. try again.','error');
 
-  // Code correct → NOW create Supabase account
   showMsg('msg-code','// code verified! creating your account...','success');
   document.getElementById('btn-verify').disabled=true;
 
@@ -298,6 +298,7 @@ async function verifyCode(){
   showMsg('msg-code','// welcome to the crew!','success');
   setTimeout(()=>showLoggedIn(pendingUser),1200);
 }
+
 async function resendCode(){
   if(!pendingEmail)return;
   verificationCode=generateCode();
