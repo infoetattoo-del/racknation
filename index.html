@@ -249,26 +249,60 @@ document.querySelector('.logo').addEventListener('click', function() {
 async function submitNotify() {
   var email = document.getElementById('notify-email').value.trim();
   var msg = document.getElementById('notify-msg');
+  var btn = document.querySelector('.notify-btn');
+
   if (!email || !email.includes('@')) {
     msg.style.color = '#ff5555';
-    msg.textContent = 'Enter a valid email';
+    msg.textContent = "// enter a valid email";
     return;
   }
-  msg.style.color = '#e8ff00';
-  msg.textContent = 'Adding to the list...';
 
-  // Stocker dans Supabase
-  if (window.supabase) {
+  // Loading state
+  btn.disabled = true;
+  btn.textContent = '...';
+  msg.style.color = '#e8ff00';
+  msg.textContent = "Adding to the list...";
+
+  try {
     var supa = window.supabase.createClient(SUPA_URL, SUPA_KEY);
-    // Table waitlist (à créer dans Supabase)
-    var r = await supa.from('waitlist').insert({ email: email });
-    if (r.error && r.error.code === '23505') {
-      msg.textContent = 'Already on the list!';
-      return;
+
+    // 1. Insert into waitlist table
+    var { error } = await supa.from('waitlist').insert({ email: email });
+
+    if (error) {
+      if (error.code === '23505') {
+        msg.style.color = '#00aaff';
+        msg.textContent = "// already on the list!";
+        btn.disabled = false;
+        btn.textContent = 'NOTIFY ME';
+        return;
+      }
+      throw new Error(error.message);
     }
+
+    // 2. Send confirmation email via Edge Function
+    await fetch(SUPA_URL + '/functions/v1/send-confirmation', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer ' + SUPA_KEY,
+        'apikey': SUPA_KEY
+      },
+      body: JSON.stringify({ email: email, username: email.split('@')[0].toUpperCase(), code: '', type: 'newsletter' })
+    });
+
+    // 3. Success
+    document.getElementById('notify-email').value = '';
+    msg.style.color = '#00cc66';
+    msg.textContent = "✓ You are on the list — we will hit you up at launch!";
+
+  } catch(e) {
+    msg.style.color = '#ff5555';
+    msg.textContent = "// error: " + e.message;
   }
-  document.getElementById('notify-email').value = '';
-  msg.textContent = '✓ You're on the list — we'll hit you up!';
+
+  btn.disabled = false;
+  btn.textContent = 'NOTIFY ME';
 }
 </script>
 
