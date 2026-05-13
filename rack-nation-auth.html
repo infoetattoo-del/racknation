@@ -249,9 +249,9 @@ async function signup(){
   // 1. Create user in Supabase (unconfirmed)
   const{data,error}=await sb.auth.signUp({
     email,password:pass,
-    options:{data:{username,country,flag,level:1,xp:0,bombs:0}}
+    options:{data:{username,country,flag,level:1,xp:0,bombs:0},emailRedirectTo:null}
   });
-  if(error){setLoading('btn-signup',false,'ENTER THE YARD');return showMsg('msg-signup',error.message,'error');}
+  if(error){setLoading('btn-signup',false,'ENTER THE YARD');return showMsg('msg-signup','// '+error.message,'error');}
 
   // 2. Generate code and send via Edge Function
   verificationCode=generateCode();
@@ -260,18 +260,17 @@ async function signup(){
 
   const fnRes=await fetch(`${SUPABASE_URL}/functions/v1/send-confirmation`,{
     method:'POST',
-    headers:{'Content-Type':'application/json','Authorization':`Bearer ${SUPABASE_KEY}`},
+    headers:{'Content-Type':'application/json','Authorization':`Bearer ${SUPABASE_KEY}`,'apikey':SUPABASE_KEY},
     body:JSON.stringify({email,username,code:verificationCode})
   });
 
   setLoading('btn-signup',false,'ENTER THE YARD');
 
+  const fnData=await fnRes.json().catch(()=>({}));
+  console.log('[send-confirmation]',fnRes.status,fnData);
   if(!fnRes.ok){
-    // Fallback to confirm screen if edge function fails
-    document.getElementById('auth-screens').style.display='none';
-    document.getElementById('confirm-screen').style.display='block';
-    document.getElementById('confirm-email').textContent=email;
-    return;
+    // Show error message instead of silent fallback
+    return showMsg('msg-signup','// error sending code: '+JSON.stringify(fnData),'error');
   }
 
   // 3. Show code input screen
@@ -297,7 +296,7 @@ async function resendCode(){
   verificationCode=generateCode();
   await fetch(`${SUPABASE_URL}/functions/v1/send-confirmation`,{
     method:'POST',
-    headers:{'Content-Type':'application/json','Authorization':`Bearer ${SUPABASE_KEY}`},
+    headers:{'Content-Type':'application/json','Authorization':`Bearer ${SUPABASE_KEY}`,'apikey':SUPABASE_KEY},
     body:JSON.stringify({email:pendingEmail,username:'VANDAL',code:verificationCode})
   });
   showMsg('msg-code','// new code sent!','success');
