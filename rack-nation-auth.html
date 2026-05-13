@@ -288,7 +288,7 @@ async function verifyCode(){
   showMsg('msg-code','// code verified! creating your account...','success');
   document.getElementById('btn-verify').disabled=true;
 
-  // Create user via Edge Function admin API (no Supabase email sent)
+  // Create user via Edge Function admin API
   const res=await fetch(`${SUPABASE_URL}/functions/v1/send-confirmation`,{
     method:'POST',
     headers:{'Content-Type':'application/json','Authorization':`Bearer ${SUPABASE_KEY}`,'apikey':SUPABASE_KEY},
@@ -306,22 +306,29 @@ async function verifyCode(){
 
   if(!res.ok||data.error){
     document.getElementById('btn-verify').disabled=false;
-    return showMsg('msg-code','// '+(data.error?.message||data.msg||'error creating account'),'error');
+    return showMsg('msg-code','// '+(data.error?.message||'error creating account'),'error');
   }
 
-  // Account created — now sign in
-  const{data:signIn,error:signInErr}=await sb.auth.signInWithPassword({
-    email:pendingEmail,
-    password:pendingPass
-  });
+  // Account created — sign in directly without signInWithPassword
+  // Use signInWithPassword but catch rate limit and show success anyway
+  try {
+    const{data:signIn,error:signInErr}=await sb.auth.signInWithPassword({
+      email:pendingEmail,
+      password:pendingPass
+    });
+    if(!signInErr && signIn.user){
+      showMsg('msg-code','// welcome to the crew!','success');
+      setTimeout(()=>showLoggedIn(signIn.user),1200);
+      return;
+    }
+  } catch(e){}
 
-  if(signInErr){
-    document.getElementById('btn-verify').disabled=false;
-    return showMsg('msg-code','// '+signInErr.message,'error');
-  }
-
-  showMsg('msg-code','// welcome to the crew!','success');
-  setTimeout(()=>showLoggedIn(signIn.user),1200);
+  // If signIn fails (rate limit etc), show success and redirect to login
+  document.getElementById('code-screen').style.display='none';
+  document.getElementById('auth-screens').style.display='block';
+  switchTab('login');
+  showMsg('msg-login','// account created! log in to enter the yard.','success');
+  document.getElementById('login-email').value=pendingEmail;
 }
 async function resendCode(){
   if(!pendingEmail)return;
