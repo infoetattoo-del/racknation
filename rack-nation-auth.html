@@ -191,6 +191,10 @@ const sb=supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
 let pendingUser=null;
 let verificationCode=null;
 let pendingEmail=null;
+let pendingPass=null;
+let pendingUsername=null;
+let pendingCountry=null;
+let pendingFlag=null;
 
 function generateCode(){return Math.floor(100000+Math.random()*900000).toString();}
 
@@ -230,12 +234,7 @@ async function login(){
   setLoading('btn-login',false,'ENTER THE YARD');
   if(error){
     const m={'Invalid login credentials':'// wrong email or password','Email not confirmed':'// please confirm your email first'};
-    return showMsg('msg-login',m[error.message]||error.message,'error');
-  }
-  showLoggedIn(data.user);
-}
-
-async function signup(){
+    return sasync function signup(){
   const username=document.getElementById('signup-username').value.trim().toUpperCase();
   const email=document.getElementById('signup-email').value.trim();
   const pass=document.getElementById('signup-password').value;
@@ -246,17 +245,13 @@ async function signup(){
   if(pass.length<8)return showMsg('msg-signup','// password: 8 characters minimum','error');
   setLoading('btn-signup',true);
 
-  // 1. Create user in Supabase (unconfirmed)
-  const{data,error}=await sb.auth.signUp({
-    email,password:pass,
-    options:{data:{username,country,flag,level:1,xp:0,bombs:0},emailRedirectTo:null}
-  });
-  if(error){setLoading('btn-signup',false,'ENTER THE YARD');return showMsg('msg-signup','// '+error.message,'error');}
-
-  // 2. Generate code and send via Edge Function
+  // 1. Send code FIRST via Edge Function — no Supabase signUp yet
   verificationCode=generateCode();
   pendingEmail=email;
-  pendingUser=data.user;
+  pendingPass=pass;
+  pendingUsername=username;
+  pendingCountry=country;
+  pendingFlag=flag;
 
   const fnRes=await fetch(`${SUPABASE_URL}/functions/v1/send-confirmation`,{
     method:'POST',
@@ -266,31 +261,43 @@ async function signup(){
 
   setLoading('btn-signup',false,'ENTER THE YARD');
 
-  const fnData=await fnRes.json().catch(()=>({}));
-  console.log('[send-confirmation]',fnRes.status,fnData);
   if(!fnRes.ok){
-    // Show error message instead of silent fallback
-    return showMsg('msg-signup','// error sending code: '+JSON.stringify(fnData),'error');
+    return showMsg('msg-signup','// error sending code. try again.','error');
   }
 
-  // 3. Show code input screen
+  // 2. Show code screen
   document.getElementById('auth-screens').style.display='none';
   document.getElementById('code-screen').style.display='block';
   document.getElementById('code-email').textContent=email;
+  document.getElementById('c1').focus();
+}ent.getElementById('code-email').textContent=email;
   document.getElementById('c1').focus();
 }
 
 async function verifyCode(){
   const entered=[1,2,3,4,5,6].map(i=>document.getElementById('c'+i).value).join('');
   if(entered.length<6)return showMsg('msg-code','// enter all 6 digits','error');
-  if(entered===verificationCode){
-    showMsg('msg-code','// code verified! welcome to the crew.','success');
-    setTimeout(()=>showLoggedIn(pendingUser),1000);
-  } else {
-    showMsg('msg-code','// wrong code. try again.','error');
-  }
-}
+  if(entered!==verificationCode)return showMsg('msg-code','// wrong code. try again.','error');
 
+  // Code correct → NOW create Supabase account
+  showMsg('msg-code','// code verified! creating your account...','success');
+  document.getElementById('btn-verify').disabled=true;
+
+  const{data,error}=await sb.auth.signUp({
+    email:pendingEmail,
+    password:pendingPass,
+    options:{data:{username:pendingUsername,country:pendingCountry,flag:pendingFlag,level:1,xp:0,bombs:0}}
+  });
+
+  if(error){
+    document.getElementById('btn-verify').disabled=false;
+    return showMsg('msg-code','// '+error.message,'error');
+  }
+
+  pendingUser=data.user;
+  showMsg('msg-code','// welcome to the crew!','success');
+  setTimeout(()=>showLoggedIn(pendingUser),1200);
+}
 async function resendCode(){
   if(!pendingEmail)return;
   verificationCode=generateCode();
