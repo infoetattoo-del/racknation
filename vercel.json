@@ -1,0 +1,9 @@
+{
+  "redirects": [
+    {
+      "source": "http://racknationvandals.com/(.*)",
+      "destination": "https://racknationvandals.com/$1",
+      "permanent": true
+    }
+  ]
+}
