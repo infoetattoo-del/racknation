@@ -311,9 +311,9 @@ async function verifyCode(){
 async function resendCode(){
   if(!pendingEmail)return;
   verificationCode=generateCode();
-  await fetch(`${SUPABASE_URL}/functions/v1/send-confirmation`,{
+  await fetch(SUPABASE_URL+'/functions/v1/send-confirmation',{
     method:'POST',
-    headers:{'Content-Type':'application/json','Authorization':`Bearer ${SUPABASE_KEY}`,'apikey':SUPABASE_KEY},
+    headers:{'Content-Type':'application/json','Authorization':'Bearer '+SUPABASE_KEY,'apikey':SUPABASE_KEY},
     body:JSON.stringify({email:pendingEmail,username:'VANDAL',code:verificationCode})
   });
   showMsg('msg-code','// new code sent!','success');
