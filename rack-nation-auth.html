@@ -3,8 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="theme-color" content="#e8ff00">
-<title>RACK NATION VANDALS — LOGIN</title>
+<title>RACK NATION VANDALS — Enter the Yard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Share+Tech+Mono&display=swap" rel="stylesheet">
 <style>
 *{box-sizing:border-box;margin:0;padding:0;}
@@ -182,182 +182,220 @@ select option{background:#111;}
     <span>racknationvandals.com</span>
   </div>
 </div>
+
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
 const SUPABASE_URL='https://lxotohgaojnrzmpaxeqc.supabase.co';
 const SUPABASE_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imx4b3RvaGdhb2pucnptcGF4ZXFjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgwOTMwNjYsImV4cCI6MjA5MzY2OTA2Nn0.B1u8-q8Ilc9BQ8Pkw9b-IlBxrgCEbXtCP-XihcFTOQU';
-const sb=supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-let pendingUser=null;
-let verificationCode=null;
-let pendingEmail=null;
-let pendingPass=null;
-let pendingUsername=null;
-let pendingCountry=null;
-let pendingFlag=null;
+let pendingUser = null;
+let verificationCode = null;
+let pendingEmail = null;
+let pendingPass = null;
+let pendingUsername = null;
+let pendingCountry = null;
+let pendingFlag = null;
 
-function generateCode(){return Math.floor(100000+Math.random()*900000).toString();}
+function generateCode() {
+  return Math.floor(100000 + Math.random() * 900000).toString();
+}
 
-window.addEventListener('DOMContentLoaded',async()=>{
-  const{data:{session}}=await sb.auth.getSession();
-  if(session)showLoggedIn(session.user);
+window.addEventListener('DOMContentLoaded', async () => {
+  const { data: { session } } = await sb.auth.getSession();
+  if (session) showLoggedIn(session.user);
 });
 
-function updateFlag(){
-  const val=document.getElementById('signup-country').value;
-  document.getElementById('flag-display').textContent=val?val.split('|')[1]:'';
+function updateFlag() {
+  const val = document.getElementById('signup-country').value;
+  document.getElementById('flag-display').textContent = val ? val.split('|')[1] : '';
 }
 
-function switchTab(tab){
-  ['login','signup','reset'].forEach(t=>{
-    document.getElementById('form-'+t).style.display=t===tab?'block':'none';
-    const el=document.getElementById('tab-'+t);
-    if(el)el.classList.toggle('active',t===tab);
+function switchTab(tab) {
+  ['login','signup','reset'].forEach(function(t) {
+    document.getElementById('form-' + t).style.display = t === tab ? 'block' : 'none';
+    const el = document.getElementById('tab-' + t);
+    if (el) el.classList.toggle('active', t === tab);
   });
-  document.querySelectorAll('.msg').forEach(m=>{m.className='msg';m.textContent='';});
+  document.querySelectorAll('.msg').forEach(function(m) { m.className = 'msg'; m.textContent = ''; });
 }
 
-function showMsg(id,text,type){const el=document.getElementById(id);el.textContent=text;el.className='msg '+type;}
-function setLoading(id,on,label){const b=document.getElementById(id);b.disabled=on;b.innerHTML=on?'<span class="spinner"></span>LOADING...':label;}
-
-function moveNext(el,nextId){
-  el.value=el.value.replace(/[^0-9]/g,'');
-  if(el.value&&nextId)document.getElementById(nextId).focus();
+function showMsg(id, text, type) {
+  const el = document.getElementById(id);
+  el.textContent = text;
+  el.className = 'msg ' + type;
 }
 
-async function login(){
-  const email=document.getElementById('login-email').value.trim();
-  const pass=document.getElementById('login-password').value;
-  if(!email||!pass)return showMsg('msg-login','// fill in all fields','error');
-  setLoading('btn-login',true);
-  const{data,error}=await sb.auth.signInWithPassword({email,password:pass});
-  setLoading('btn-login',false,'ENTER THE YARD');
-  if(error){
-    const m={'Invalid login credentials':'// wrong email or password','Email not confirmed':'// please confirm your email first'};
-    return 
-async function signup(){
-  const username=document.getElementById('signup-username').value.trim().toUpperCase();
-  const email=document.getElementById('signup-email').value.trim();
-  const pass=document.getElementById('signup-password').value;
-  const countryRaw=document.getElementById('signup-country').value;
-  const country=countryRaw?countryRaw.split('|')[0]:'';
-  const flag=countryRaw?countryRaw.split('|')[1]:'';
-  if(!username||!email||!pass)return showMsg('msg-signup','// fill in all fields','error');
-  if(pass.length<8)return showMsg('msg-signup','// password: 8 characters minimum','error');
-  setLoading('btn-signup',true);
+function setLoading(id, on, label) {
+  const b = document.getElementById(id);
+  b.disabled = on;
+  b.innerHTML = on ? '<span class="spinner"></span>LOADING...' : label;
+}
 
-  verificationCode=generateCode();
-  pendingEmail=email;
-  pendingPass=pass;
-  pendingUsername=username;
-  pendingCountry=country;
-  pendingFlag=flag;
+function moveNext(el, nextId) {
+  el.value = el.value.replace(/[^0-9]/g, '');
+  if (el.value && nextId) document.getElementById(nextId).focus();
+}
 
-  const fnRes=await fetch(SUPABASE_URL+'/functions/v1/send-confirmation',{
-    method:'POST',
-    headers:{'Content-Type':'application/json','Authorization':'Bearer '+SUPABASE_KEY,'apikey':SUPABASE_KEY},
-    body:JSON.stringify({email:email,username:username,code:verificationCode})
+async function login() {
+  const email = document.getElementById('login-email').value.trim();
+  const pass = document.getElementById('login-password').value;
+  if (!email || !pass) return showMsg('msg-login', '// fill in all fields', 'error');
+  setLoading('btn-login', true);
+  const { data, error } = await sb.auth.signInWithPassword({ email: email, password: pass });
+  setLoading('btn-login', false, 'ENTER THE YARD');
+  if (error) {
+    const m = { 'Invalid login credentials': '// wrong email or password', 'Email not confirmed': '// please confirm your email first' };
+    return showMsg('msg-login', m[error.message] || error.message, 'error');
+  }
+  showLoggedIn(data.user);
+}
+
+async function signup() {
+  const username = document.getElementById('signup-username').value.trim().toUpperCase();
+  const email = document.getElementById('signup-email').value.trim();
+  const pass = document.getElementById('signup-password').value;
+  const countryRaw = document.getElementById('signup-country').value;
+  const country = countryRaw ? countryRaw.split('|')[0] : '';
+  const flag = countryRaw ? countryRaw.split('|')[1] : '';
+  if (!username || !email || !pass) return showMsg('msg-signup', '// fill in all fields', 'error');
+  if (pass.length < 8) return showMsg('msg-signup', '// password: 8 characters minimum', 'error');
+  setLoading('btn-signup', true);
+
+  verificationCode = generateCode();
+  pendingEmail = email;
+  pendingPass = pass;
+  pendingUsername = username;
+  pendingCountry = country;
+  pendingFlag = flag;
+
+  const fnRes = await fetch(SUPABASE_URL + '/functions/v1/send-confirmation', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': 'Bearer ' + SUPABASE_KEY,
+      'apikey': SUPABASE_KEY
+    },
+    body: JSON.stringify({ email: email, username: username, code: verificationCode })
   });
 
-  setLoading('btn-signup',false,'ENTER THE YARD');
+  setLoading('btn-signup', false, 'ENTER THE YARD');
 
-  if(!fnRes.ok){
-    return showMsg('msg-signup','// error sending code. try again.','error');
+  if (!fnRes.ok) {
+    return showMsg('msg-signup', '// error sending code. try again.', 'error');
   }
 
-  document.getElementById('auth-screens').style.display='none';
-  document.getElementById('code-screen').style.display='block';
-  document.getElementById('code-email').textContent=email;
+  document.getElementById('auth-screens').style.display = 'none';
+  document.getElementById('code-screen').style.display = 'block';
+  document.getElementById('code-email').textContent = email;
   document.getElementById('c1').focus();
 }
 
-async function verifyCode(){
-  const entered=[1,2,3,4,5,6].map(function(i){return document.getElementById('c'+i).value;}).join('');
-  if(entered.length<6)return showMsg('msg-code','// enter all 6 digits','error');
-  if(entered!==verificationCode)return showMsg('msg-code','// wrong code. try again.','error');
+async function verifyCode() {
+  const entered = [1,2,3,4,5,6].map(function(i) { return document.getElementById('c' + i).value; }).join('');
+  if (entered.length < 6) return showMsg('msg-code', '// enter all 6 digits', 'error');
+  if (entered !== verificationCode) return showMsg('msg-code', '// wrong code. try again.', 'error');
 
-  showMsg('msg-code','// code verified! creating your account...','success');
-  document.getElementById('btn-verify').disabled=true;
+  showMsg('msg-code', '// code verified! creating your account...', 'success');
+  document.getElementById('btn-verify').disabled = true;
 
-  var res=await fetch(SUPABASE_URL+'/functions/v1/send-confirmation',{
-    method:'POST',
-    headers:{'Content-Type':'application/json','Authorization':'Bearer '+SUPABASE_KEY,'apikey':SUPABASE_KEY},
-    body:JSON.stringify({type:'create_user',email:pendingEmail,password:pendingPass,username:pendingUsername,country:pendingCountry,flag:pendingFlag})
+  const res = await fetch(SUPABASE_URL + '/functions/v1/send-confirmation', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': 'Bearer ' + SUPABASE_KEY,
+      'apikey': SUPABASE_KEY
+    },
+    body: JSON.stringify({
+      type: 'create_user',
+      email: pendingEmail,
+      password: pendingPass,
+      username: pendingUsername,
+      country: pendingCountry,
+      flag: pendingFlag
+    })
   });
 
-  var data=await res.json();
+  const data = await res.json();
 
-  if(!res.ok||data.error){
-    document.getElementById('btn-verify').disabled=false;
-    return showMsg('msg-code','// '+(data.error&&data.error.message?data.error.message:'error creating account'),'error');
+  if (!res.ok || data.error) {
+    document.getElementById('btn-verify').disabled = false;
+    const errMsg = data.error && data.error.message ? data.error.message : 'error creating account';
+    return showMsg('msg-code', '// ' + errMsg, 'error');
   }
 
-  try{
-    var signIn=await sb.auth.signInWithPassword({email:pendingEmail,password:pendingPass});
-    if(!signIn.error&&signIn.data.user){
-      showMsg('msg-code','// welcome to the crew!','success');
-      setTimeout(function(){showLoggedIn(signIn.data.user);},1200);
+  try {
+    const signIn = await sb.auth.signInWithPassword({ email: pendingEmail, password: pendingPass });
+    if (!signIn.error && signIn.data.user) {
+      showMsg('msg-code', '// welcome to the crew!', 'success');
+      setTimeout(function() { showLoggedIn(signIn.data.user); }, 1200);
       return;
     }
-  }catch(e){}
+  } catch(e) {}
 
-  document.getElementById('code-screen').style.display='none';
-  document.getElementById('auth-screens').style.display='block';
+  document.getElementById('code-screen').style.display = 'none';
+  document.getElementById('auth-screens').style.display = 'block';
   switchTab('login');
-  showMsg('msg-login','// account created! log in to enter the yard.','success');
-  document.getElementById('login-email').value=pendingEmail;
+  showMsg('msg-login', '// account created! log in to enter the yard.', 'success');
+  document.getElementById('login-email').value = pendingEmail;
 }
 
-async function resendCode(){
-  if(!pendingEmail)return;
-  verificationCode=generateCode();
-  await fetch(SUPABASE_URL+'/functions/v1/send-confirmation',{
-    method:'POST',
-    headers:{'Content-Type':'application/json','Authorization':'Bearer '+SUPABASE_KEY,'apikey':SUPABASE_KEY},
-    body:JSON.stringify({email:pendingEmail,username:'VANDAL',code:verificationCode})
+async function resendCode() {
+  if (!pendingEmail) return;
+  verificationCode = generateCode();
+  await fetch(SUPABASE_URL + '/functions/v1/send-confirmation', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': 'Bearer ' + SUPABASE_KEY,
+      'apikey': SUPABASE_KEY
+    },
+    body: JSON.stringify({ email: pendingEmail, username: 'VANDAL', code: verificationCode })
   });
-  showMsg('msg-code','// new code sent!','success');
+  showMsg('msg-code', '// new code sent!', 'success');
 }
 
-async function resetPassword(){
-  const email=document.getElementById('reset-email').value.trim();
-  if(!email)return showMsg('msg-reset','// enter your email','error');
-  setLoading('btn-reset',true);
-  const{error}=await sb.auth.resetPasswordForEmail(email);
-  setLoading('btn-reset',false,'SEND RESET LINK');
-  if(error)return showMsg('msg-reset',error.message,'error');
-  showMsg('msg-reset','// link sent! check your inbox.','success');
+async function resetPassword() {
+  const email = document.getElementById('reset-email').value.trim();
+  if (!email) return showMsg('msg-reset', '// enter your email', 'error');
+  setLoading('btn-reset', true);
+  const { error } = await sb.auth.resetPasswordForEmail(email);
+  setLoading('btn-reset', false, 'SEND RESET LINK');
+  if (error) return showMsg('msg-reset', error.message, 'error');
+  showMsg('msg-reset', '// link sent! check your inbox.', 'success');
 }
 
-function showLoggedIn(user){
-  const u=user?.user_metadata?.username||user?.email?.split('@')[0].toUpperCase()||'VANDAL';
-  document.getElementById('auth-screens').style.display='none';
-  document.getElementById('code-screen').style.display='none';
-  document.getElementById('confirm-screen').style.display='none';
-  document.getElementById('logged-screen').style.display='block';
-  document.getElementById('logged-username').textContent=u;
+function showLoggedIn(user) {
+  const u = (user && user.user_metadata && user.user_metadata.username) ? user.user_metadata.username : (user && user.email ? user.email.split('@')[0].toUpperCase() : 'VANDAL');
+  document.getElementById('auth-screens').style.display = 'none';
+  document.getElementById('code-screen').style.display = 'none';
+  document.getElementById('confirm-screen').style.display = 'none';
+  document.getElementById('logged-screen').style.display = 'block';
+  document.getElementById('logged-username').textContent = u;
 }
 
-function goToApp(){window.location.href='rack-nation.html';}
+function goToApp() { window.location.href = 'rack-nation.html'; }
 
-async function logout(){
+async function logout() {
   await sb.auth.signOut();
-  document.getElementById('logged-screen').style.display='none';
-  document.getElementById('auth-screens').style.display='block';
+  document.getElementById('logged-screen').style.display = 'none';
+  document.getElementById('auth-screens').style.display = 'block';
   switchTab('login');
 }
 
-function backToLogin(){
-  document.getElementById('confirm-screen').style.display='none';
-  document.getElementById('auth-screens').style.display='block';
+function backToLogin() {
+  document.getElementById('confirm-screen').style.display = 'none';
+  document.getElementById('auth-screens').style.display = 'block';
   switchTab('login');
 }
 
-document.addEventListener('keydown',e=>{
-  if(e.key!=='Enter')return;
-  const t=document.querySelector('.tab.active')?.id?.replace('tab-','');
-  if(t==='login')login();
-  else if(t==='signup')signup();
+document.addEventListener('keydown', function(e) {
+  if (e.key !== 'Enter') return;
+  const activeTab = document.querySelector('.tab.active');
+  if (!activeTab) return;
+  const t = activeTab.id.replace('tab-', '');
+  if (t === 'login') login();
+  else if (t === 'signup') signup();
 });
 </script>
 </body>
