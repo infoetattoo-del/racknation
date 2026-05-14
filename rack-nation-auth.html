@@ -307,11 +307,6 @@ async function verifyCode(){
   showMsg('msg-login','// account created! log in to enter the yard.','success');
   document.getElementById('login-email').value=pendingEmail;
 }
-dingUser),1000);
-  } else {
-    showMsg('msg-code','// wrong code. try again.','error');
-  }
-}
 
 async function resendCode(){
   if(!pendingEmail)return;
