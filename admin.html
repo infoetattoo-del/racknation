@@ -1,0 +1,1157 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RACK NATION VANDALS · ADMIN</title>
+<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Barlow+Condensed:wght@600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+:root {
+  --bg: #0a0a0a;
+  --surface: #111111;
+  --surface2: #1a1a1a;
+  --border: #2a2a2a;
+  --accent: #ccff00;
+  --cyan: #00aaff;
+  --text: #ffffff;
+  --muted: #555555;
+  --danger: #ff3333;
+  --warning: #ffaa00;
+  --sidebar-w: 230px;
+  --font-mono: 'Share Tech Mono', monospace;
+  --font-display: 'Barlow Condensed', sans-serif;
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { height: 100%; }
+body {
+  font-family: var(--font-mono);
+  background: var(--bg);
+  color: var(--text);
+  font-size: 13px;
+  line-height: 1.5;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+/* ── LOGIN ── */
+#login-screen {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg);
+  position: relative;
+  overflow: hidden;
+}
+#login-screen::before {
+  content: 'RN';
+  position: absolute;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 50vw;
+  color: rgba(204,255,0,0.018);
+  user-select: none;
+  pointer-events: none;
+  top: 50%; left: 50%;
+  transform: translate(-50%, -50%);
+  letter-spacing: -0.05em;
+}
+.login-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  width: 440px;
+  position: relative;
+}
+.login-card-top {
+  padding: 1rem 1.25rem;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+}
+.login-logo-text {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 1.3rem;
+  letter-spacing: 0.08em;
+  line-height: 1;
+}
+.login-logo-text .cyan { color: var(--cyan); }
+.login-logo-text .lime { color: var(--accent); }
+.login-logo-sub {
+  font-size: 9px;
+  color: var(--muted);
+  letter-spacing: 0.2em;
+  margin-top: 5px;
+}
+.login-online {
+  font-size: 9px;
+  color: var(--accent);
+  letter-spacing: 0.15em;
+  text-align: right;
+  line-height: 1.8;
+}
+.login-online-ver { color: var(--muted); }
+.login-body {
+  padding: 2.5rem 2rem 2rem;
+  text-align: center;
+}
+.login-title {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 2rem;
+  color: var(--accent);
+  letter-spacing: 0.12em;
+  margin-bottom: 4px;
+}
+.login-sub-title {
+  color: var(--cyan);
+  font-size: 10px;
+  letter-spacing: 0.25em;
+  margin-bottom: 2rem;
+}
+.field { margin-bottom: 0.85rem; text-align: left; }
+.field label {
+  display: block;
+  font-size: 9px;
+  letter-spacing: 0.2em;
+  color: var(--muted);
+  margin-bottom: 5px;
+}
+.field input {
+  width: 100%;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-left: 2px solid var(--cyan);
+  color: var(--text);
+  font-family: var(--font-mono);
+  font-size: 13px;
+  padding: 10px 12px;
+  outline: none;
+  text-transform: none;
+  letter-spacing: 0.04em;
+  transition: border-left-color 0.2s;
+}
+.field input:focus { border-left-color: var(--accent); }
+.field input::placeholder { color: var(--muted); }
+.btn-login {
+  width: 100%;
+  background: var(--accent);
+  color: #0a0a0a;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 1.1rem;
+  letter-spacing: 0.14em;
+  border: none;
+  padding: 13px;
+  cursor: pointer;
+  margin-top: 0.5rem;
+  transition: background 0.15s;
+}
+.btn-login:hover { background: #deff33; }
+.login-err {
+  color: var(--danger);
+  font-size: 10px;
+  margin-top: 0.75rem;
+  min-height: 16px;
+  letter-spacing: 0.12em;
+  text-align: center;
+}
+.login-footer {
+  padding: 0.75rem 1.25rem;
+  border-top: 1px solid var(--border);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 10px;
+  color: var(--muted);
+  letter-spacing: 0.1em;
+}
+.dot-live {
+  width: 6px; height: 6px;
+  background: var(--accent);
+  border-radius: 50%;
+  display: inline-block;
+  margin-right: 7px;
+  vertical-align: middle;
+  animation: pulse 2s infinite;
+}
+@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.3} }
+
+/* ── LAYOUT ── */
+#app { display: none; min-height: 100vh; flex-direction: row; }
+#app.visible { display: flex; }
+
+/* ── SIDEBAR ── */
+.sidebar {
+  width: var(--sidebar-w);
+  background: var(--surface);
+  border-right: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+  position: fixed;
+  top: 0; left: 0; bottom: 0;
+  z-index: 10;
+}
+.sidebar-top {
+  padding: 1rem 1.25rem;
+  border-bottom: 1px solid var(--border);
+}
+.sidebar-logo {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 1.2rem;
+  letter-spacing: 0.08em;
+  line-height: 1;
+}
+.sidebar-logo .cyan { color: var(--cyan); }
+.sidebar-logo .lime { color: var(--accent); }
+.sidebar-badge {
+  font-size: 9px;
+  color: var(--muted);
+  letter-spacing: 0.2em;
+  margin-top: 4px;
+}
+.sidebar-nav { flex: 1; padding: 0.75rem 0; overflow-y: auto; }
+.nav-section {
+  font-size: 9px;
+  letter-spacing: 0.2em;
+  color: var(--muted);
+  padding: 0.75rem 1.25rem 0.35rem;
+}
+.nav-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 1.25rem;
+  cursor: pointer;
+  color: var(--muted);
+  transition: background 0.1s, color 0.1s;
+  font-size: 12px;
+  letter-spacing: 0.1em;
+  border-left: 2px solid transparent;
+  user-select: none;
+}
+.nav-item:hover { background: var(--surface2); color: var(--text); }
+.nav-item.active { background: var(--surface2); color: var(--accent); border-left-color: var(--accent); }
+.nav-icon { font-size: 14px; width: 16px; text-align: center; flex-shrink: 0; }
+.nav-badge {
+  margin-left: auto;
+  background: var(--danger);
+  color: #fff;
+  font-size: 9px;
+  padding: 1px 6px;
+  min-width: 20px;
+  text-align: center;
+  letter-spacing: 0.05em;
+}
+.sidebar-user {
+  border-top: 1px solid var(--border);
+  padding: 1rem 1.25rem;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.user-avatar {
+  width: 28px; height: 28px;
+  background: var(--accent);
+  color: #0a0a0a;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 14px;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+}
+.user-info { flex: 1; min-width: 0; }
+.user-name { font-size: 11px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.user-role { font-size: 9px; color: var(--accent); letter-spacing: 0.15em; }
+.btn-logout {
+  background: none; border: none; color: var(--muted);
+  cursor: pointer; font-size: 14px; padding: 2px;
+  transition: color 0.15s; font-family: var(--font-mono);
+}
+.btn-logout:hover { color: var(--danger); }
+
+/* ── MAIN ── */
+.main { margin-left: var(--sidebar-w); flex: 1; display: flex; flex-direction: column; min-height: 100vh; }
+.topbar {
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  padding: 0 1.75rem;
+  height: 48px;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  position: sticky; top: 0; z-index: 5;
+}
+.page-title {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 1.2rem;
+  letter-spacing: 0.1em;
+  color: var(--text);
+}
+.topbar-right {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 10px;
+  color: var(--accent);
+  letter-spacing: 0.1em;
+}
+.status-dot { width: 6px; height: 6px; background: var(--accent); border-radius: 50%; animation: pulse 2s infinite; }
+.content { padding: 1.75rem; flex: 1; }
+
+/* ── SECTIONS ── */
+.section { display: none; }
+.section.active { display: block; }
+
+/* ── STAT CARDS ── */
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 1px;
+  margin-bottom: 1.5rem;
+  border: 1px solid var(--border);
+  background: var(--border);
+}
+.stat-card {
+  background: var(--surface);
+  padding: 1.25rem;
+  position: relative;
+}
+.stat-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 0.75rem;
+}
+.stat-label {
+  font-size: 9px;
+  letter-spacing: 0.18em;
+  color: var(--muted);
+}
+.stat-icon { font-size: 16px; color: var(--muted); }
+.stat-value {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 2.4rem;
+  line-height: 1;
+}
+.stat-value.lime { color: var(--accent); }
+.stat-value.cyan { color: var(--cyan); }
+.stat-value.red { color: var(--danger); }
+.stat-value.white { color: var(--text); }
+.stat-delta {
+  font-size: 10px;
+  color: var(--muted);
+  margin-top: 6px;
+  letter-spacing: 0.08em;
+}
+.stat-delta.up { color: var(--accent); }
+
+/* ── SECTION HEADER ── */
+.section-header { margin-bottom: 1.25rem; }
+.section-title {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 1.4rem;
+  letter-spacing: 0.1em;
+  margin-bottom: 4px;
+}
+.section-desc { font-size: 10px; color: var(--muted); letter-spacing: 0.12em; }
+
+/* ── TABLES ── */
+.table-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.75rem;
+}
+.table-title {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 1rem;
+  letter-spacing: 0.08em;
+}
+.table-wrap {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  overflow: hidden;
+}
+table { width: 100%; border-collapse: collapse; }
+thead th {
+  text-align: left;
+  padding: 9px 14px;
+  font-size: 9px;
+  letter-spacing: 0.18em;
+  color: var(--muted);
+  border-bottom: 1px solid var(--border);
+  font-weight: 400;
+  white-space: nowrap;
+}
+tbody tr { border-bottom: 1px solid var(--border); transition: background 0.1s; }
+tbody tr:last-child { border-bottom: none; }
+tbody tr:hover { background: var(--surface2); }
+td { padding: 9px 14px; vertical-align: middle; }
+.user-main { font-size: 12px; font-weight: 600; letter-spacing: 0.06em; }
+.user-email { font-size: 10px; color: var(--muted); letter-spacing: 0.04em; text-transform: none; }
+
+/* ── TAGS ── */
+.tag {
+  display: inline-block;
+  font-size: 9px;
+  letter-spacing: 0.12em;
+  padding: 2px 8px;
+}
+.tag-admin { background: rgba(204,255,0,0.12); color: var(--accent); border: 1px solid rgba(204,255,0,0.3); }
+.tag-user { background: rgba(255,255,255,0.04); color: var(--muted); border: 1px solid var(--border); }
+.tag-banned { background: rgba(255,51,51,0.12); color: var(--danger); border: 1px solid rgba(255,51,51,0.3); }
+.tag-pending { background: rgba(255,170,0,0.12); color: var(--warning); border: 1px solid rgba(255,170,0,0.3); }
+.tag-approved { background: rgba(204,255,0,0.1); color: var(--accent); border: 1px solid rgba(204,255,0,0.25); }
+.tag-rejected { background: rgba(255,51,51,0.1); color: var(--danger); border: 1px solid rgba(255,51,51,0.3); }
+.tag-active { background: rgba(0,170,255,0.1); color: var(--cyan); border: 1px solid rgba(0,170,255,0.25); }
+.tag-inactive { background: rgba(255,255,255,0.04); color: var(--muted); border: 1px solid var(--border); }
+
+/* ── BUTTONS ── */
+.actions { display: flex; gap: 6px; }
+.btn-sm {
+  background: none;
+  border: 1px solid var(--border);
+  color: var(--muted);
+  font-size: 10px;
+  font-family: var(--font-mono);
+  padding: 4px 10px;
+  cursor: pointer;
+  transition: all 0.12s;
+  white-space: nowrap;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.btn-sm:hover { border-color: var(--accent); color: var(--accent); }
+.btn-sm.danger:hover { border-color: var(--danger); color: var(--danger); }
+.btn-sm.active-state { border-color: var(--cyan); color: var(--cyan); }
+
+/* ── SEARCH ── */
+.search-row { display: flex; gap: 10px; margin-bottom: 1rem; align-items: center; }
+.search-input {
+  flex: 1;
+  max-width: 280px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-left: 2px solid var(--cyan);
+  color: var(--text);
+  font-family: var(--font-mono);
+  font-size: 12px;
+  padding: 7px 12px;
+  outline: none;
+  text-transform: none;
+  letter-spacing: 0.03em;
+  transition: border-left-color 0.2s;
+}
+.search-input:focus { border-left-color: var(--accent); }
+.search-input::placeholder { color: var(--muted); text-transform: uppercase; letter-spacing: 0.1em; font-size: 10px; }
+.filter-select {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  color: var(--text);
+  font-family: var(--font-mono);
+  font-size: 10px;
+  padding: 7px 10px;
+  outline: none;
+  cursor: pointer;
+  letter-spacing: 0.1em;
+}
+
+/* ── MOD GRID ── */
+.mod-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+  gap: 1px;
+  background: var(--border);
+}
+.mod-card { background: var(--surface); }
+.mod-img {
+  width: 100%;
+  height: 150px;
+  background: var(--surface2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--muted);
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  overflow: hidden;
+}
+.mod-img img { width: 100%; height: 100%; object-fit: cover; }
+.mod-meta { padding: 10px 12px; border-top: 1px solid var(--border); }
+.mod-user { font-size: 11px; font-weight: 600; margin-bottom: 3px; letter-spacing: 0.06em; }
+.mod-city { font-size: 10px; color: var(--cyan); letter-spacing: 0.08em; margin-bottom: 8px; }
+.mod-actions { display: flex; gap: 1px; background: var(--border); }
+.btn-approve {
+  flex: 1;
+  background: rgba(204,255,0,0.08);
+  border: none;
+  color: var(--accent);
+  font-size: 10px;
+  font-family: var(--font-mono);
+  padding: 7px;
+  cursor: pointer;
+  letter-spacing: 0.1em;
+  transition: background 0.12s;
+  text-transform: uppercase;
+}
+.btn-approve:hover { background: rgba(204,255,0,0.16); }
+.btn-reject {
+  flex: 1;
+  background: rgba(255,51,51,0.06);
+  border: none;
+  color: var(--danger);
+  font-size: 10px;
+  font-family: var(--font-mono);
+  padding: 7px;
+  cursor: pointer;
+  letter-spacing: 0.1em;
+  transition: background 0.12s;
+  text-transform: uppercase;
+}
+.btn-reject:hover { background: rgba(255,51,51,0.14); }
+
+/* ── LOADING ── */
+.loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 140px;
+  color: var(--muted);
+  font-size: 10px;
+  gap: 10px;
+  letter-spacing: 0.15em;
+}
+.spinner {
+  width: 14px; height: 14px;
+  border: 2px solid var(--border);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: spin 0.6s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ── LOGS ── */
+.log-list { display: flex; flex-direction: column; }
+.log-item {
+  display: flex;
+  align-items: baseline;
+  gap: 14px;
+  padding: 8px 14px;
+  border-bottom: 1px solid var(--border);
+  font-size: 11px;
+}
+.log-time { color: var(--muted); flex-shrink: 0; font-size: 10px; }
+.log-action { color: var(--accent); flex-shrink: 0; letter-spacing: 0.1em; }
+.log-detail { color: var(--text); flex: 1; letter-spacing: 0.04em; }
+
+/* ── SETTINGS ── */
+.settings-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1px; background: var(--border); }
+.settings-card { background: var(--surface); padding: 1.5rem; }
+.settings-card-title {
+  font-family: var(--font-display);
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  font-size: 1rem;
+  margin-bottom: 1rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid var(--border);
+  color: var(--accent);
+}
+.setting-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--border);
+  gap: 1rem;
+}
+.setting-row:last-child { border-bottom: none; }
+.setting-label { font-size: 11px; letter-spacing: 0.06em; }
+.setting-sub { font-size: 10px; color: var(--muted); margin-top: 2px; letter-spacing: 0.05em; }
+.toggle {
+  width: 34px; height: 18px;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 9px;
+  position: relative;
+  cursor: pointer;
+  transition: background 0.2s, border-color 0.2s;
+  flex-shrink: 0;
+}
+.toggle.on { background: var(--accent); border-color: var(--accent); }
+.toggle::after {
+  content: '';
+  position: absolute;
+  width: 12px; height: 12px;
+  background: var(--muted);
+  border-radius: 50%;
+  top: 2px; left: 2px;
+  transition: left 0.2s, background 0.2s;
+}
+.toggle.on::after { left: 18px; background: #0a0a0a; }
+.supa-info { font-size: 11px; color: var(--muted); line-height: 2.2; letter-spacing: 0.06em; }
+.supa-info span { color: var(--text); }
+.supa-info .lime { color: var(--accent); }
+.supa-info .cyan { color: var(--cyan); }
+.supa-info .green { color: #44ff88; }
+
+/* ── TOAST ── */
+.toast {
+  position: fixed;
+  bottom: 1.5rem; right: 1.5rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-left: 2px solid var(--accent);
+  padding: 10px 16px;
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  z-index: 999;
+  animation: slideIn 0.2s ease;
+  pointer-events: none;
+}
+@keyframes slideIn { from { transform: translateX(20px); opacity:0; } }
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="login-screen">
+  <div class="login-card">
+    <div class="login-card-top">
+      <div>
+        <div class="login-logo-text"><span class="lime">RACK NATION</span> <span class="cyan">VANDALS</span></div>
+        <div class="login-logo-sub">// AUTH TERMINAL — ADMIN ACCESS //</div>
+      </div>
+      <div class="login-online">
+        <div class="login-online-ver">v2.0</div>
+        <div>ONLINE</div>
+      </div>
+    </div>
+    <div class="login-body">
+      <div class="login-title">ACCESS CONTROL</div>
+      <div class="login-sub-title">// ADMIN CREDENTIALS REQUIRED //</div>
+      <div class="field">
+        <label>// Email</label>
+        <input type="email" id="login-email" placeholder="admin@racknationvandals.com" autocomplete="email">
+      </div>
+      <div class="field">
+        <label>// Password</label>
+        <input type="password" id="login-pass" placeholder="••••••••••••" autocomplete="current-password">
+      </div>
+      <button class="btn-login" onclick="doLogin()">ENTER THE YARD</button>
+      <div class="login-err" id="login-err"></div>
+    </div>
+    <div class="login-footer">
+      <span><span class="dot-live"></span>SUPABASE CONNECTED</span>
+      <span>racknationvandals.com</span>
+    </div>
+  </div>
+</div>
+
+<!-- APP -->
+<div id="app">
+  <aside class="sidebar">
+    <div class="sidebar-top">
+      <div class="sidebar-logo"><span class="lime">RACK</span> <span class="cyan">NATION</span></div>
+      <div class="sidebar-badge">// ADMIN PANEL //</div>
+    </div>
+    <nav class="sidebar-nav">
+      <div class="nav-section">// GENERAL</div>
+      <div class="nav-item active" data-section="overview" onclick="showSection(this)">
+        <span class="nav-icon">▣</span> Overview
+      </div>
+      <div class="nav-item" data-section="users" onclick="showSection(this)">
+        <span class="nav-icon">◈</span> Utilisateurs
+        <span class="nav-badge" id="badge-users" style="display:none">0</span>
+      </div>
+      <div class="nav-section">// CONTENT</div>
+      <div class="nav-item" data-section="gallery" onclick="showSection(this)">
+        <span class="nav-icon">◧</span> Galerie
+        <span class="nav-badge" id="badge-gallery" style="display:none">0</span>
+      </div>
+      <div class="nav-item" data-section="cities" onclick="showSection(this)">
+        <span class="nav-icon">◎</span> Villes
+      </div>
+      <div class="nav-section">// SYSTEM</div>
+      <div class="nav-item" data-section="logs" onclick="showSection(this)">
+        <span class="nav-icon">≡</span> Logs
+      </div>
+      <div class="nav-item" data-section="settings" onclick="showSection(this)">
+        <span class="nav-icon">◬</span> Paramètres
+      </div>
+    </nav>
+    <div class="sidebar-user">
+      <div class="user-avatar" id="user-avatar">?</div>
+      <div class="user-info">
+        <div class="user-name" id="user-name">—</div>
+        <div class="user-role">// ADMIN</div>
+      </div>
+      <button class="btn-logout" onclick="doLogout()" title="Déconnecter">✕</button>
+    </div>
+  </aside>
+
+  <main class="main">
+    <div class="topbar">
+      <div class="page-title" id="page-title">// OVERVIEW</div>
+      <div class="topbar-right">
+        <div class="status-dot"></div>
+        SUPABASE CONNECTED
+      </div>
+    </div>
+
+    <div class="content">
+
+      <!-- OVERVIEW -->
+      <div class="section active" id="section-overview">
+        <div class="section-header">
+          <div class="section-title">DASHBOARD</div>
+          <div class="section-desc">// VUE GLOBALE DE RACK NATION VANDALS</div>
+        </div>
+        <div class="stats-grid" id="stats-grid">
+          <div class="loading" style="grid-column:1/-1"><div class="spinner"></div> CHARGEMENT...</div>
+        </div>
+        <div class="table-header">
+          <div class="table-title">INSCRIPTIONS RÉCENTES</div>
+        </div>
+        <div class="table-wrap" id="recent-users-table">
+          <div class="loading"><div class="spinner"></div></div>
+        </div>
+      </div>
+
+      <!-- USERS -->
+      <div class="section" id="section-users">
+        <div class="section-header">
+          <div class="section-title">UTILISATEURS</div>
+          <div class="section-desc">// GÉRER LES COMPTES, RÔLES ET ACCÈS</div>
+        </div>
+        <div class="search-row">
+          <input class="search-input" id="user-search" placeholder="Rechercher email ou pseudo..." oninput="filterUsers()">
+          <select class="filter-select" id="user-filter" onchange="filterUsers()">
+            <option value="all">ALL ROLES</option>
+            <option value="admin">ADMIN</option>
+            <option value="user">USER</option>
+            <option value="banned">BANNED</option>
+          </select>
+        </div>
+        <div class="table-wrap" id="users-table">
+          <div class="loading"><div class="spinner"></div> CHARGEMENT...</div>
+        </div>
+      </div>
+
+      <!-- GALLERY -->
+      <div class="section" id="section-gallery">
+        <div class="section-header">
+          <div class="section-title">MODÉRATION GALERIE</div>
+          <div class="section-desc">// APPROUVER OU REJETER LES ŒUVRES SOUMISES</div>
+        </div>
+        <div class="search-row">
+          <select class="filter-select" id="gallery-filter" onchange="filterGallery()">
+            <option value="pending">PENDING</option>
+            <option value="approved">APPROVED</option>
+            <option value="rejected">REJECTED</option>
+            <option value="all">ALL</option>
+          </select>
+        </div>
+        <div class="mod-grid" id="gallery-grid">
+          <div class="loading" style="grid-column:1/-1"><div class="spinner"></div> CHARGEMENT...</div>
+        </div>
+      </div>
+
+      <!-- CITIES -->
+      <div class="section" id="section-cities">
+        <div class="section-header">
+          <div class="section-title">VILLES & SURFACES</div>
+          <div class="section-desc">// GÉRER LES LOCALISATIONS PAINTABLES</div>
+        </div>
+        <div class="table-wrap" id="cities-table">
+          <div class="loading"><div class="spinner"></div> CHARGEMENT...</div>
+        </div>
+      </div>
+
+      <!-- LOGS -->
+      <div class="section" id="section-logs">
+        <div class="section-header">
+          <div class="section-title">LOGS D'ACTIVITÉ</div>
+          <div class="section-desc">// HISTORIQUE DES ACTIONS ADMIN (SESSION EN COURS)</div>
+        </div>
+        <div class="table-wrap">
+          <div class="log-list" id="log-list">
+            <div class="loading">AUCUNE ACTION CETTE SESSION</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- SETTINGS -->
+      <div class="section" id="section-settings">
+        <div class="section-header">
+          <div class="section-title">PARAMÈTRES</div>
+          <div class="section-desc">// CONFIGURATION DU SITE</div>
+        </div>
+        <div class="settings-grid">
+          <div class="settings-card">
+            <div class="settings-card-title">ACCÈS & INSCRIPTION</div>
+            <div class="setting-row">
+              <div><div class="setting-label">INSCRIPTIONS OUVERTES</div><div class="setting-sub">Autoriser les nouveaux comptes</div></div>
+              <div class="toggle on" onclick="toggleSetting(this,'registrations_open')"></div>
+            </div>
+            <div class="setting-row">
+              <div><div class="setting-label">MODE MAINTENANCE</div><div class="setting-sub">Bloquer l'accès au site</div></div>
+              <div class="toggle" onclick="toggleSetting(this,'maintenance_mode')"></div>
+            </div>
+            <div class="setting-row">
+              <div><div class="setting-label">MODÉRATION GALERIE</div><div class="setting-sub">Valider manuellement les œuvres</div></div>
+              <div class="toggle on" onclick="toggleSetting(this,'gallery_moderation')"></div>
+            </div>
+          </div>
+          <div class="settings-card">
+            <div class="settings-card-title">FREEMIUM</div>
+            <div class="setting-row">
+              <div><div class="setting-label">MODE FREEMIUM ACTIF</div><div class="setting-sub">Activer les plans payants</div></div>
+              <div class="toggle" onclick="toggleSetting(this,'freemium_active')"></div>
+            </div>
+            <div class="setting-row">
+              <div><div class="setting-label">LIMITE SURFACES (FREE)</div><div class="setting-sub">Surfaces max comptes gratuits</div></div>
+              <div class="toggle on" onclick="toggleSetting(this,'surface_limit')"></div>
+            </div>
+            <div class="setting-row">
+              <div><div class="setting-label">SOUND DESIGN</div><div class="setting-sub">Activer l'ambiance sonore urbaine</div></div>
+              <div class="toggle on" onclick="toggleSetting(this,'sound_enabled')"></div>
+            </div>
+          </div>
+          <div class="settings-card">
+            <div class="settings-card-title">SUPABASE</div>
+            <div class="supa-info">
+              <div>PROJECT ID: <span class="lime">lxotohgaojnrzmpaxeqc</span></div>
+              <div>REGION: <span>eu-west-1</span></div>
+              <div>AUTH: <span class="green">✓ ACTIF</span></div>
+              <div>DATABASE: <span class="green">✓ CONNECTÉ</span></div>
+              <div>EMAILS: <span class="cyan">RESEND</span></div>
+            </div>
+          </div>
+          <div class="settings-card">
+            <div class="settings-card-title">DÉPLOIEMENT</div>
+            <div class="supa-info">
+              <div>PLATFORM: <span>VERCEL</span></div>
+              <div>DOMAIN: <span class="cyan">racknationvandals.com</span></div>
+              <div>BUILD: <span class="green">✓ PRODUCTION</span></div>
+              <div>ENV: <span>VANILLA JS</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </main>
+</div>
+
+<script>
+// ─────────────────────────────────────────────
+//  CONFIG — Remplace YOUR_ANON_KEY
+// ─────────────────────────────────────────────
+const SUPABASE_URL = 'https://lxotohgaojnrzmpaxeqc.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imx4b3RvaGdhb2pucnptcGF4ZXFjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgwOTMwNjYsImV4cCI6MjA5MzY2OTA2Nn0.B1u8-q8Ilc9BQ8Pkw9b-IlBxrgCEbXtCP-XihcFTOQU';
+
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+let currentUser = null;
+let allUsers = [], allArtworks = [], allCities = [], adminLog = [];
+
+// ── AUTH ──
+async function doLogin() {
+  const email = document.getElementById('login-email').value.trim();
+  const pass  = document.getElementById('login-pass').value;
+  const err   = document.getElementById('login-err');
+  err.textContent = '';
+  if (!email || !pass) { err.textContent = '// CHAMPS REQUIS'; return; }
+  err.textContent = '// CONNEXION EN COURS...';
+  const { data, error } = await sb.auth.signInWithPassword({ email, password: pass });
+  if (error) { err.textContent = '// ' + error.message.toUpperCase(); return; }
+  const { data: profile, error: pErr } = await sb.from('profiles').select('role,username').eq('id', data.user.id).single();
+  if (pErr || profile?.role !== 'admin') {
+    await sb.auth.signOut();
+    err.textContent = '// ACCÈS REFUSÉ — COMPTE NON ADMIN';
+    return;
+  }
+  currentUser = { ...data.user, username: profile.username };
+  enterAdmin();
+}
+
+async function doLogout() {
+  await sb.auth.signOut();
+  currentUser = null;
+  document.getElementById('app').classList.remove('visible');
+  document.getElementById('login-screen').style.display = 'flex';
+}
+
+window.addEventListener('DOMContentLoaded', async () => {
+  const { data: { session } } = await sb.auth.getSession();
+  if (session) {
+    const { data: profile } = await sb.from('profiles').select('role,username').eq('id', session.user.id).single();
+    if (profile?.role === 'admin') {
+      currentUser = { ...session.user, username: profile.username };
+      enterAdmin(); return;
+    }
+  }
+  document.getElementById('login-screen').style.display = 'flex';
+});
+
+document.addEventListener('keydown', e => {
+  if (e.key === 'Enter' && document.getElementById('login-screen').style.display !== 'none') doLogin();
+});
+
+function enterAdmin() {
+  document.getElementById('login-screen').style.display = 'none';
+  document.getElementById('app').classList.add('visible');
+  const name = currentUser.username || currentUser.email || '?';
+  document.getElementById('user-avatar').textContent = name[0].toUpperCase();
+  document.getElementById('user-name').textContent = name;
+  loadAll();
+}
+
+// ── LOAD ──
+async function loadAll() {
+  await Promise.all([loadUsers(), loadArtworks(), loadCities()]);
+  renderStats();
+  renderOverview();
+  renderUsers();
+  renderGallery('pending');
+  renderCities();
+}
+
+async function loadUsers() {
+  const { data } = await sb.from('profiles')
+    .select('id,email,username,role,is_banned,created_at,city,total_pieces')
+    .order('created_at', { ascending: false }).limit(300);
+  allUsers = data || [];
+  const admins = allUsers.filter(u => u.role === 'admin').length;
+  if (admins > 0) { document.getElementById('badge-users').textContent = admins; document.getElementById('badge-users').style.display = ''; }
+}
+
+async function loadArtworks() {
+  const { data } = await sb.from('artworks')
+    .select('id,user_id,city,surface,image_url,status,created_at,profiles(username)')
+    .order('created_at', { ascending: false }).limit(300);
+  allArtworks = data || [];
+  const pending = allArtworks.filter(a => a.status === 'pending').length;
+  if (pending > 0) { document.getElementById('badge-gallery').textContent = pending; document.getElementById('badge-gallery').style.display = ''; }
+}
+
+async function loadCities() {
+  const { data } = await sb.from('cities').select('id,name,country,surfaces_count,artworks_count,is_active').order('name');
+  allCities = data || [];
+}
+
+// ── RENDER STATS ──
+function renderStats() {
+  const total   = allUsers.length;
+  const today   = allUsers.filter(u => new Date(u.created_at) > new Date(Date.now()-86400000)).length;
+  const pieces  = allArtworks.length;
+  const pending = allArtworks.filter(a => a.status === 'pending').length;
+  document.getElementById('stats-grid').innerHTML = `
+    <div class="stat-card">
+      <div class="stat-top"><div class="stat-label">// USERS</div><span class="stat-icon">◈</span></div>
+      <div class="stat-value lime">${fmt(total)}</div>
+      <div class="stat-delta up">+${today} AUJOURD'HUI</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-top"><div class="stat-label">// ARTWORKS</div><span class="stat-icon">◧</span></div>
+      <div class="stat-value cyan">${fmt(pieces)}</div>
+      <div class="stat-delta">${pending} EN ATTENTE</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-top"><div class="stat-label">// VILLES</div><span class="stat-icon">◎</span></div>
+      <div class="stat-value white">${allCities.filter(c=>c.is_active).length}</div>
+      <div class="stat-delta">SUR ${allCities.length} CONFIGURÉES</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-top"><div class="stat-label">// MODÉRATION</div><span class="stat-icon">◬</span></div>
+      <div class="stat-value red">${fmt(pending)}</div>
+      <div class="stat-delta">PIÈCES EN ATTENTE</div>
+    </div>
+  `;
+}
+
+// ── RENDER OVERVIEW ──
+function renderOverview() {
+  document.getElementById('recent-users-table').innerHTML = buildUserTable(allUsers.slice(0,8), true);
+}
+
+// ── RENDER USERS ──
+function renderUsers(users = allUsers) {
+  document.getElementById('users-table').innerHTML = buildUserTable(users, false);
+}
+
+function buildUserTable(users, compact) {
+  if (!users.length) return '<div class="loading">AUCUN UTILISATEUR</div>';
+  return `<table>
+    <thead><tr>
+      <th>PSEUDO / EMAIL</th><th>RÔLE</th>
+      ${compact?'':'<th>VILLE</th><th>PIÈCES</th>'}
+      <th>INSCRIT</th>
+      ${compact?'':'<th>ACTIONS</th>'}
+    </tr></thead>
+    <tbody>
+    ${users.map(u=>`<tr>
+      <td>
+        <div class="user-main">${esc(u.username||'—')}</div>
+        <div class="user-email">${esc(u.email||'')}</div>
+      </td>
+      <td>${u.is_banned?'<span class="tag tag-banned">BANNED</span>':u.role==='admin'?'<span class="tag tag-admin">ADMIN</span>':'<span class="tag tag-user">USER</span>'}</td>
+      ${compact?'':` <td style="color:var(--muted);font-size:11px">${esc(u.city||'—')}</td><td style="color:var(--cyan)">${u.total_pieces||0}</td>`}
+      <td style="color:var(--muted);font-size:10px">${fmtDate(u.created_at)}</td>
+      ${compact?'':` <td><div class="actions">
+        <button class="btn-sm" onclick="promoteUser('${u.id}','${u.role}')">${u.role==='admin'?'RÉTROGRADER':'PROMOUVOIR'}</button>
+        <button class="btn-sm danger" onclick="banUser('${u.id}',${!!u.is_banned})">${u.is_banned?'DÉBANNIR':'BANNIR'}</button>
+      </div></td>`}
+    </tr>`).join('')}
+    </tbody></table>`;
+}
+
+function filterUsers() {
+  const q = document.getElementById('user-search').value.toLowerCase();
+  const f = document.getElementById('user-filter').value;
+  renderUsers(allUsers.filter(u => {
+    const mq = !q||(u.email||'').toLowerCase().includes(q)||(u.username||'').toLowerCase().includes(q);
+    const mf = f==='all'||(f==='banned'?u.is_banned:f==='admin'?u.role==='admin':u.role==='user'&&!u.is_banned);
+    return mq && mf;
+  }));
+}
+
+// ── RENDER GALLERY ──
+function renderGallery(status='pending') {
+  const items = status==='all'?allArtworks:allArtworks.filter(a=>a.status===status);
+  if(!items.length){ document.getElementById('gallery-grid').innerHTML='<div class="loading" style="grid-column:1/-1">AUCUNE ŒUVRE DANS CETTE CATÉGORIE</div>'; return; }
+  document.getElementById('gallery-grid').innerHTML = items.map(a=>`
+    <div class="mod-card" id="card-${a.id}">
+      <div class="mod-img">${a.image_url?`<img src="${esc(a.image_url)}" alt="">`:' NO PREVIEW'}</div>
+      <div class="mod-meta">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:3px">
+          <div class="mod-user">${esc(a.profiles?.username||a.user_id?.slice(0,8)||'—')}</div>
+          <span class="tag tag-${a.status}">${a.status.toUpperCase()}</span>
+        </div>
+        <div class="mod-city">${esc(a.city||'—')} · ${esc(a.surface||'—')}</div>
+        <div class="mod-actions">
+          <button class="btn-approve" onclick="moderateArtwork('${a.id}','approved')">✓ APPROVE</button>
+          <button class="btn-reject"  onclick="moderateArtwork('${a.id}','rejected')">✕ REJECT</button>
+        </div>
+      </div>
+    </div>`).join('');
+}
+function filterGallery(){ renderGallery(document.getElementById('gallery-filter').value); }
+
+// ── RENDER CITIES ──
+function renderCities() {
+  if(!allCities.length){ document.getElementById('cities-table').innerHTML='<div class="loading">AUCUNE VILLE CONFIGURÉE</div>'; return; }
+  document.getElementById('cities-table').innerHTML=`<table>
+    <thead><tr><th>VILLE</th><th>PAYS</th><th>SURFACES</th><th>ŒUVRES</th><th>STATUT</th><th>ACTIONS</th></tr></thead>
+    <tbody>
+    ${allCities.map(c=>`<tr>
+      <td style="font-weight:600;letter-spacing:0.06em">${esc(c.name)}</td>
+      <td style="color:var(--muted);font-size:11px">${esc(c.country||'—')}</td>
+      <td style="color:var(--cyan)">${c.surfaces_count||0}</td>
+      <td style="color:var(--muted)">${c.artworks_count||0}</td>
+      <td><span class="tag tag-${c.is_active?'active':'inactive'}">${c.is_active?'ACTIVE':'INACTIVE'}</span></td>
+      <td><div class="actions">
+        <button class="btn-sm ${c.is_active?'active-state':''}" onclick="toggleCity('${c.id}',${c.is_active})">${c.is_active?'DÉSACTIVER':'ACTIVER'}</button>
+      </div></td>
+    </tr>`).join('')}
+    </tbody></table>`;
+}
+
+// ── ACTIONS ──
+async function promoteUser(id, role) {
+  const newRole = role==='admin'?'user':'admin';
+  const { error } = await sb.from('profiles').update({role:newRole}).eq('id',id);
+  if(error){ toast('ERREUR: '+error.message); return; }
+  const u = allUsers.find(u=>u.id===id); if(u) u.role=newRole;
+  addLog(newRole==='admin'?'PROMOTED':'DEMOTED', (u?.username||id)+' → '+newRole);
+  toast(newRole==='admin'?'✓ PROMU ADMIN':'✓ DROITS RÉVOQUÉS');
+  renderUsers(); renderOverview();
+}
+
+async function banUser(id, isBanned) {
+  const nb = !isBanned;
+  const { error } = await sb.from('profiles').update({is_banned:nb}).eq('id',id);
+  if(error){ toast('ERREUR: '+error.message); return; }
+  const u = allUsers.find(u=>u.id===id); if(u) u.is_banned=nb;
+  addLog(nb?'BANNED':'UNBANNED', u?.username||id);
+  toast(nb?'✓ UTILISATEUR BANNI':'✓ UTILISATEUR DÉBANNI');
+  renderUsers(); renderOverview();
+}
+
+async function moderateArtwork(id, status) {
+  const { error } = await sb.from('artworks').update({status}).eq('id',id);
+  if(error){ toast('ERREUR: '+error.message); return; }
+  const a = allArtworks.find(a=>a.id===id); if(a) a.status=status;
+  addLog(status.toUpperCase(), 'ARTWORK '+id.slice(0,8)+'...');
+  document.getElementById('card-'+id)?.remove();
+  const pending = allArtworks.filter(a=>a.status==='pending').length;
+  const badge = document.getElementById('badge-gallery');
+  if(pending){ badge.textContent=pending; badge.style.display=''; } else badge.style.display='none';
+  toast(status==='approved'?'✓ ŒUVRE APPROUVÉE':'✕ ŒUVRE REJETÉE');
+}
+
+async function toggleCity(id, isActive) {
+  const { error } = await sb.from('cities').update({is_active:!isActive}).eq('id',id);
+  if(error){ toast('ERREUR: '+error.message); return; }
+  const c = allCities.find(c=>c.id===id); if(c) c.is_active=!isActive;
+  addLog(!isActive?'CITY_ON':'CITY_OFF', c?.name||id);
+  toast(!isActive?'✓ VILLE ACTIVÉE':'✓ VILLE DÉSACTIVÉE');
+  renderCities();
+}
+
+function toggleSetting(el, key) {
+  el.classList.toggle('on');
+  addLog('SETTING', key+' → '+(el.classList.contains('on')?'ON':'OFF'));
+}
+
+// ── LOGS ──
+function addLog(action, detail) {
+  adminLog.unshift({ time: new Date().toLocaleTimeString('fr-FR'), action, detail });
+  if(document.getElementById('section-logs').classList.contains('active')) renderLogs();
+}
+function renderLogs() {
+  const el = document.getElementById('log-list');
+  if(!adminLog.length){ el.innerHTML='<div class="loading">AUCUNE ACTION CETTE SESSION</div>'; return; }
+  el.innerHTML = adminLog.map(l=>`
+    <div class="log-item">
+      <span class="log-time">${l.time}</span>
+      <span class="log-action">${l.action}</span>
+      <span class="log-detail">${l.detail}</span>
+    </div>`).join('');
+}
+
+// ── NAV ──
+const TITLES = { overview:'// OVERVIEW', users:'// UTILISATEURS', gallery:'// GALERIE', cities:'// VILLES & SURFACES', logs:'// LOGS', settings:'// PARAMÈTRES' };
+function showSection(el) {
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
+  el.classList.add('active');
+  const sec = el.dataset.section;
+  document.getElementById('section-'+sec).classList.add('active');
+  document.getElementById('page-title').textContent = TITLES[sec]||sec.toUpperCase();
+  if(sec==='logs') renderLogs();
+}
+
+// ── UTILS ──
+function esc(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function fmt(n){ return (n??0).toLocaleString('fr-FR'); }
+function fmtDate(iso){ return iso?new Date(iso).toLocaleDateString('fr-FR',{day:'2-digit',month:'short',year:'numeric'}):'—'; }
+let _tt;
+function toast(msg){
+  let t=document.querySelector('.toast');
+  if(!t){ t=document.createElement('div'); t.className='toast'; document.body.appendChild(t); }
+  t.textContent=msg; clearTimeout(_tt); _tt=setTimeout(()=>t.remove(),3000);
+}
+</script>
+</body>
+</html>
